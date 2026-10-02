@@ -17,7 +17,7 @@ $GLOBALS['TL_DCA']['tl_schema_translation'] = [
         'default' => '{home_legend},page,language,isMainEntity;{content_legend},name,description,jobTitle;{publish_legend},published',
     ],
     'fields' => [
-        'schemaPreview' => ['inputType' => 'textarea', 'eval' => ['readonly' => true, 'doNotSave' => true, 'rows' => 16, 'tl_class' => 'clr']],
+        'schemaPreview' => ['eval' => ['doNotSave' => true]],
         'sourceContent' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'chosen' => true, 'submitOnChange' => true, 'tl_class' => 'w50'], 'sql' => 'int unsigned NOT NULL default 0'],
         'sourceRow' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default ''"],
         'id' => ['sql' => 'int unsigned NOT NULL auto_increment'],
