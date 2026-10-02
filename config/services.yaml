@@ -1,0 +1,7 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+    VHUG\SchemaManagerBundle\:
+        resource: ../src/
+        exclude: ../src/{ContaoManager,Model,SchemaManagerBundle.php}

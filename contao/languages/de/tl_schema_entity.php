@@ -1,0 +1,35 @@
+<?php
+declare(strict_types=1);
+$GLOBALS['TL_LANG']['tl_schema_entity']['identity_legend'] = 'Identität (sprachübergreifend)';
+$GLOBALS['TL_LANG']['tl_schema_entity']['facts_legend'] = 'Gemeinsame Angaben';
+$GLOBALS['TL_LANG']['tl_schema_entity']['publish_legend'] = 'Veröffentlichung';
+$GLOBALS['TL_LANG']['tl_schema_entity']['home_legend'] = 'Sprachabhängige Hauptseite';
+$GLOBALS['TL_LANG']['tl_schema_entity']['content_legend'] = 'Übersetzte Inhalte';
+$GLOBALS['TL_LANG']['tl_schema_entity']['name'] = ['Name', 'Gemeinsamer öffentlicher Name. Namen von Organisationen und Personen werden nicht übersetzt.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['entityType'] = ['Schema-Typ', 'Bestimmt die angezeigten Felder.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['identityBase'] = ['Domain der Identität', 'Dauerhafte öffentliche Domain, z. B. https://www.vhug.tech. Nicht die Domain des Abnahmeservers verwenden.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Dauerhafte Entitäts-ID', 'Wird beim ersten Speichern erzeugt und bleibt bei Übersetzungen, Seitenumzügen und Typwechseln erhalten.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['legalName'] = ['Rechtlicher Name', 'Verbindlicher rechtlicher Name für alle Sprachen.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['telephone'] = ['Telefon', 'Gemeinsame öffentliche Telefonnummer.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['email'] = ['E-Mail', 'Gemeinsame öffentliche Kontaktadresse.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['streetAddress'] = ['Straße und Hausnummer', 'Gemeinsame Anschrift des Standorts.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['postalCode'] = ['Postleitzahl', ''];
+$GLOBALS['TL_LANG']['tl_schema_entity']['addressLocality'] = ['Ort', ''];
+$GLOBALS['TL_LANG']['tl_schema_entity']['addressCountry'] = ['Ländercode', 'Zweistelliger Ländercode, z. B. DE.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['organization'] = ['Verknüpfte Organisation', 'Arbeitgeber bei Personen, Anbieter bei Leistungen, Veranstalter bei Events, übergeordnete Organisation.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['startDate'] = ['Beginn', 'JJJJ-MM-TT oder JJJJ-MM-TTTHH:MM:SS+HH:MM.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['endDate'] = ['Ende', 'JJJJ-MM-TT oder JJJJ-MM-TTTHH:MM:SS+HH:MM.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['locationName'] = ['Veranstaltungsort', 'Name des Veranstaltungsorts.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['eventStatus'] = ['Veranstaltungsstatus', ''];
+$GLOBALS['TL_LANG']['tl_schema_entity']['published'] = ['Veröffentlicht', 'Entität und Sprachversion müssen veröffentlicht sein, um die vollständige Beschreibung auszugeben.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['page'] = ['Repräsentative Seite', 'Eine Hauptseite pro Sprache. Die Sprache wird aus dem Startpunkt dieser Seite übernommen.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['language'] = ['Sprache', 'Wird aus der ausgewählten Seite ermittelt.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['description'] = ['Beschreibung', 'Klartext passend zum sichtbaren Inhalt in dieser Sprache.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['jobTitle'] = ['Berufsbezeichnung', 'Übersetzte Funktion dieser Person.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['isMainEntity'] = ['Hauptthema dieser Seite', 'Verknüpft die bestehende WebPage über mainEntity mit dieser Entität.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['links_legend'] = 'Links und Bild';
+$GLOBALS['TL_LANG']['tl_schema_entity']['vatID'] = ['Umsatzsteuer-ID', 'Umsatzsteuer-Identifikationsnummer.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['taxID'] = ['Register-/Steuernummer', 'Öffentliche Register- oder Steuernummer.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['sameAs'] = ['Offizielle Profile', 'Eine bestätigte öffentliche Profil-URL pro Zeile.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['image'] = ['Logo / Porträt', 'Vorhandenes öffentliches Bild auswählen.'];

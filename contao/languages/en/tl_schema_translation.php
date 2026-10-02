@@ -1,0 +1,36 @@
+<?php
+declare(strict_types=1);
+$GLOBALS['TL_LANG']['tl_schema_translation']['identity_legend'] = 'Identity (shared across languages)';
+$GLOBALS['TL_LANG']['tl_schema_translation']['facts_legend'] = 'Shared facts';
+$GLOBALS['TL_LANG']['tl_schema_translation']['publish_legend'] = 'Publication';
+$GLOBALS['TL_LANG']['tl_schema_translation']['home_legend'] = 'Localized home';
+$GLOBALS['TL_LANG']['tl_schema_translation']['content_legend'] = 'Localized content';
+$GLOBALS['TL_LANG']['tl_schema_translation']['name'] = ['Name', 'Shared public name. Organization and person names are not translated.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['entityType'] = ['Schema type', 'Controls the relevant fields.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['identityBase'] = ['Identity origin', 'Permanent public origin, e.g. https://www.vhug.tech. Never use the preview server hostname.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['entityId'] = ['Permanent entity ID', 'Generated on first save; retained across translations, page moves and type changes.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['legalName'] = ['Legal name', 'Authoritative legal name shared across languages.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['telephone'] = ['Telephone', 'Shared public telephone number.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['email'] = ['Email', 'Shared public contact address.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['streetAddress'] = ['Street address', 'Shared location address.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['postalCode'] = ['Postal code', ''];
+$GLOBALS['TL_LANG']['tl_schema_translation']['addressLocality'] = ['City', ''];
+$GLOBALS['TL_LANG']['tl_schema_translation']['addressCountry'] = ['Country code', 'Two-letter country code, e.g. DE.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['organization'] = ['Related organization', 'Employer for people, provider for services, organizer for events, parent for organizations.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['startDate'] = ['Start', 'YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS+HH:MM.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['endDate'] = ['End', 'YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS+HH:MM.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['locationName'] = ['Venue', 'Name of the physical venue.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['eventStatus'] = ['Event status', ''];
+$GLOBALS['TL_LANG']['tl_schema_translation']['published'] = ['Published', 'Both the entity and its localized home must be published to emit the full description.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['page'] = ['Representative page', 'One home per language. The language is taken from this page\'s website root.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['language'] = ['Language', 'Derived from the selected page.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['description'] = ['Description', 'Plain text matching the visible content in this language.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['jobTitle'] = ['Job title', 'Localized role of this person.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['isMainEntity'] = ['Main subject of this page', 'Link the existing WebPage to this entity using mainEntity.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['name'] = ['Localized name', 'For events and services only. Leave empty to use the shared name.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['source_legend'] = 'Existing pricing content';
+$GLOBALS['TL_LANG']['tl_schema_translation']['sourceContent'] = ['Pricing element ID', 'Optional: derive offer name, description and price from a pricing element on this home page.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['sourceRow'] = ['Pricing row key', 'Row key in the pricing element, usually 1, 2 or 3.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['preview_legend'] = 'Published JSON-LD preview';
+$GLOBALS['TL_LANG']['tl_schema_translation']['schemaPreview'] = ['Saved output', 'Save first to refresh. Shows the published entity and its referenced organization; unpublished records are omitted.'];
