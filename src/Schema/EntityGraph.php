@@ -12,6 +12,7 @@ use Contao\StringUtil;
 use Contao\CoreBundle\String\HtmlDecoder;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 final class EntityGraph
 {
@@ -22,6 +23,7 @@ final class EntityGraph
         private readonly EntityMapper $mapper,
         private readonly PriceParser $prices,
         private readonly HtmlDecoder $decoder,
+        private readonly RequestStack $requests,
     ) {}
 
     public function record(int $id): ?array
@@ -100,6 +102,16 @@ final class EntityGraph
             if ($organization) { $offer['seller'] = ['@id' => $organization['entityId']]; }
             if ($price = $this->prices->parse($priceText)) { $offer['priceSpecification'] = $price; }
             $node['offers'] = $offer;
+        }
+        // A company keeps its full description on its localized home. Supporting
+        // references stay identifiable without repeating all legal/contact facts.
+        // Decide before publishing the node, so later graph listeners can enrich it.
+        // Backend entity previews have no frontend page and remain complete.
+        $page = $this->requests->getMainRequest()?->attributes->get('pageModel');
+        if (in_array($entity['entityType'], ['Organization', 'LocalBusiness'], true)
+            && $page instanceof PageModel
+            && (!$translation || (int) $translation['page'] !== (int) $page->id)) {
+            $node = array_intersect_key($node, array_flip(['@type', '@id', 'name', 'url', 'logo']));
         }
         $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)
             ->set($manager->createSchemaOrgTypeFromArray($node), $entity['entityId']);

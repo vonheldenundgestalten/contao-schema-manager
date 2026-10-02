@@ -314,9 +314,9 @@ A password-protected development URL cannot be fetched by public validators. Use
 
 ### Full organization or a compact reference?
 
-**Current behavior:** when an organization is referenced as publisher, provider or another relationship, the manager includes its available full shared/localized data once in that page's graph. Relations point to its permanent `@id`. The company is edited centrally, but its rendered details currently repeat across pages.
+**Current behavior:** Organization and LocalBusiness records emit their full details on their published localized home. On other pages, they emit a compact node containing `@type`, `@id`, `name`, the localized home `url` when available, and `logo` when configured. Publisher/provider relationships still reference the same permanent identity. Saved entity previews remain complete.
 
-A future compact-output policy could publish full details on the organization's localized home and a small identifying node elsewhere. That is a recommendation, **not an existing toggle or implemented behavior**. See [Organization output: guidance and proposed policy](docs/organization-output.md) for examples and the distinction between an ID reference and automatic data retrieval.
+See [Organization output](docs/organization-output.md) for examples and the distinction between an ID reference and automatic data retrieval. The [pricing and image integration design](docs/generic-integrations.md) describes the next refactoring; those proposed controls are not yet implemented.
 
 ## Everyday maintenance
 
@@ -348,7 +348,7 @@ Preserve generated IDs when migrating or importing records. Removing and recreat
 
 Available now: Organization, LocalBusiness, Person, Service, basic standalone Event; localized homes; page purposes; website publisher/identity; shared people as news authors; archive-controlled article enrichment; representative/social images; saved previews; optional VHUG pricing and terminal42 page-image integrations.
 
-Still pending: a full Event workflow, JobPosting replacement and fields, FAQ-checkbox adapters, Product-specific fields, generalized content adapters, language-home suggestions, a visual relationship/usage overview, and compact supporting-entity output. Existing HTML schemas need a deliberate migration per project.
+Still pending: a full Event workflow, JobPosting replacement and fields, FAQ-checkbox adapters, Product-specific fields, generalized content adapters, language-home suggestions, a visual relationship/usage overview. Compact output is currently implemented for Organization and LocalBusiness, not all entity types. Existing HTML schemas need a deliberate migration per project.
 
 ## Developer notes
 
@@ -366,6 +366,7 @@ Run integration checks from a configured Contao application root, adjusting the 
 
 ```sh
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/dca.php
+php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/contao-offers.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/integration.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/news.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/page-metadata.php

@@ -25,7 +25,7 @@ $check = static function (bool $ok, string $message): void { if (!$ok) { throw n
 $entities = new VHUG\SchemaManagerBundle\Schema\EntityGraph(
     $db, $c->get('contao.routing.content_url_generator'), $c->get('contao.cache.tag_manager'),
     new VHUG\SchemaManagerBundle\Schema\EntityMapper(), new VHUG\SchemaManagerBundle\Schema\PriceParser(),
-    $c->get('contao.string.html_decoder')
+    $c->get('contao.string.html_decoder'), $c->get('request_stack')
 );
 $news = new VHUG\SchemaManagerBundle\Schema\NewsGraph($db, $entities, $c->get('contao.routing.content_url_generator'), $c->get('contao.string.html_decoder'), $c->get('contao.cache.tag_manager'));
 $listener = new VHUG\SchemaManagerBundle\EventListener\JsonLdListener(

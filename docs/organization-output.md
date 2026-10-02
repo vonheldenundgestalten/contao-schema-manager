@@ -1,12 +1,12 @@
-# Organization output: guidance and proposed policy
+# Organization output
 
-This note distinguishes current behavior from a possible refinement. It does not describe a configuration option that already exists.
+## Implemented behavior
 
-## What the extension does today
+Organization and LocalBusiness records emit their complete available data on their published representative page for the current language. Elsewhere, they emit `@type`, `@id`, `name`, localized home `url` when available, and `logo` when configured. Identity and type are retained; unpublished organizations are omitted as before. No other-language home is invented when the current language has none.
 
-EntityGraph emits the available full representation of a referenced entity, once per page graph. An organization's shared facts and current-language description/home can therefore appear on many pages. Service.provider, WebPage.publisher, article.publisher and other relationships use its permanent `@id`.
+This selection happens while the manager builds its own entity nodes, before later graph listeners. It does not sweep the final graph or strip unrelated extensions' organization nodes. Other integrations can still enrich the result afterwards. A complete supporting-company preview remains available in the backend: the saved entity preview is not a full frontend-page preview.
 
-This preserves identity and avoids duplicate organization nodes within one graph. It does not yet limit the full company description to its home.
+The change applies to Organization and LocalBusiness only. Services, people and events retain their existing representation.
 
 ## What the sources say
 
@@ -14,13 +14,14 @@ Google recommends putting Organization markup on the homepage or another page de
 
 JSON-LD permits a node reference containing only `@id`. Matching IDs identify the same node; they are not an instruction to fetch another page and import all its properties. Do not assume a page-level consumer will retrieve missing company details automatically. [W3C JSON-LD 1.1, Node Identifiers](https://www.w3.org/TR/json-ld11/#node-identifiers).
 
-## Recommended refinement
+## Output policy
 
-For this manager, a sensible default would be:
+The manager now follows this default:
 
 1. **Localized company home:** emit the full relevant organization description, legal/contact facts, logo and verified profile links.
 2. **Other pages referring to it:** include a compact identifying organization node and link relationships to it by `@id`.
-3. **Feature-specific requirements:** retain any additional organization properties needed by the consuming feature on that page. A fixed four-property stub is not a universal guarantee of rich-result eligibility.
+
+For future feature-specific integrations, retain any additional organization properties needed by that consumer through the relevant integration. The compact representation is not a universal guarantee of rich-result eligibility.
 
 The compact node should normally include `@type`, `@id`, `name` and the representative `url` where available. A logo can be retained where useful, particularly in a publishing context. The actual type should remain consistent—for example, do not silently replace an existing LocalBusiness type with a less specific one.
 
@@ -28,7 +29,7 @@ This is an engineering recommendation based on the guidance above, not a separat
 
 ## Example: service page
 
-This illustrative graph uses shortened example IDs for readability. It shows the proposed compact representation, not an exact current export:
+This illustrative graph uses shortened example IDs for readability. It illustrates the implemented compact representation, with no logo configured:
 
 ```json
 {
@@ -63,8 +64,6 @@ Do not change the ID to the current service-page URL. An entity's permanent iden
 
 If no published home exists in the current language, omit the unavailable localized URL rather than inventing one. If a future implementation supports deliberate cross-language fallback, it should be explicit.
 
-## Implementation considerations
+## Verification
 
-A future change should distinguish entities directly described by the current page from supporting entities such as the provider or publisher. A direct/full representation must win if an entity is first encountered as a compact reference and later as the page's subject. Deduplicate by `@id`, preserve type and relationships, respect publication rules, and test both language homes and news readers.
-
-Keep the saved entity preview useful as a full record preview, and label any future page-specific output preview separately. This output refinement should not add another set of company fields for editors to maintain.
+Integration tests cover full DE/EN homes, compact supporting references, encounter-order independence, LocalBusiness type preservation, unpublished/missing homes and complete standalone previews. The live pilot was checked across 20 language, service and blog routes. The same organization ID and localized home URLs are retained.

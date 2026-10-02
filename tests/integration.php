@@ -25,7 +25,7 @@ $check = static function (bool $ok, string $message): void { if (!$ok) { throw n
 $entities = new VHUG\SchemaManagerBundle\Schema\EntityGraph(
     $db, $c->get('contao.routing.content_url_generator'), $c->get('contao.cache.tag_manager'),
     new VHUG\SchemaManagerBundle\Schema\EntityMapper(), new VHUG\SchemaManagerBundle\Schema\PriceParser(),
-    $c->get('contao.string.html_decoder')
+    $c->get('contao.string.html_decoder'), $c->get('request_stack')
 );
 $news = new VHUG\SchemaManagerBundle\Schema\NewsGraph($db, $entities, $c->get('contao.routing.content_url_generator'), $c->get('contao.string.html_decoder'), $c->get('contao.cache.tag_manager'));
 $listener = new VHUG\SchemaManagerBundle\EventListener\JsonLdListener(
@@ -77,12 +77,33 @@ try {
     $check(count(array_filter($de, static fn ($n) => ($n['@id'] ?? '') === $orgId)) === 1, 'Organization is not duplicated');
     $web = array_values(array_filter($de, static fn ($n) => $n['@type'] === 'WebPage'))[0];
     $check($web['name'] === 'Core page metadata' && in_array(['@id' => $personId], isset($web['mainEntity']['@id']) ? [$web['mainEntity']] : $web['mainEntity'], true), 'Core WebPage preserved and enriched');
+    $check($byId($en, $orgId)['legalName'] === 'Fixture GmbH' && $byId($de, $orgId)['description'] === 'Description de', 'Full organization on both localized homes');
+    $other = null;
+    foreach ($db->fetchFirstColumn("SELECT id FROM tl_page WHERE type='regular' AND published='1' AND requireItem='' ORDER BY id") as $candidateId) {
+        $candidate = Contao\PageModel::findById($candidateId); $candidate->loadDetails();
+        if ($candidate->language === 'en' && !$candidate->protected && (int) $candidate->id !== (int) $pages['en']->id) { $other = clone $candidate; break; }
+    }
+    if (!$other) { throw new RuntimeException('Need another public EN page for supporting organization checks.'); }
+    $other->schemaEntities = serialize([$person, $org]); // Provider is encountered before explicit reference.
+    $compact = $byId($render($other), $orgId);
+    $check(array_keys($compact) === ['@type', '@id', 'name', 'url'] && $compact['name'] === 'Fixture Company', 'Supporting organization has compact identity fields');
+    $check($compact['url'] === $byId($en, $orgId)['url'], 'Compact node points to localized home');
+    $other->schemaEntities = serialize([$org, $person]);
+    $check($byId($render($other), $orgId) === $compact, 'Reference encounter order does not change output');
+    $db->update('tl_schema_entity', ['entityType' => 'LocalBusiness'], ['id' => $org]);
+    $check($byId($render($other), $orgId)['@type'] === 'LocalBusiness' && isset($byId($render($pages['en']), $orgId)['legalName']), 'LocalBusiness type retained and home stays full');
+    $db->update('tl_schema_translation', ['published' => ''], ['pid' => $org, 'language' => 'en']);
+    $missingHome = $byId($render($other), $orgId);
+    $check(!isset($missingHome['url']) && !isset($missingHome['description']) && $missingHome['name'] === 'Fixture Company', 'No other-language fallback without a published home');
+    $previewManager = new Contao\CoreBundle\Routing\ResponseContext\JsonLd\JsonLdManager(new Contao\CoreBundle\Routing\ResponseContext\ResponseContext());
+    $previewEmitted = [];
+    $check(isset($entities->emit($org, 'de', $previewManager, $previewEmitted)['legalName']), 'Standalone entity preview retains complete facts');
     $db->update('tl_schema_entity', ['published' => ''], ['id' => $org]);
     $nodes = $render($pages['de']);
     $check(!$byId($nodes, $orgId) && !isset($byId($nodes, $personId)['worksFor']), 'Unpublished related entity omitted');
     $db->update('tl_schema_translation', ['published' => ''], ['pid' => $person, 'language' => 'en']);
     $check(!$byId($render($pages['en']), $personId), 'Unpublished translation omitted');
-    echo "PASS: 8 real Contao graph, route, localization and publication checks.\n";
+    echo "PASS: 15 real Contao graph, localization, compact organization and publication checks.\n";
 } finally {
     $db->rollBack();
     echo "All integration fixture records rolled back.\n";
