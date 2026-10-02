@@ -9,14 +9,8 @@ $GLOBALS['TL_DCA']['tl_schema_translation'] = [
         'sql' => ['keys' => ['id' => 'primary', 'pid' => 'index', 'page,published' => 'index']],
     ],
     'list' => [
-        'sorting' => ['mode' => DataContainer::MODE_PARENT, 'fields' => [
-        'schemaPreview' => ['inputType' => 'textarea', 'eval' => ['readonly' => true, 'doNotSave' => true, 'rows' => 16, 'tl_class' => 'clr']],
-        'sourceContent' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'chosen' => true, 'submitOnChange' => true, 'tl_class' => 'w50'], 'sql' => 'int unsigned NOT NULL default 0'],
-        'sourceRow' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default ''"],'language'], 'headerFields' => ['name', 'entityType', 'entityId'], 'panelLayout' => 'limit'],
-        'label' => ['fields' => [
-        'schemaPreview' => ['inputType' => 'textarea', 'eval' => ['readonly' => true, 'doNotSave' => true, 'rows' => 16, 'tl_class' => 'clr']],
-        'sourceContent' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'chosen' => true, 'submitOnChange' => true, 'tl_class' => 'w50'], 'sql' => 'int unsigned NOT NULL default 0'],
-        'sourceRow' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default ''"],'language'], 'format' => '%s'],
+        'sorting' => ['mode' => DataContainer::MODE_PARENT, 'fields' => ['language'], 'headerFields' => ['name', 'entityType', 'entityId'], 'panelLayout' => 'limit'],
+        'label' => ['fields' => ['language'], 'format' => '%s'],
         'operations' => ['edit', 'delete', 'show'],
     ],
     'palettes' => [
