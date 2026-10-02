@@ -18,7 +18,7 @@
 - Four service areas: development, maintenance/support, hosting, SEO/GEO.
 - Six hosting packages, three maintenance/support packages and three SEO/GEO packages.
 - Both blog archives configured as BlogPosting; all eight posts retain source-owned content.
-- Two language-root WebSite identities and one shared publisher identity.
+- DE/EN now share one active WebSite identity and publisher. The old EN ID is retained in storage if that root is separated later.
 - Contact and imprint pages reference the company.
 
 The company uses the localized homepage as its home. Markus uses the respective imprint, where he is identified as representative. Vanja has no invented profile page or employment claim: the shared author identity is emitted without a home until an appropriate public page is available.
@@ -49,3 +49,16 @@ Only the extension's entity tables and explicitly listed new columns were instal
 This is a working development pilot, not a tagged release. The current Event fields are only a starting point; inspect and port the Diakonie schema element before replacing it. Jobs and FAQ adapters need their real source projects and editorial rules. Product support should describe actual products rather than reclassifying hosting services for rich-result eligibility.
 
 Broader compatibility (other Contao/PHP versions, sites without News, custom canonical URL rules and complex access restrictions) needs a package CI matrix before release. Cache dependencies cover entity/translation/page tables, news archives/items/authors, selected source elements/articles and localized home pages.
+
+
+## Page and image iteration (2026-10-02)
+
+Added page-purpose selectors, resolved title/description, canonical URL alignment, existing breadcrumb linkage, independent website-home resolution and alternate site name. EN explicitly shares the DE website identity.
+
+Existing DE/EN OG artwork was copied into files/schema-manager and registered through Contao Dbafs, then selected as root fallbacks. No new artwork was fabricated. How We Work pages are AboutPage, contact pages ContactPage, and blog indexes CollectionPage.
+
+The VHUG News hook and page template now yield to centralized social metadata when schemaManageSocial is enabled. These two exact files were deployed and committed separately in vhugtech-bundle (0384ae1); unrelated dirty files were preserved.
+
+Some news entries have custom external canonical URLs for their original publications. The configured canonicals remain untouched; OG URL, WebPage identity and article mainEntityOfPage now agree.
+
+Validation adds 8 pure image-selection checks and 14 real Contao metadata/image/lifecycle checks. Backend selectors, a 20-page crawl, four additional about/contact routes and live social-image requests were checked. Modern lifecycle preparation is exercised in the Contao integration test; the pilot's actual layout remains legacy. Full browser/social-platform previews and real project-specific heroes should be checked on the next client installation.

@@ -19,7 +19,7 @@ final class NewsCaptureListener
         $detail = $module instanceof ModuleNewsReader || !$template->hasReader;
         // A teaser later on the same page must not replace the reader's richer contribution.
         if (!isset($items[$record['id']]) || $detail) {
-            $items[$record['id']] = ['record' => $record, 'template' => $template, 'detail' => $detail];
+            $items[$record['id']] = ['record' => $record, 'template' => $template, 'detail' => $detail, 'reader' => $module instanceof ModuleNewsReader];
         }
         $request->attributes->set('_schema_manager_news', $items);
     }

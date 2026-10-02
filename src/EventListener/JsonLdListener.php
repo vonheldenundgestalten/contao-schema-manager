@@ -60,20 +60,11 @@ final class JsonLdListener
             }
         }
         $root = PageModel::findById($page->rootId);
+        if ($root?->schemaWebsiteRoot) { $root = PageModel::findById($root->schemaWebsiteRoot); }
         if ($root) { $this->cacheTags->tagWithModelInstance($root); }
         if ($root && ($publisher = $this->entities->emit((int) $root->schemaPublisher, $language, $manager, $emitted))) {
             $webPage->setProperty('publisher', ['@id' => $publisher['@id']]);
-            if ($root->schemaWebsiteId) {
-                $home = $publisher['url'] ?? $publisher['@id'];
-                $website = [
-                    '@type' => 'WebSite', '@id' => $root->schemaWebsiteId,
-                    'name' => $root->schemaSiteName ?: $publisher['name'],
-                    'url' => $home, 'inLanguage' => $language,
-                    'publisher' => ['@id' => $publisher['@id']],
-                ];
-                $graph->set($manager->createSchemaOrgTypeFromArray($website), $root->schemaWebsiteId);
-                $webPage->setProperty('isPartOf', ['@id' => $root->schemaWebsiteId]);
-            }
+
         }
         $newsSubjects = $this->news->apply($request->attributes->get('_schema_manager_news', []), $language, $manager, $emitted);
         foreach ($newsSubjects as $subject) { $main[$subject['@id']] = $subject; }

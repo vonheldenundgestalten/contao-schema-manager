@@ -45,6 +45,25 @@ A published entity with no published home in the current language contributes on
 
 Dates of article modification are explicit: ordinary administrative saves do not claim that the article was revised. Translated news records use Contao changelanguage's languageMain relationship when available.
 
+## Page metadata and sharing images
+
+Page purpose can be WebPage, AboutPage, ContactPage, CollectionPage, ProfilePage or ItemPage. The subtype preserves accumulated core page properties rather than emitting another page node. Resolved head titles/descriptions, canonical URLs, language, website membership and existing core breadcrumbs are connected automatically.
+
+Language roots can share a primary website root, so a single WebSite identity describes both DE/EN with a language list. Website URL defaults to the domain homepage and is independent of the publisher's representative page. An optional homepage override and genuine alternate website name are available.
+
+Enable **Manage social sharing metadata** on the language root. Existing hardcoded OG/Twitter tags must be disabled; the VHUG theme does this automatically when management is enabled. Legacy layouts use generatePage/HtmlHeadBag; modern layouts prepare the head lazily after rendered content supplies its image. Custom legacy templates must render metaTags, as core templates do.
+
+One image resolver supplies primaryImageOfPage and social cards:
+1. Automatic: news reader image → explicitly marked hero/main image → page picker → explicitly assigned terminal42 pageimage → language-root fallback.
+2. Override: page picker/pageimage precedes the automatic sources.
+3. None: no representative page image or social image, leaving article-specific image data intact.
+
+Content elements using the standard singleSRC/addImage fields can be marked **This image represents the page**. Only rendered, enabled images participate, and the first marked image wins. Project-specific hero structures need an adapter or the standard fields; arbitrary images, sliders and logo strips are never guessed. The pilot has no photographic heroes, so that source is tested through fixtures.
+
+The optional terminal42 adapter uses the first explicitly assigned page image in editorial order, with its metadata override. It does not emulate module-specific parent-image inheritance or require installing the extension.
+
+Original ImageObject metadata is reused. Social renditions use Contao's image pipeline: fit the whole image by default, or opt into a 1200 × 630 crop with Contao's important image area. Localized file alt text is reused unless overridden. Missing/unusable files fall through to the next candidate. JPG, PNG and WebP are supported. Root fallback artwork may represent an otherwise imageless page; it does not replace a news article's image.
+
 ## Pricing adapter
 
 The pilot adapter supports the existing VHUG `pricing` element's serialized rows. It validates the owning article/page and publication state. Source row keys are persistent references: when reorganizing or replacing rows, review the linked schema records. The core-only installation does not require the custom pricing field.
@@ -58,6 +77,7 @@ From the package directory:
 ```sh
 php tests/mapper.php
 php tests/prices.php
+php tests/images.php
 ```
 
 From a configured Contao application's root:
@@ -65,6 +85,7 @@ From a configured Contao application's root:
 ```sh
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/integration.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/news.php
+php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/page-metadata.php
 ```
 
 Integration tests require published DE/EN pages; news tests additionally require a configured archive, a published organization and a mapped author. All fixture writes roll back. SCHEMA_TEST_ORIGIN sets the test routing origin. SCHEMA_TEST_DB_TCP=1 is an optional process-only workaround for jailed SSH environments lacking the local MySQL socket.
