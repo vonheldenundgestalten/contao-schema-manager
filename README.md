@@ -1,3 +1,5 @@
+> **Experimental branch: smart images/social metadata.** Not the 5.7.0 release. See [image development notes](docs/smart-images.md). The release documentation below describes main.
+
 # Contao Schema Manager 5.7
 
 **Describe your company, people, products and services once. Connect them to your Contao content in every language.**
