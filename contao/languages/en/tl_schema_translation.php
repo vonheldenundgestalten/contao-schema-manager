@@ -41,3 +41,7 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['offerAvailability'] = ['Availabili
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerDescription'] = ['Offer description', 'Optional localized price or quotation explanation matching visible content.'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerModes'] = ['' => 'No offer', 'exact' => 'Exact price', 'from' => 'Starting price', 'quote' => 'On request'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerUnits'] = ['' => 'One-off', 'MON' => 'Month', 'ANN' => 'Year', 'HUR' => 'Hour', 'DAY' => 'Day'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['source_legend'] = 'Existing pricing content';
+$GLOBALS['TL_LANG']['tl_schema_translation']['sourceContent'] = ['Pricing element ID', 'Optional: derive offer name, description and price from a pricing element on this home page.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['sourceRow'] = ['Pricing row key', 'Row key in the pricing element, usually 1, 2 or 3.'];

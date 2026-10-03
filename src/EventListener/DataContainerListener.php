@@ -124,9 +124,39 @@ final class DataContainerListener
         };
         $GLOBALS['TL_DCA']['tl_schema_translation']['palettes']['default'] =
             '{home_legend},page,language,isMainEntity;{content_legend},'.$fields.
+            ($type === 'Service' ? ';{source_legend},sourceContent,sourceRow' : '').
             (in_array($type, ['Service', 'Product'], true) ? ';{offer_legend},offerMode,offerDescription' : '').';{publish_legend},published;{preview_legend:hide},schemaPreview';
     }
 
+
+    #[AsCallback(table: 'tl_schema_translation', target: 'fields.sourceContent.options')]
+    public function pricingElements(DataContainer $dc): array
+    {
+        $page = (int) $this->connection->fetchOne('SELECT page FROM tl_schema_translation WHERE id=?', [$dc->id]);
+        $result = [];
+        foreach ($this->connection->fetchAllAssociative("SELECT c.id,c.headline FROM tl_content c JOIN tl_article a ON a.id=c.pid WHERE c.ptable='tl_article' AND c.type='pricing' AND a.pid=? ORDER BY c.sorting", [$page]) as $row) {
+            $headline = \Contao\StringUtil::deserialize($row['headline'], true);
+            $result[$row['id']] = '#'.$row['id'].' '.($headline['value'] ?? 'Pricing');
+        }
+        return $result;
+    }
+    #[AsCallback(table: 'tl_schema_translation', target: 'fields.sourceRow.options')]
+    public function pricingRows(DataContainer $dc): array
+    {
+        $content = $this->connection->fetchOne('SELECT sourceContent FROM tl_schema_translation WHERE id=?', [$dc->id]);
+        $rows = \Contao\StringUtil::deserialize(($content ? \Contao\ContentModel::findById($content)?->pricing : null), true);
+        $result = [];
+        foreach ($rows as $key=>$row) { $result[$key] = $key.' · '.($row['headline'] ?? ''); }
+        return $result;
+    }
+    #[AsCallback(table: 'tl_schema_translation', target: 'fields.sourceContent.save')]
+    public function pricingElement(mixed $value, DataContainer $dc): int
+    {
+        if ($value && !array_key_exists((int) $value, $this->pricingElements($dc))) {
+            throw new \InvalidArgumentException('Choose a pricing element on the selected home page.');
+        }
+        return (int) $value;
+    }
 
     #[AsCallback(table: 'tl_schema_translation', target: 'fields.offerPrice.save')]
     public function offerPrice(mixed $value): string

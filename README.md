@@ -1,3 +1,5 @@
+> **Experimental branch: product/pricing hooks.** Not the 5.7.0 release. See [contribution development notes](docs/product-hooks.md). The release documentation below describes main.
+
 # Contao Schema Manager 5.7
 
 **Describe your company, people, products and services once. Connect them to your Contao content in every language.**

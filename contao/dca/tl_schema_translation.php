@@ -28,6 +28,8 @@ $GLOBALS['TL_DCA']['tl_schema_translation'] = [
         'offerUnit' => ['inputType' => 'select', 'options' => ['', 'MON', 'ANN', 'HUR', 'DAY'], 'reference' => &$GLOBALS['TL_LANG']['tl_schema_translation']['offerUnits'], 'eval' => ['tl_class' => 'w50'], 'sql' => "varchar(3) NOT NULL default ''"],
         'offerAvailability' => ['inputType' => 'select', 'options' => ['', 'InStock', 'OutOfStock', 'PreOrder', 'LimitedAvailability', 'Discontinued'], 'eval' => ['tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default ''"],
         'offerDescription' => ['inputType' => 'textarea', 'eval' => ['tl_class' => 'clr'], 'sql' => 'text NULL'],
+        'sourceContent' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'chosen' => true, 'submitOnChange' => true, 'tl_class' => 'w50'], 'sql' => 'int unsigned NOT NULL default 0'],
+        'sourceRow' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default ''"],
         'schemaPreview' => ['eval' => ['doNotSave' => true]],
         'id' => ['sql' => 'int unsigned NOT NULL auto_increment'],
         'pid' => ['sql' => 'int unsigned NOT NULL default 0'],

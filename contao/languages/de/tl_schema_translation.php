@@ -41,3 +41,7 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['offerAvailability'] = ['Verfügbar
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerDescription'] = ['Angebotsbeschreibung', 'Optionale lokalisierte Preis- oder Anfragebeschreibung passend zum Seiteninhalt.'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerModes'] = ['' => 'Ohne Angebot', 'exact' => 'Festpreis', 'from' => 'Ab-Preis', 'quote' => 'Auf Anfrage'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerUnits'] = ['' => 'Einmalig', 'MON' => 'Monat', 'ANN' => 'Jahr', 'HUR' => 'Stunde', 'DAY' => 'Tag'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['source_legend'] = 'Vorhandene Preisinhalte';
+$GLOBALS['TL_LANG']['tl_schema_translation']['sourceContent'] = ['ID des Preiselements', 'Optional: Name, Beschreibung und Preis aus einem Preiselement dieser Seite übernehmen.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['sourceRow'] = ['Schlüssel der Preiszeile', 'Zeilenschlüssel im Preiselement, normalerweise 1, 2 oder 3.'];
