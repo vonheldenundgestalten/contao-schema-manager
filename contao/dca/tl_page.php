@@ -34,3 +34,6 @@ foreach(['root','rootfallback'] as $palette){
  PaletteManipulator::create()->addField(['schemaSiteAlternateName','schemaWebsiteRoot','schemaWebsiteHome'],'schema_legend',PaletteManipulator::POSITION_APPEND)->applyToPalette($palette,'tl_page');
 }
 PaletteManipulator::create()->addField('schemaPageType','schema_legend',PaletteManipulator::POSITION_APPEND)->applyToPalette('regular','tl_page');
+
+$fields['schemaLocationOverview'] = ['inputType' => 'checkbox', 'eval' => ['tl_class' => 'clr'], 'sql' => "char(1) NOT NULL default ''"];
+PaletteManipulator::create()->addField('schemaLocationOverview','schema_legend',PaletteManipulator::POSITION_APPEND)->applyToPalette('regular','tl_page');

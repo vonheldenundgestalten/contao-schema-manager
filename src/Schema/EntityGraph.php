@@ -48,10 +48,14 @@ final class EntityGraph
                 $url = $this->urls->generate($home, [], UrlGeneratorInterface::ABSOLUTE_URL);
             } else { $translation = null; }
         }
+        $isOrganization = in_array($entity['entityType'], ['Organization', 'LocalBusiness'], true);
+        if ($isOrganization && !$url && !empty($entity['externalUrl'])) { $url = $entity['externalUrl']; }
+        $page = $this->requests->getMainRequest()?->attributes->get('pageModel');
+        $full = !$isOrganization || !($page instanceof PageModel) || ($translation && (int) $translation['page'] === (int) $page->id);
         $organization = $this->record((int) $entity['organization']);
         $node = $this->mapper->map($entity, $translation, $url, $organization);
         $this->tags->tagWithModelClass(\VHUG\SchemaManagerBundle\Model\ContactModel::class);
-        if ($entity['entityType'] === 'Service') {
+        if ($entity['entityType'] === 'Service' || ($isOrganization && $full)) {
             $countries = \Contao\StringUtil::deserialize($entity['areaServed'] ?? null, true);
             if ($countries) { $node['areaServed'] = array_values($countries); }
             $offers = [];
@@ -79,6 +83,30 @@ final class EntityGraph
                 $node['contactPoint'][] = $point;
             }
         }
+        if ($full) {
+            $relations = [];
+            if ($isOrganization || $entity['entityType'] === 'Person') {
+                $relations['memberOf'] = [\Contao\StringUtil::deserialize($entity['memberOf'] ?? null, true), ['Organization', 'LocalBusiness']];
+            }
+            if ($entity['entityType'] === 'Person') {
+                $relations['workLocation'] = [\Contao\StringUtil::deserialize($entity['workLocation'] ?? null, true), ['LocalBusiness']];
+            }
+            if ($isOrganization) {
+                $offices = $this->connection->fetchFirstColumn("SELECT id FROM tl_schema_entity WHERE organization=? AND entityType='LocalBusiness' AND published='1'", [$id]);
+                $relations['location'] = [array_merge($offices, \Contao\StringUtil::deserialize($entity['locations'] ?? null, true)), ['LocalBusiness']];
+                $relations['subOrganization'] = [$this->connection->fetchFirstColumn("SELECT id FROM tl_schema_entity WHERE organization=? AND entityType='Organization' AND published='1'", [$id]), ['Organization']];
+            }
+            foreach ($relations as $property => [$ids, $types]) {
+                $refs = [];
+                foreach (array_unique($ids) as $relatedId) {
+                    if ((int) $relatedId === $id) { continue; }
+                    $related = $this->record((int) $relatedId);
+                    if (!$related || !in_array($related['entityType'], $types, true)) { continue; }
+                    if ($ref = $this->emit((int) $relatedId, $language, $manager, $emitted)) { $refs[] = ['@id' => $ref['@id']]; }
+                }
+                if ($refs) { $node[$property] = $refs; }
+            }
+        }
         foreach (['vatID', 'taxID'] as $field) {
             if (in_array($entity['entityType'], ['Organization','LocalBusiness'], true) && !empty($entity[$field])) {
                 $node[$field] = $entity[$field];
@@ -88,7 +116,7 @@ final class EntityGraph
             $links = preg_split('/\R/', trim($entity['sameAs']));
             $node['sameAs'] = array_values(array_filter($links, static fn ($url) => preg_match('~^https?://~', $url)));
         }
-        if (!empty($entity['image']) && ($file = FilesModel::findByUuid($entity['image']))) {
+        if ((!$isOrganization || empty($entity['externalUrl']) || $translation) && !empty($entity['image']) && ($file = FilesModel::findByUuid($entity['image']))) {
             $image = rtrim($entity['identityBase'], '/').'/'.ltrim($file->path, '/');
             $node[in_array($entity['entityType'], ['Organization','LocalBusiness'], true) ? 'logo' : 'image'] = $image;
         }
@@ -97,11 +125,12 @@ final class EntityGraph
         // references stay identifiable without repeating all legal/contact facts.
         // Decide before publishing the node, so later graph listeners can enrich it.
         // Backend entity previews have no frontend page and remain complete.
-        $page = $this->requests->getMainRequest()?->attributes->get('pageModel');
-        if (in_array($entity['entityType'], ['Organization', 'LocalBusiness'], true)
-            && $page instanceof PageModel
-            && (!$translation || (int) $translation['page'] !== (int) $page->id)) {
-            $node = array_intersect_key($node, array_flip(['@type', '@id', 'name', 'url', 'logo']));
+        if (!$full) {
+            $keep = ['@type', '@id', 'name', 'url', 'logo'];
+            if ($entity['entityType'] === 'LocalBusiness' && !empty($page->schemaLocationOverview)) {
+                $keep = array_merge($keep, ['address', 'telephone', 'email', 'parentOrganization']);
+            }
+            $node = array_intersect_key($node, array_flip($keep));
         }
         $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)
             ->set($manager->createSchemaOrgTypeFromArray($node), $entity['entityId']);

@@ -1,4 +1,4 @@
-# Contao Schema Manager 5.7
+# Contao Schema Manager 1.0
 
 **Describe your company, people, products and services once. Connect them to your Contao content in every language.**
 
@@ -8,11 +8,11 @@ For example, a hosting business can describe its company once, connect its hosti
 
 ![Structured data overview with company, people, hosting and maintenance services](docs/images/entities.png)
 
-*Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. Product, contact, service-catalogue and job screenshots use unpublished documentation examples.*
+*Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. Product, contact, service-catalogue, job, office, qualification and event screenshots use unpublished documentation examples.*
 
-> **Release 5.7.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. This first release focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Release 1.0.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. This first release focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
-> **On main, not yet tagged:** richer company/person details, contact points, service catalogues and News-based JobPosting. Run the database update after updating to this development version. The additions below are not included in the existing 5.7.0 tag.
+> **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.0.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
 
 ## In this guide
 
@@ -39,7 +39,7 @@ Register the repository and require the first release:
 
 ```sh
 composer config repositories.schema-manager vcs https://github.com/vonheldenundgestalten/contao-schema-manager.git
-composer require vonheldenundgestalten/contao-schema-manager:^5.7
+composer require vonheldenundgestalten/contao-schema-manager:^1.0
 ```
 
 The Git tag supplies the package version; there is no separate Packagist publication assumed here. If the repository requires authentication, configure Composer's normal GitHub access separately.
@@ -180,7 +180,7 @@ A service can be the main subject of its detail page and also be relevant to oth
 
 **Main subject** connects a page with what it primarily describes (`mainEntity`). **Related entities** connects subjects relevant to that page (`about`). Select only entities supported by the visible content.
 
-### Richer services and reusable catalogues (main)
+### Richer services and reusable catalogues
 
 On the shared Service record, select the countries served and any existing Service entities to include in its offer catalogue. Each selected service keeps its own identity and localized home. Circular catalogues are rejected. Only services with a published home in the current language are linked; missing translations are not replaced with another language.
 
@@ -238,7 +238,7 @@ This changes the existing page node's type while preserving its other properties
 
 ![Contact page linked to the company and assigned ContactPage purpose](docs/images/page.png)
 
-Release 5.7.0 leaves image selection and Open Graph/Twitter tags to Contao, your theme or your existing extension. Core ImageObject nodes and news article images are preserved. You can still assign a logo/portrait/product image directly to a managed entity; that is separate from page/social image selection.
+Release 1.0.0 leaves image selection and Open Graph/Twitter tags to Contao, your theme or your existing extension. Core ImageObject nodes and news article images are preserved. You can still assign a logo/portrait/product image directly to a managed entity; that is separate from page/social image selection.
 
 ## Manage news and blog posts
 
@@ -280,7 +280,7 @@ The existing headline, publication date, article content and main image remain t
 
 Where terminal42 changelanguage supplies a `languageMain` relationship, translated news links to the original through `translationOfWork`. Shared company/person identities stay the same across languages; translated news records have their own article identities.
 
-### Jobs stored in News (main)
+### Jobs stored in News
 
 1. Set the news archive’s **Schema type** to **JobPosting** and choose its **Publisher / hiring organization**. Save the archive to generate missing permanent IDs.
 2. Set default employment types and workplace details on the archive. A physical or hybrid workplace needs a city and country. Fully remote jobs need eligible applicant countries; only fully remote jobs emit `TELECOMMUTE`.
@@ -296,7 +296,7 @@ Salary, application actions and multiple physical workplaces are not part of thi
 ![Per-job overrides in the News editor](docs/images/job-details.png)
 
 
-## Company details and contact points (main)
+## Company details and contact points
 
 Organization and LocalBusiness records now have a shared alternate name and founding date. Enter only the precision you know: `1998` or `1998-06-15`. The legal name remains shared and authoritative.
 
@@ -306,13 +306,34 @@ Full contact details appear with the full organization on its localized home and
 
 ![A shared sales contact point](docs/images/contact-point.png)
 
+## Offices, groups and networks
+
+Create one **Organization** for each legal company and one **LocalBusiness** for each physical office. An office’s Related organization is its actual parent company; this automatically adds a `location` reference from that company on its localized home. Organization children similarly produce `subOrganization` links. Do not classify every company in a business group as an office of the same legal entity.
+
+LocalBusiness supports region, PO box, fax, coordinates, a map URL, weekly opening hours and a public price range. Enter both coordinates in decimal degrees. Opening hours use one period per line, for example `Mo-Fr 09:00-17:00`; use a second line for a lunch break or a different day. A day range without times means open all day. Do not mix a PO box’s mailing postcode with an unrelated street address. Special-date opening exceptions are not included.
+
+![LocalBusiness address, coordinates and opening hours](docs/images/local-business.png)
+
+Use **Additional offices** for other locations that a group page visibly describes, beyond its direct LocalBusiness children. Choose **Member of** for networks and associations; membership does not imply ownership. For an external network, create an Organization with its established identity and External organization website. No local page is required. External-only references emit identifying facts and their website URL; they do not use locally uploaded logos. A published local home takes precedence over the external URL.
+
+Organizations and offices can select their own **Service catalogue**, using the same reusable Service records as service-to-service catalogues. Catalogue titles, slogan, expertise and awards are localized; legal names, employee counts and office facts are shared. Employee counts emit a QuantitativeValue. Use only publicly supported expertise, awards and price ranges.
+
+![Company facts, memberships and catalogues](docs/images/company-network.png)
+![Localized company expertise](docs/images/company-expertise.png)
+
+For a contact page that visibly lists office addresses and phone numbers, enable **Location overview with contact details** in the page’s structured-data settings, and select its offices as Related entities. This retains address, telephone, email and parent links in supporting LocalBusiness nodes. Other pages remain compact. Multiple office entities may share the same localized contact page as their home; distinct entity IDs still identify each office.
+
 ## People and standalone events
 
-For a Person, put the name, portrait, public telephone/email and actual related organization on the shared entity. Put the biography/description, job title and representative page on the localized children. The related organization becomes `worksFor`, so only set it when that relationship is accurate.
+For a Person, put the name, portrait, public telephone/email and actual related organization on the shared entity. Put the biography/description, job title and representative page on the localized children. The related organization becomes `worksFor`, so only set it when that relationship is accurate. Choose physical offices separately under **Workplaces**. Expertise, awards and professional qualifications are localized; one qualification per line becomes an EducationalOccupationalCredential. Names and public contact details remain shared.
+
+![Localized professional qualifications and expertise](docs/images/person-qualifications.png)
 
 A **standalone Event** can use the entire homepage as its localized home. You do not need to create a Contao Calendar event. This is useful when a complete landing page represents one conference.
 
-The current Event editor is basic: dates, venue name, status, organizer and localized text. Dates accept `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS+HH:MM`. It does not yet replace a complete custom event element with ticket offers, attendance modes, detailed venue addresses and other event-specific data.
+Events support dates, status, organizer, localized text, a physical venue with its full address, and offline/online/mixed attendance. Online and mixed events can include a public VirtualLocation URL. Dates accept `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS+HH:MM`. Event ticket offers and a Calendar-record adapter are not included. Never put private access tokens in the public event URL.
+
+![Physical and online event venue](docs/images/event-venue.png)
 
 ## Preview and validate
 
@@ -370,7 +391,7 @@ Preserve generated IDs when migrating or importing records. Removing and recreat
 
 ## Current scope and limitations
 
-Available in **5.7.0**: Organization, LocalBusiness, Person, Product, Service and basic standalone Event; manual offers; localized homes; compact supporting organizations; page purposes; website publisher/identity; public news authors; archive-controlled article enrichment; saved previews; English/German labels.
+Available in **1.0.0**: Organization, LocalBusiness, Person, Product, Service and standalone Event with physical/online venues; manual offers; localized homes; compact supporting organizations; page purposes; website publisher/identity; public news authors; archive-controlled article enrichment and JobPosting; saved previews; English/German labels.
 
 Not included: smart/automatic page images, social-tag generation, pricing-source hooks, Product variants/inventory/reviews, full Event rich-result fields, FAQ adapters or a visual relationship overview. A valid Product or Event node does not by itself guarantee eligibility for Google's feature-specific rich results.
 
@@ -386,6 +407,7 @@ Run pure checks from the package directory:
 php tests/mapper.php
 php tests/manual-products.php
 php tests/jobs.php
+php tests/business-mapper.php
 ```
 
 Run integration checks from a configured Contao application root, adjusting the package path for a `vendor/` installation:
@@ -393,6 +415,7 @@ Run integration checks from a configured Contao application root, adjusting the 
 ```sh
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/dca.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/integration.php
+php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/business.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/news.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/page-metadata.php
 ```

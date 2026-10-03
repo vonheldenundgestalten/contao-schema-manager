@@ -19,17 +19,38 @@ final class EntityMapper
             'description' => $translation['description'] ?? null,
         ];
         if (in_array($type, ['Organization', 'LocalBusiness'], true)) {
-            foreach (['legalName', 'alternateName', 'foundingDate', 'telephone', 'email'] as $key) {
+            foreach (['legalName', 'alternateName', 'foundingDate', 'telephone', 'email', 'faxNumber'] as $key) {
                 $node[$key] = $entity[$key] ?? null;
             }
             $address = [];
-            foreach (['streetAddress', 'postalCode', 'addressLocality', 'addressCountry'] as $key) {
+            foreach (['streetAddress', 'postalCode', 'addressLocality', 'addressRegion', 'addressCountry', 'postOfficeBoxNumber'] as $key) {
                 if (!empty($entity[$key])) { $address[$key] = $entity[$key]; }
             }
             if ($address) { $node['address'] = ['@type' => 'PostalAddress'] + $address; }
         }
+        if (in_array($type, ['Organization', 'LocalBusiness', 'Person'], true)) {
+            foreach (['knowsAbout', 'award'] as $field) {
+                if ($values = self::lines($translation[$field] ?? '')) { $node[$field] = $values; }
+            }
+        }
+        if (in_array($type, ['Organization', 'LocalBusiness'], true)) {
+            $node['slogan'] = $translation['slogan'] ?? null;
+            $count = (string) ($entity['numberOfEmployees'] ?? '');
+            if ($count !== '' && ctype_digit($count)) { $node['numberOfEmployees'] = ['@type' => 'QuantitativeValue', 'value' => (int) $count]; }
+        }
+        if ($type === 'LocalBusiness') {
+            foreach (['hasMap', 'priceRange'] as $field) { $node[$field] = $entity[$field] ?? null; }
+            if ($hours = self::lines($entity['openingHours'] ?? '')) { $node['openingHours'] = $hours; }
+            $lat = $entity['latitude'] ?? ''; $lon = $entity['longitude'] ?? '';
+            if (is_numeric($lat) && is_numeric($lon) && abs((float) $lat) <= 90 && abs((float) $lon) <= 180) {
+                $node['geo'] = ['@type' => 'GeoCoordinates', 'latitude' => (float) $lat, 'longitude' => (float) $lon];
+            }
+        }
         if ($type === 'Person') {
             $node['jobTitle'] = $translation['jobTitle'] ?? null;
+            if ($credentials = self::lines($translation['credentials'] ?? '')) {
+                $node['hasCredential'] = array_map(static fn ($name) => ['@type' => 'EducationalOccupationalCredential', 'name' => $name], $credentials);
+            }
             foreach (['telephone', 'email'] as $key) { $node[$key] = $entity[$key] ?? null; }
         }
         if ($type === 'Service') {
@@ -76,10 +97,30 @@ final class EntityMapper
         if ($type === 'Event') {
             foreach (['startDate', 'endDate'] as $key) { $node[$key] = $entity[$key] ?? null; }
             $node['eventStatus'] = 'https://schema.org/'.($entity['eventStatus'] ?: 'EventScheduled');
-            if (!empty($entity['locationName'])) {
-                $node['location'] = ['@type' => 'Place', 'name' => $entity['locationName']];
+            $mode = $entity['eventAttendanceMode'] ?? '';
+            if (in_array($mode, ['OfflineEventAttendanceMode', 'OnlineEventAttendanceMode', 'MixedEventAttendanceMode'], true)) {
+                $node['eventAttendanceMode'] = 'https://schema.org/'.$mode;
             }
+            $places = [];
+            if ($mode !== 'OnlineEventAttendanceMode') {
+                $place = ['@type' => 'Place'];
+                if (!empty($entity['locationName'])) { $place['name'] = $entity['locationName']; }
+                $address = [];
+                foreach (['streetAddress', 'postalCode', 'addressLocality', 'addressRegion', 'addressCountry'] as $field) {
+                    if (!empty($entity[$field])) { $address[$field] = $entity[$field]; }
+                }
+                if ($address) { $place['address'] = ['@type' => 'PostalAddress'] + $address; }
+                if (count($place) > 1) { $places[] = $place; }
+            }
+            if (in_array($mode, ['OnlineEventAttendanceMode', 'MixedEventAttendanceMode'], true) && !empty($entity['eventUrl'])) {
+                $places[] = ['@type' => 'VirtualLocation', 'url' => $entity['eventUrl']];
+            }
+            if ($places) { $node['location'] = count($places) === 1 ? $places[0] : $places; }
         }
         return array_filter($node, static fn ($v): bool => $v !== null && $v !== '' && $v !== []);
+    }
+    private static function lines(string $value): array
+    {
+        return array_values(array_unique(array_filter(array_map('trim', preg_split('/\R/u', $value)))));
     }
 }

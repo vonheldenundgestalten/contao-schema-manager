@@ -46,3 +46,47 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['areaServed'] = ['Countries served', 'Sh
 $GLOBALS['TL_LANG']['tl_schema_entity']['subservices'] = ['Services in catalogue', 'Reusable Service entities; only published localized destinations are linked.'];
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['contacts'] = ['Contact points', 'Edit organization contact points'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['business_legend'] = 'Business facts';
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['relations_legend'] = 'Offices, memberships and services';
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['location_legend'] = 'Location and access';
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['addressRegion'] = ['State / region', ''];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['postOfficeBoxNumber'] = ['PO box number', ''];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['faxNumber'] = ['Fax', ''];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['numberOfEmployees'] = ['Employee count', 'Whole number; leave blank when unknown.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['latitude'] = ['Latitude', 'Decimal degrees from -90 to 90. Supply both coordinates.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['longitude'] = ['Longitude', 'Decimal degrees from -180 to 180. Supply both coordinates.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['hasMap'] = ['Map URL', ''];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['openingHours'] = ['Opening hours', 'One period per line: Mo-Fr 09:00-17:00. Days without times mean open all day.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['externalUrl'] = ['External organization website', 'For external networks/partners without a local home page. A published local translation takes precedence.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['eventUrl'] = ['Public online event URL', 'Public attendance link for online or mixed events; no private access tokens.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['priceRange'] = ['Price range', 'LocalBusiness only; use publicly supported information, e.g. €€€.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['locations'] = ['Additional offices', 'Direct LocalBusiness children are linked automatically. Select any additional offices shown in your content.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['memberOf'] = ['Member of', 'Networks and associations, distinct from a parent company.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['workLocation'] = ['Workplaces', 'Physical offices; select the employer separately.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['eventAttendanceMode'] = ['Attendance mode', ''];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['subservices'] = ['Service catalogue', 'Reusable Service entities with published localized homes.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Permanent entity ID', 'Before first save, optionally enter an established HTTPS ID; leave blank to generate one. Locked afterwards.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes'][''] = 'Not specified';
+$GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OfflineEventAttendanceMode'] = 'In person';
+$GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OnlineEventAttendanceMode'] = 'Online';
+$GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['MixedEventAttendanceMode'] = 'Mixed: in person and online';

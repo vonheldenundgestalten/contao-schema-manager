@@ -47,3 +47,11 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['serviceType'] = ['Service type', '
 $GLOBALS['TL_LANG']['tl_schema_translation']['audienceType'] = ['Audience', 'Localized description of the intended audience.'];
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['catalogName'] = ['Catalogue title', 'Leave blank to use this service’s name.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['slogan'] = ['Slogan', 'Localized public slogan.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['knowsAbout'] = ['Expertise', 'One publicly stated area of expertise per line.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['award'] = ['Awards', 'One public award per line, including its year where useful.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['credentials'] = ['Professional qualifications', 'One substantiated public qualification per line.'];

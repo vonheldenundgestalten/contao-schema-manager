@@ -47,3 +47,11 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['serviceType'] = ['Leistungsart', '
 $GLOBALS['TL_LANG']['tl_schema_translation']['audienceType'] = ['Zielgruppe', 'Lokalisierte Beschreibung der Zielgruppe.'];
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['catalogName'] = ['Katalogtitel', 'Leer: Name dieser Leistung verwenden.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['slogan'] = ['Slogan', 'Lokalisierter öffentlicher Slogan.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['knowsAbout'] = ['Fachgebiete', 'Ein sichtbares Fachgebiet pro Zeile.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['award'] = ['Auszeichnungen', 'Eine öffentliche Auszeichnung pro Zeile, mit Jahr wenn sinnvoll.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['credentials'] = ['Berufliche Qualifikationen', 'Eine belegte öffentliche Qualifikation pro Zeile.'];

@@ -9,3 +9,5 @@ $GLOBALS['TL_LANG']['tl_page']['schemaSiteAlternateName'] = ['Alternativer Websi
 $GLOBALS['TL_LANG']['tl_page']['schemaWebsiteRoot'] = ['Website-Identität teilen mit', 'Primären Sprachstartpunkt derselben Website auswählen. Leer: eigenständige Website.'];
 $GLOBALS['TL_LANG']['tl_page']['schemaWebsiteHome'] = ['Abweichende Website-Startseite', 'Normalerweise leer lassen: Die Domain-Startseite wird unabhängig von der Unternehmensseite ermittelt.'];
 $GLOBALS['TL_LANG']['tl_page']['schemaPageType'] = ['Zweck der Seite', 'Beschreibt die Seite; Artikel, Dienstleistung oder Person bleibt eine verknüpfte eigene Entität.'];
+
+$GLOBALS['TL_LANG']['tl_page']['schemaLocationOverview'] = ['Standortübersicht mit Kontaktdaten', 'Nur aktivieren, wenn diese Seite die ausgegebenen Standorte samt Kontaktdaten sichtbar zeigt. Behält Adresse, Telefon und E-Mail in Standortreferenzen.'];

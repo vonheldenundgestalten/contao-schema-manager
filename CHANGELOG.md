@@ -1,31 +1,28 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 — 2026-10-03
 
-- Shared organization alternate name and founding date, public Person phone/email, and published contact points with languages and territories.
-- Localized service classification, audience and catalogue titles, shared territories and reusable subservices with cycle prevention.
-- Archive-controlled JobPosting with inherited defaults and record overrides, real reader URLs, remote/physical locations, deadlines, article replacement and expiry-aware cache lifetime.
-- Bilingual fields and illustrated editorial documentation. Existing 5.7.0 entities and articles retain their behavior.
-- Smart images, source-record bindings and specialized products remain deferred; their feature branches are unchanged.
+First semantic-versioned release. Requires Contao ^5.7 and PHP ^8.3; package versions no longer mirror Contao versions.
 
-## 5.7.0 — 2026-10-03
+- Organization, LocalBusiness, Person, Service, manual Product and standalone Event entities with stable identities and localized homes.
+- Company/contact facts, employee counts, expertise, awards and shared contact points.
+- LocalBusiness addresses, region/PO box/fax, coordinates, map links, weekly opening hours and price range.
+- Company-to-office and subsidiary links, network memberships, external organization references and reusable company/office/service catalogues.
+- Public person contacts, workplaces and localized professional qualifications.
+- Event venue addresses and offline/online/mixed attendance.
+- Compact supporting organizations, with an explicit NAP-preserving location overview mode.
+- Optional News article enrichment and archive-controlled JobPosting with defaults, overrides and expiry-aware output.
+- Controlled adoption of established IDs, both at creation and via an explicit dry-run migration command.
+- Website/page enrichment, manual offers, English/German editors, saved graph previews and illustrated documentation.
 
-First scoped release for Contao 5.7 and PHP 8.3+.
+### Version-number correction
 
-- Shared Organization, LocalBusiness, Person, Product, Service and basic Event entities.
-- Permanent identities, localized home pages/content, publication controls and saved JSON-LD previews.
-- Manually entered Product identifiers/brand and Product/Service offers, including starting prices and billing units.
-- Compact organization references outside localized organization homes.
-- Website publisher/identity, page purposes, canonical metadata and core breadcrumbs.
-- Optional News enrichment with archive-level types, shared public authors and explicit revision dates.
-- English/German backend labels and illustrated setup/editorial documentation.
+The earlier **5.7.0** GitHub release and tag were withdrawn at the maintainer’s request; commits remain in history. Existing consumers should change the package constraint from ^5.7 to ^1.0, run the additive database update and rebuild the cache. See [migration details](docs/versioning.md).
 
 ### Deliberately deferred
 
-Smart image selection/social-tag generation and content-driven pricing are developed on separate feature branches. Core ImageObject and article-image output remains untouched. This release has no dependency on VHUG elements or terminal42 extensions.
+Smart image/social metadata, source-record adapters and product/pricing hooks remain on their separate unchanged feature branches. Products/offers remain manual. No AccountingService subtype, shop variants/inventory, Calendar adapter or FAQ adapter is included. Existing Contao images and project social metadata remain in place.
 
-### Transition from the unpublished pilot
+### Earlier pilot data
 
-The pilot's 24 linked offers were backed up and copied to manual localized values without changing entity/offer identities. The site's original social-tag handling was re-enabled. Existing experimental database columns were retained for reversibility; they are not used by the release. Do not blindly apply database DROP suggestions when moving an existing pilot installation to this release.
-
-For other pre-release installations, copy any source-derived values into the manual fields and ensure your existing social metadata provider is enabled before removing the experimental code. Back up first. New installations need no pilot migration.
+The pilot’s 24 source-linked offers were previously copied to manual fields without changing their identities. Retired experimental database columns were retained for reversibility. Other early pilot installations must preserve any needed source-derived values and their existing social metadata provider before removing experimental code. Do not blindly accept database DROP suggestions.

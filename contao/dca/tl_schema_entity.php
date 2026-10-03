@@ -66,3 +66,21 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
         ],
     ],
 ];
+
+$fields = &$GLOBALS['TL_DCA']['tl_schema_entity']['fields'];
+foreach (['addressRegion', 'postOfficeBoxNumber', 'faxNumber', 'latitude', 'longitude', 'hasMap', 'externalUrl', 'eventUrl', 'numberOfEmployees', 'priceRange'] as $field) { $fields[$field] = $text(); }
+$fields['openingHours'] = ['inputType' => 'textarea', 'eval' => ['tl_class' => 'clr'], 'sql' => 'text NULL'];
+$fields['eventAttendanceMode'] = ['inputType' => 'select', 'options' => ['', 'OfflineEventAttendanceMode', 'OnlineEventAttendanceMode', 'MixedEventAttendanceMode'], 'reference' => &$GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes'], 'eval' => ['tl_class' => 'w50'], 'sql' => "varchar(40) NOT NULL default ''"];
+foreach (['memberOf' => 'organizations', 'locations' => 'offices', 'workLocation' => 'offices'] as $field => $callback) {
+    $fields[$field] = ['inputType' => 'select', 'options_callback' => [VHUG\SchemaManagerBundle\EventListener\BusinessDetailsListener::class, $callback], 'eval' => ['multiple' => true, 'chosen' => true, 'tl_class' => 'clr'], 'sql' => 'blob NULL'];
+}
+$palettes = &$GLOBALS['TL_DCA']['tl_schema_entity']['palettes'];
+foreach (['Organization', 'LocalBusiness'] as $type) {
+    $palettes[$type] = str_replace('telephone,email', 'telephone,email,faxNumber', $palettes[$type]);
+    $palettes[$type] = str_replace('addressLocality,addressCountry', 'addressLocality,addressRegion,addressCountry,postOfficeBoxNumber', $palettes[$type]);
+    $palettes[$type] = str_replace(';{links_legend}', ';{business_legend},numberOfEmployees,areaServed;{relations_legend},locations,memberOf,subservices;{links_legend}', $palettes[$type]);
+    $palettes[$type] = str_replace('sameAs,image', 'externalUrl,sameAs,image', $palettes[$type]);
+}
+$palettes['LocalBusiness'] = str_replace(';{business_legend}', ';{location_legend},latitude,longitude,hasMap,openingHours,priceRange;{business_legend}', $palettes['LocalBusiness']);
+$palettes['Person'] = str_replace('organization,telephone,email', 'organization,telephone,email,workLocation,memberOf', $palettes['Person']);
+$palettes['Event'] = str_replace('locationName,organization', 'organization;{location_legend},eventAttendanceMode,locationName,streetAddress,postalCode,addressLocality,addressRegion,addressCountry,eventUrl', $palettes['Event']);

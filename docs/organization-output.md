@@ -2,11 +2,13 @@
 
 ## Implemented behavior
 
-Organization and LocalBusiness records emit their complete available data on their published representative page for the current language. Elsewhere, they emit `@type`, `@id`, `name`, localized home `url` when available, and `logo` when configured. Identity and type are retained; unpublished organizations are omitted as before. No other-language home is invented when the current language has none.
+Organization and LocalBusiness records emit their complete available data on their published representative page for the current language. Elsewhere, they emit `@type`, `@id`, `name`, localized home `url` when available, and `logo` when configured. Identity and type are retained; unpublished organizations are omitted as before. No other-language home is invented when the current language has none. Explicit external organization references can instead use their configured external website URL.
 
 This selection happens while the manager builds its own entity nodes, before later graph listeners. It does not sweep the final graph or strip unrelated extensions' organization nodes. Other integrations can still enrich the result afterwards. A complete supporting-company preview remains available in the backend: the saved entity preview is not a full frontend-page preview.
 
 The change applies to Organization and LocalBusiness only. Services, people and events retain their existing representation.
+
+An explicit **Location overview with contact details** page setting retains address, telephone, email and parentOrganization on supporting LocalBusiness nodes when the page visibly lists those offices. Full organization relationships (locations, subsidiaries, networks and service catalogues) are followed only on the localized home or in a backend preview, avoiding unrelated catalogue trees on every page.
 
 ## What the sources say
 
@@ -62,7 +64,7 @@ Use the same organization ID and shared name/legal facts in every language. Its 
 
 Do not change the ID to the current service-page URL. An entity's permanent identity and the URL of a page describing it remain separate.
 
-If no published home exists in the current language, omit the unavailable localized URL rather than inventing one. If a future implementation supports deliberate cross-language fallback, it should be explicit.
+If no published home exists in the current language, omit the unavailable localized URL rather than inventing one. A configured External organization website is an explicit reference for external organizations, not an automatic cross-language fallback.
 
 ## Verification
 

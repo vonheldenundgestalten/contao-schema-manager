@@ -24,7 +24,8 @@
         "test": [
             "@php tests/mapper.php",
             "@php tests/manual-products.php",
-            "@php tests/jobs.php"
+            "@php tests/jobs.php",
+            "@php tests/business-mapper.php"
         ]
     }
 }

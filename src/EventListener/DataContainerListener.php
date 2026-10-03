@@ -28,7 +28,23 @@ final class DataContainerListener
     public function immutableId(mixed $value, DataContainer $dc): ?string
     {
         $id = $this->connection->fetchOne('SELECT entityId FROM tl_schema_entity WHERE id = ?', [$dc->id]);
-        return $id ?: null;
+        if ($id) { return $id; }
+        $value = trim((string) $value);
+        if ($value === '') { return null; }
+        $origin = (string) $this->connection->fetchOne('SELECT identityBase FROM tl_schema_entity WHERE id=?', [$dc->id]);
+        $value = \VHUG\SchemaManagerBundle\Schema\EntityIdentity::validate($value, $origin);
+        if ($this->connection->fetchOne('SELECT id FROM tl_schema_entity WHERE entityId=? AND id<>?', [$value,$dc->id])) {
+            throw new \InvalidArgumentException('Another entity already uses this ID.');
+        }
+        return $value;
+    }
+
+    #[AsCallback(table: 'tl_schema_entity', target: 'config.onload')]
+    public function identityEditor(DataContainer $dc): void
+    {
+        if (!$dc->id) { return; }
+        $id = $this->connection->fetchOne('SELECT entityId FROM tl_schema_entity WHERE id=?', [$dc->id]);
+        $GLOBALS['TL_DCA']['tl_schema_entity']['fields']['entityId']['eval']['readonly'] = (bool) $id;
     }
 
     #[AsCallback(table: 'tl_schema_entity', target: 'config.onsubmit')]
@@ -118,7 +134,8 @@ final class DataContainerListener
             'SELECT e.entityType FROM tl_schema_entity e JOIN tl_schema_translation t ON t.pid = e.id WHERE t.id = ?', [$dc->id]
         );
         $fields = match ($type) {
-            'Person' => 'description,jobTitle',
+            'Person' => 'description,jobTitle,knowsAbout,credentials,award',
+            'Organization', 'LocalBusiness' => 'description,slogan,knowsAbout,award,catalogName',
             'Service' => 'name,description,serviceType,audienceType,catalogName',
             'Product', 'Event' => 'name,description',
             default => 'description',

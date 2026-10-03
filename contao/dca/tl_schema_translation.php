@@ -66,3 +66,7 @@ $GLOBALS['TL_DCA']['tl_schema_translation'] = [
         ],
     ],
 ];
+
+foreach (['slogan', 'knowsAbout', 'award', 'credentials'] as $field) {
+    $GLOBALS['TL_DCA']['tl_schema_translation']['fields'][$field] = ['inputType' => 'textarea', 'eval' => ['tl_class' => 'clr'], 'sql' => 'text NULL'];
+}
