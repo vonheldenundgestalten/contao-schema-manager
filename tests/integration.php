@@ -42,11 +42,13 @@ try {
     $token = bin2hex(random_bytes(6));
     $orgId = 'https://example.org/#integration-org-'.$token;
     $personId = 'https://example.org/#integration-person-'.$token;
+    $productId = 'https://example.org/#integration-product-'.$token;
     $org = $add('tl_schema_entity', ['entityType' => 'Organization', 'name' => 'Fixture Company', 'legalName' => 'Fixture GmbH', 'identityBase' => 'https://example.org', 'entityId' => $orgId, 'published' => '1']);
     $person = $add('tl_schema_entity', ['entityType' => 'Person', 'name' => 'Fixture Person', 'identityBase' => 'https://example.org', 'entityId' => $personId, 'organization' => $org, 'published' => '1']);
+    $product = $add('tl_schema_entity', ['entityType' => 'Product', 'name' => 'Manual product', 'sku' => 'TEST-1', 'identityBase' => 'https://example.org', 'entityId' => $productId, 'organization' => $org, 'published' => '1']);
     foreach ($pages as $locale => $page) {
-        foreach ([$org, $person] as $entity) {
-            $add('tl_schema_translation', ['pid' => $entity, 'page' => (int) $page->id, 'language' => $locale, 'description' => 'Description '.$locale, 'published' => '1', 'isMainEntity' => $entity === $person ? '1' : '']);
+        foreach ([$org, $person, $product] as $entity) {
+            $add('tl_schema_translation', ['pid' => $entity, 'page' => (int) $page->id, 'language' => $locale, 'description' => 'Description '.$locale, 'offerMode' => $entity === $product ? 'exact' : '', 'offerPrice' => '19.90', 'offerCurrency' => 'EUR', 'published' => '1', 'isMainEntity' => $entity === $person ? '1' : '']);
         }
     }
     $render = static function ($page) use ($c, $listener): array {
@@ -70,6 +72,8 @@ try {
         return [];
     };
     $de = $render($pages['de']); $en = $render($pages['en']);
+    $manualProduct = $byId($en, $productId);
+    $check($manualProduct['@type'] === 'Product' && $manualProduct['sku'] === 'TEST-1' && $manualProduct['offers']['itemOffered']['@id'] === $productId && $manualProduct['offers']['priceSpecification']['price'] === '19.90', 'Manual Product and Offer survive real Contao graph serialization');
     $pde = $byId($de, $personId); $pen = $byId($en, $personId);
     $check($pde['@id'] === $pen['@id'], 'One identity across languages');
     $check($pde['description'] === 'Description de' && $pen['description'] === 'Description en', 'Localized descriptions');
@@ -104,7 +108,7 @@ try {
     $check(!$byId($nodes, $orgId) && !isset($byId($nodes, $personId)['worksFor']), 'Unpublished related entity omitted');
     $db->update('tl_schema_translation', ['published' => ''], ['pid' => $person, 'language' => 'en']);
     $check(!$byId($render($pages['en']), $personId), 'Unpublished translation omitted');
-    echo "PASS: 15 real Contao graph, localization, compact organization and publication checks.\n";
+    echo "PASS: 16 real Contao graph, manual Product, localization, compact organization and publication checks.\n";
 } finally {
     $db->rollBack();
     echo "All integration fixture records rolled back.\n";
