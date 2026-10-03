@@ -19,7 +19,7 @@ final class EntityMapper
             'description' => $translation['description'] ?? null,
         ];
         if (in_array($type, ['Organization', 'LocalBusiness'], true)) {
-            foreach (['legalName', 'telephone', 'email'] as $key) {
+            foreach (['legalName', 'alternateName', 'foundingDate', 'telephone', 'email'] as $key) {
                 $node[$key] = $entity[$key] ?? null;
             }
             $address = [];
@@ -28,7 +28,14 @@ final class EntityMapper
             }
             if ($address) { $node['address'] = ['@type' => 'PostalAddress'] + $address; }
         }
-        if ($type === 'Person') { $node['jobTitle'] = $translation['jobTitle'] ?? null; }
+        if ($type === 'Person') {
+            $node['jobTitle'] = $translation['jobTitle'] ?? null;
+            foreach (['telephone', 'email'] as $key) { $node[$key] = $entity[$key] ?? null; }
+        }
+        if ($type === 'Service') {
+            $node['serviceType'] = $translation['serviceType'] ?? null;
+            if (!empty($translation['audienceType'])) { $node['audience'] = ['@type' => 'Audience', 'audienceType' => $translation['audienceType']]; }
+        }
         if ($organization && $type !== 'Product') {
             $property = match ($type) {
                 'Person' => 'worksFor', 'Service' => 'provider',

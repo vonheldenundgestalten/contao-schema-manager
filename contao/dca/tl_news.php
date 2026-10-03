@@ -13,3 +13,12 @@ $GLOBALS['TL_DCA']['tl_news']['fields']['schemaDateModified'] = [
     'inputType'=>'text', 'eval'=>['rgxp'=>'datim','datepicker'=>true,'tl_class'=>'w50 wizard'],
     'sql'=>"varchar(10) NOT NULL default ''",
 ];
+
+$GLOBALS['TL_DCA']['tl_news']['fields'] += VHUG\SchemaManagerBundle\Schema\JobFields::defaults();
+$GLOBALS['TL_DCA']['tl_news']['fields']['schemaJobEmployer'] = [
+    'inputType' => 'select', 'options_callback' => [VHUG\SchemaManagerBundle\EventListener\DataContainerListener::class, 'organizations'],
+    'eval' => ['includeBlankOption' => true, 'chosen' => true, 'tl_class' => 'w50'], 'sql' => 'int unsigned NOT NULL default 0',
+];
+$GLOBALS['TL_DCA']['tl_news']['fields']['schemaJobValidThrough'] = [
+    'inputType' => 'text', 'eval' => ['rgxp' => 'datim', 'datepicker' => true, 'tl_class' => 'w50 wizard'], 'sql' => "varchar(10) NOT NULL default ''",
+];

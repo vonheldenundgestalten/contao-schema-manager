@@ -68,6 +68,11 @@ final class JsonLdListener
         }
         $newsSubjects = $this->news->apply($request->attributes->get('_schema_manager_news', []), $language, $manager, $emitted);
         foreach ($newsSubjects as $subject) { $main[$subject['@id']] = $subject; }
+        foreach ($request->attributes->get('_schema_manager_news', []) as $item) {
+            $expiry = (int) ($item['record']['schemaJobValidThrough'] ?? 0);
+            if ($expiry <= time() || !$graph->has(\Spatie\SchemaOrg\JobPosting::class, $item['record']['schemaIdentity'] ?? '')) { continue; }
+            $request->attributes->set('_schema_job_expires', min($expiry, $request->attributes->get('_schema_job_expires', PHP_INT_MAX)));
+        }
         if ($emitted || $newsSubjects) {
             $url = $this->urls->generate($page, ['parameters' => $request->attributes->get('parameters', '')], UrlGeneratorInterface::ABSOLUTE_URL);
             // Reader URLs include the record alias, unlike the bare reader-page route.

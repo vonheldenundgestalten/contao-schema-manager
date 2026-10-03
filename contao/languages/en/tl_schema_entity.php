@@ -36,3 +36,13 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['image'] = ['Logo / portrait / product i
 $GLOBALS['TL_LANG']['tl_schema_entity']['sku'] = ['SKU', 'Internal product stock keeping unit.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['mpn'] = ['MPN', 'Manufacturer part number, if known.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['brand'] = ['Brand', 'Product brand name, if known.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['alternateName'] = ['Alternate name', 'Shared public short name or alias.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['foundingDate'] = ['Founding date', 'YYYY or YYYY-MM-DD; do not invent an unknown month or day.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['areaServed'] = ['Countries served', 'Shared across languages.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['subservices'] = ['Services in catalogue', 'Reusable Service entities; only published localized destinations are linked.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['contacts'] = ['Contact points', 'Edit organization contact points'];

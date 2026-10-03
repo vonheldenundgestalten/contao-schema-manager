@@ -23,7 +23,8 @@
     "scripts": {
         "test": [
             "@php tests/mapper.php",
-            "@php tests/manual-products.php"
+            "@php tests/manual-products.php",
+            "@php tests/jobs.php"
         ]
     }
 }

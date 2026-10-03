@@ -8,22 +8,22 @@ $text = static fn (bool $mandatory = false): array => [
 ];
 $GLOBALS['TL_DCA']['tl_schema_entity'] = [
     'config' => [
-        'dataContainer' => DC_Table::class, 'ctable' => ['tl_schema_translation'],
+        'dataContainer' => DC_Table::class, 'ctable' => ['tl_schema_translation', 'tl_schema_contact'],
         'enableVersioning' => true, 'switchToEdit' => true,
         'sql' => ['keys' => ['id' => 'primary', 'entityId' => 'unique']],
     ],
     'list' => [
         'sorting' => ['mode' => DataContainer::MODE_SORTED, 'fields' => ['name'], 'flag' => 1, 'panelLayout' => 'filter;search,limit'],
         'label' => ['fields' => ['name', 'entityType'], 'format' => '%s [%s]'],
-        'operations' => ['edit', 'children', 'copy', 'delete', 'show'],
+        'operations' => ['edit', 'children' => ['href' => 'table=tl_schema_translation'], 'contacts' => ['href' => 'table=tl_schema_contact', 'icon' => 'member.svg'], 'copy', 'delete', 'show'],
     ],
     'palettes' => [
         '__selector__' => ['entityType'],
         'default' => '{identity_legend},name,entityType,identityBase,entityId;{links_legend},sameAs,image;{publish_legend},published',
-        'Organization' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},legalName,vatID,taxID,telephone,email,streetAddress,postalCode,addressLocality,addressCountry,organization;{links_legend},sameAs,image;{publish_legend},published',
-        'LocalBusiness' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},legalName,vatID,taxID,telephone,email,streetAddress,postalCode,addressLocality,addressCountry,organization;{links_legend},sameAs,image;{publish_legend},published',
-        'Person' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},organization;{links_legend},sameAs,image;{publish_legend},published',
-        'Service' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},organization;{links_legend},sameAs,image;{publish_legend},published',
+        'Organization' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},legalName,alternateName,foundingDate,vatID,taxID,telephone,email,streetAddress,postalCode,addressLocality,addressCountry,organization;{links_legend},sameAs,image;{publish_legend},published',
+        'LocalBusiness' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},legalName,alternateName,foundingDate,vatID,taxID,telephone,email,streetAddress,postalCode,addressLocality,addressCountry,organization;{links_legend},sameAs,image;{publish_legend},published',
+        'Person' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},organization,telephone,email;{links_legend},sameAs,image;{publish_legend},published',
+        'Service' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},organization,areaServed,subservices;{links_legend},sameAs,image;{publish_legend},published',
         'Product' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},sku,mpn,brand,organization;{links_legend},sameAs,image;{publish_legend},published',
         'Event' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},startDate,endDate,eventStatus,locationName,organization;{links_legend},sameAs,image;{publish_legend},published',
     ],
@@ -41,6 +41,9 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
             'inputType' => 'text', 'eval' => ['readonly' => true, 'doNotCopy' => true, 'tl_class' => 'clr long'],
             'sql' => 'varchar(255) DEFAULT NULL',
         ],
+        'alternateName' => $text(), 'foundingDate' => $text(),
+        'areaServed' => ['inputType' => 'select', 'options_callback' => [VHUG\SchemaManagerBundle\EventListener\EntityDetailsListener::class, 'countries'], 'eval' => ['multiple' => true, 'chosen' => true, 'tl_class' => 'clr'], 'sql' => 'blob NULL'],
+        'subservices' => ['inputType' => 'select', 'options_callback' => [VHUG\SchemaManagerBundle\EventListener\EntityDetailsListener::class, 'services'], 'eval' => ['multiple' => true, 'chosen' => true, 'tl_class' => 'clr'], 'sql' => 'blob NULL'],
         'vatID' => $text(), 'taxID' => $text(),
         'sameAs' => ['inputType' => 'textarea', 'eval' => ['tl_class' => 'clr'], 'sql' => 'text NULL'],
         'image' => ['inputType' => 'fileTree', 'eval' => ['fieldType' => 'radio', 'filesOnly' => true, 'extensions' => 'jpg,jpeg,png,webp,svg', 'tl_class' => 'clr'], 'sql' => 'binary(16) NULL'],

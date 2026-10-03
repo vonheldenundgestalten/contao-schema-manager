@@ -70,7 +70,38 @@ try {
         foreach ($nodes as $node) { if (($node['@id'] ?? '') === $id) { return $node; } }
         return [];
     };
+    $contact = $add('tl_schema_contact', ['pid'=>$org, 'contactType'=>'sales', 'telephone'=>'+49 123', 'availableLanguage'=>'de, en', 'areaServed'=>serialize(['DE','AT']), 'published'=>'1']);
+    $parentUri='https://example.org/#service-'.$token;
+    $childUri='https://example.org/#subservice-'.$token;
+    $child=$add('tl_schema_entity',['name'=>'Child service','entityType'=>'Service','entityId'=>$childUri,'identityBase'=>'https://example.org','published'=>'1']);
+    $parent=$add('tl_schema_entity',['name'=>'Parent service','entityType'=>'Service','entityId'=>$parentUri,'identityBase'=>'https://example.org','areaServed'=>serialize(['DE']),'subservices'=>serialize([$child]),'published'=>'1']);
+    foreach ($pages as $locale=>$page) {
+        foreach ([$parent,$child] as $service) {
+            $add('tl_schema_translation',['pid'=>$service,'page'=>(int)$page->id,'language'=>$locale,'name'=>'Service '.$locale,'serviceType'=>'Consulting '.$locale,'audienceType'=>'Audience '.$locale,'catalogName'=>'Catalogue '.$locale,'published'=>'1']);
+        }
+    }
     $de = $render($pages['de']); $en = $render($pages['en']);
+    $service=$byId($en,$parentUri);
+    $check($service['hasOfferCatalog']['itemListElement'][0]['itemOffered']===['@id'=>$childUri] && $service['hasOfferCatalog']['name']==='Catalogue en','Localized catalogue references reusable service');
+    $check($service['areaServed']===['DE'] && $service['audience']['audienceType']==='Audience en','Service audience and territory');
+    $check(count(array_filter($en,static fn($n)=>($n['@id']??'')===$childUri))===1,'Referenced service emitted once');
+    $contactNode=$byId($en,$orgId)['contactPoint'][0];
+    $check($contactNode['availableLanguage']===['de','en'] && $contactNode['areaServed']===['DE','AT'],'Structured contact point survives serialization');
+    $db->update('tl_schema_contact',['published'=>''],['id'=>$contact]);
+    $check(!isset($byId($render($pages['en']),$orgId)['contactPoint']),'Unpublished contact omitted');
+    $db->update('tl_schema_translation',['published'=>''],['pid'=>$child,'language'=>'en']);
+    $check(!isset($byId($render($pages['en']),$parentUri)['hasOfferCatalog']),'Unpublished translated service not linked');
+    $validation=new VHUG\SchemaManagerBundle\EventListener\EntityDetailsListener($db);
+    $dc=new class($child) extends Contao\DataContainer { public function __construct(int $id) { $this->intId=$id; } public function getPalette() { return ""; } protected function save($value) {} };
+    try { $validation->subservices(serialize([$parent]),$dc); throw new LogicException('Cycle accepted'); } catch (InvalidArgumentException $expected) {}
+    $contactDc=clone $dc; $contactDc->id=$contact;
+    $check($validation->publishContact('1',$contactDc)==='1','Contact with phone can publish');
+    $db->update('tl_schema_contact',['telephone'=>'','email'=>''],['id'=>$contact]);
+    try { $validation->publishContact('1',$contactDc); throw new LogicException('Empty contact published'); } catch (InvalidArgumentException $expected) {}
+    $check($validation->languages('de, en, de')==='de, en','Contact language normalization');
+    try { $validation->languages('not a language'); throw new LogicException('Invalid language accepted'); } catch (InvalidArgumentException $expected) {}
+    $check($validation->foundingDate('1998')==='1998' && $validation->foundingDate('2024-02-29')==='2024-02-29','Founding precision preserved');
+    try { $validation->foundingDate('2025-02-29'); throw new LogicException('Invalid date accepted'); } catch (InvalidArgumentException $expected) {}
     $manualProduct = $byId($en, $productId);
     $check($manualProduct['@type'] === 'Product' && $manualProduct['sku'] === 'TEST-1' && $manualProduct['offers']['itemOffered']['@id'] === $productId && $manualProduct['offers']['priceSpecification']['price'] === '19.90', 'Manual Product and Offer survive real Contao graph serialization');
     $pde = $byId($de, $personId); $pen = $byId($en, $personId);
@@ -107,7 +138,7 @@ try {
     $check(!$byId($nodes, $orgId) && !isset($byId($nodes, $personId)['worksFor']), 'Unpublished related entity omitted');
     $db->update('tl_schema_translation', ['published' => ''], ['pid' => $person, 'language' => 'en']);
     $check(!$byId($render($pages['en']), $personId), 'Unpublished translation omitted');
-    echo "PASS: 16 real Contao graph, manual Product, localization, compact organization and publication checks.\n";
+    echo "PASS: entity graphs, contact publication, localized catalogues, cycle/date validation, manual Product and compact organization checks.\n";
 } finally {
     $db->rollBack();
     echo "All integration fixture records rolled back.\n";

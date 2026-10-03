@@ -119,7 +119,8 @@ final class DataContainerListener
         );
         $fields = match ($type) {
             'Person' => 'description,jobTitle',
-            'Service', 'Product', 'Event' => 'name,description',
+            'Service' => 'name,description,serviceType,audienceType,catalogName',
+            'Product', 'Event' => 'name,description',
             default => 'description',
         };
         $GLOBALS['TL_DCA']['tl_schema_translation']['palettes']['default'] =

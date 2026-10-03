@@ -23,11 +23,11 @@ final class SourceSettingsListener
         $archive = $this->connection->fetchAssociative(
             'SELECT a.* FROM tl_news_archive a JOIN tl_news n ON n.pid=a.id WHERE n.id=?', [$dc->id]
         );
-        if (!$archive || !in_array($archive['schemaType'], ['Article','NewsArticle','BlogPosting'], true)) { return; }
+        if (!$archive || !in_array($archive['schemaType'], ['Article','NewsArticle','BlogPosting','JobPosting'], true)) { return; }
         foreach (array_keys($GLOBALS['TL_DCA']['tl_news']['palettes']) as $palette) {
             if ($palette === '__selector__' || str_contains($GLOBALS['TL_DCA']['tl_news']['palettes'][$palette], 'schemaIdentity')) { continue; }
             PaletteManipulator::create()->addLegend('schema_legend','title_legend',PaletteManipulator::POSITION_AFTER)
-                ->addField(['schemaAuthor','schemaDateModified','schemaIdentity'],'schema_legend',PaletteManipulator::POSITION_APPEND)
+                ->addField($archive['schemaType'] === 'JobPosting' ? array_merge(['schemaJobEmployer', 'schemaJobValidThrough'], array_keys(\VHUG\SchemaManagerBundle\Schema\JobFields::defaults()), ['schemaIdentity']) : ['schemaAuthor','schemaDateModified','schemaIdentity'],'schema_legend',PaletteManipulator::POSITION_APPEND)
                 ->applyToPalette($palette,'tl_news');
         }
     }
@@ -36,11 +36,11 @@ final class SourceSettingsListener
     public function ensureNewsIdentity(int $id): void
     {
         $row = $this->connection->fetchAssociative(
-            'SELECT n.schemaIdentity,e.identityBase FROM tl_news n JOIN tl_news_archive a ON a.id=n.pid JOIN tl_schema_entity e ON e.id=a.schemaPublisher WHERE n.id=?',
+            'SELECT n.schemaIdentity,a.schemaType,e.identityBase FROM tl_news n JOIN tl_news_archive a ON a.id=n.pid JOIN tl_schema_entity e ON e.id=a.schemaPublisher WHERE n.id=?',
             [$id]
         );
         if ($row && !$row['schemaIdentity']) {
-            $this->connection->update('tl_news',['schemaIdentity'=>$row['identityBase'].'/#article-'.bin2hex(random_bytes(16))],['id'=>$id]);
+            $this->connection->update('tl_news',['schemaIdentity'=>$row['identityBase'].'/#'.($row['schemaType'] === 'JobPosting' ? 'job' : 'article').'-'.bin2hex(random_bytes(16))],['id'=>$id]);
         }
     }
     #[AsCallback(table:'tl_news_archive',target:'config.onsubmit')]

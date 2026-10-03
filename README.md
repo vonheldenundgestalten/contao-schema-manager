@@ -8,9 +8,11 @@ For example, a hosting business can describe its company once, connect its hosti
 
 ![Structured data overview with company, people, hosting and maintenance services](docs/images/entities.png)
 
-*Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. The Product screenshots use an unpublished documentation example.*
+*Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. Product, contact, service-catalogue and job screenshots use unpublished documentation examples.*
 
 > **Release 5.7.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. This first release focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+
+> **On main, not yet tagged:** richer company/person details, contact points, service catalogues and News-based JobPosting. Run the database update after updating to this development version. The additions below are not included in the existing 5.7.0 tag.
 
 ## In this guide
 
@@ -178,6 +180,15 @@ A service can be the main subject of its detail page and also be relevant to oth
 
 **Main subject** connects a page with what it primarily describes (`mainEntity`). **Related entities** connects subjects relevant to that page (`about`). Select only entities supported by the visible content.
 
+### Richer services and reusable catalogues (main)
+
+On the shared Service record, select the countries served and any existing Service entities to include in its offer catalogue. Each selected service keeps its own identity and localized home. Circular catalogues are rejected. Only services with a published home in the current language are linked; missing translations are not replaced with another language.
+
+On each localized home, enter the service type, target audience and optional catalogue title. For example, a restructuring service can reference separate planning-review and restructuring-report services. Each subservice can have its own manual offer, or none. A catalogue does not require a public price.
+
+![Reusable services and shared territory](docs/images/service-catalogue.png)
+![Localized service classification, audience and catalogue title](docs/images/service-details.png)
+
 ## Manage products and offers
 
 Create a **Product** under **Content → Structured data**. Enter its shared name, identity origin, optional SKU, manufacturer part number (MPN), brand and product image. Related organization supplies the seller of its offers; it does not assert that the seller manufactured the product.
@@ -269,11 +280,35 @@ The existing headline, publication date, article content and main image remain t
 
 Where terminal42 changelanguage supplies a `languageMain` relationship, translated news links to the original through `translationOfWork`. Shared company/person identities stay the same across languages; translated news records have their own article identities.
 
-**Jobs stored in News are not supported as JobPosting yet.** Do not select NewsArticle just to make a job appear as a supported rich-result type; retain the project's existing job-schema solution until an adapter is available.
+### Jobs stored in News (main)
+
+1. Set the news archive’s **Schema type** to **JobPosting** and choose its **Publisher / hiring organization**. Save the archive to generate missing permanent IDs.
+2. Set default employment types and workplace details on the archive. A physical or hybrid workplace needs a city and country. Fully remote jobs need eligible applicant countries; only fully remote jobs emit `TELECOMMUTE`.
+3. Continue writing the title and full job description in the existing news record and its content elements. Job fields replace the article-author fields in this archive. Blank job-specific fields inherit archive defaults; set an override only where this job differs. A location override is field-by-field: review street, city, region and country together.
+4. Optionally set an application deadline. Expired jobs emit no JobPosting; the news page remains published. Page cache lifetime is capped at the deadline. Use Contao’s publication controls when the page should disappear too.
+5. Remove the old JobPosting RDFa/JSON-LD from the project’s job template when enabling this integration. The manager replaces Contao’s NewsArticle node, but cannot remove markup rendered by another template.
+
+JobPosting appears only in a News reader, never in teaser lists. It references the shared hiring organization and uses the actual reader URL. Missing employer, description, posting date or required location data suppresses job schema. The news publication date supplies `datePosted`; do not change it merely to make a job look new. Use employment type OTHER where appropriate, rather than inventing a value.
+
+Salary, application actions and multiple physical workplaces are not part of this first job integration. Archive defaults are scoped to that archive; translated archives can use their own defaults.
+
+![Job archive defaults](docs/images/job-archive.png)
+![Per-job overrides in the News editor](docs/images/job-details.png)
+
+
+## Company details and contact points (main)
+
+Organization and LocalBusiness records now have a shared alternate name and founding date. Enter only the precision you know: `1998` or `1998-06-15`. The legal name remains shared and authoritative.
+
+Use the **Contact points** operation beside an organization in the entity list to add public sales, support, billing, reservations or customer-service contacts. Each has its own phone/email, available language codes (for example `de, en`) and countries served. Contact points are shared across language homes. Purpose labels are translated in the editor; schema values remain stable. Publish a contact point when ready; at least one phone/email is required.
+
+Full contact details appear with the full organization on its localized home and in saved previews. Other pages retain compact organization references.
+
+![A shared sales contact point](docs/images/contact-point.png)
 
 ## People and standalone events
 
-For a Person, put the name, portrait and actual related organization on the shared entity. Put the biography/description, job title and representative page on the localized children. The related organization becomes `worksFor`, so only set it when that relationship is accurate.
+For a Person, put the name, portrait, public telephone/email and actual related organization on the shared entity. Put the biography/description, job title and representative page on the localized children. The related organization becomes `worksFor`, so only set it when that relationship is accurate.
 
 A **standalone Event** can use the entire homepage as its localized home. You do not need to create a Contao Calendar event. This is useful when a complete landing page represents one conference.
 
@@ -283,7 +318,7 @@ The current Event editor is basic: dates, venue name, status, organizer and loca
 
 Save a localized record, then expand **Published JSON-LD preview**. **Saved output** displays the full saved JSON with automatic height and line wrapping.
 
-The preview contains that entity and its referenced organization. It is **not the complete page graph** and does not display unsaved edits. Unpublished entities are omitted.
+The preview contains that entity, its referenced organization and linked service catalogue entries. It is **not the complete page graph** and does not display unsaved edits. Unpublished entities are omitted.
 
 <details>
 <summary>Example: full saved output for CMS Hosting</summary>
@@ -337,7 +372,7 @@ Preserve generated IDs when migrating or importing records. Removing and recreat
 
 Available in **5.7.0**: Organization, LocalBusiness, Person, Product, Service and basic standalone Event; manual offers; localized homes; compact supporting organizations; page purposes; website publisher/identity; public news authors; archive-controlled article enrichment; saved previews; English/German labels.
 
-Not included: smart/automatic page images, social-tag generation, pricing-source hooks, Product variants/inventory/reviews, full Event rich-result fields, JobPosting, FAQ adapters or a visual relationship overview. A valid Product or Event node does not by itself guarantee eligibility for Google's feature-specific rich results.
+Not included: smart/automatic page images, social-tag generation, pricing-source hooks, Product variants/inventory/reviews, full Event rich-result fields, FAQ adapters or a visual relationship overview. A valid Product or Event node does not by itself guarantee eligibility for Google's feature-specific rich results.
 
 The [roadmap](docs/roadmap.md) links the separate ongoing feature branches. See [release notes](CHANGELOG.md) for the pilot-to-release transition.
 
@@ -350,6 +385,7 @@ Run pure checks from the package directory:
 ```sh
 php tests/mapper.php
 php tests/manual-products.php
+php tests/jobs.php
 ```
 
 Run integration checks from a configured Contao application root, adjusting the package path for a `vendor/` installation:

@@ -50,6 +50,35 @@ final class EntityGraph
         }
         $organization = $this->record((int) $entity['organization']);
         $node = $this->mapper->map($entity, $translation, $url, $organization);
+        $this->tags->tagWithModelClass(\VHUG\SchemaManagerBundle\Model\ContactModel::class);
+        if ($entity['entityType'] === 'Service') {
+            $countries = \Contao\StringUtil::deserialize($entity['areaServed'] ?? null, true);
+            if ($countries) { $node['areaServed'] = array_values($countries); }
+            $offers = [];
+            foreach (array_unique(\Contao\StringUtil::deserialize($entity['subservices'] ?? null, true)) as $childId) {
+                $childRecord = $this->record((int) $childId);
+                if (!$childRecord || $childRecord['entityType'] !== 'Service') { continue; }
+                $child = $this->emit((int) $childId, $language, $manager, $emitted);
+                if (empty($child['url'])) { continue; }
+                $offers[] = ['@type' => 'Offer', 'itemOffered' => ['@id' => $child['@id']]];
+            }
+            if ($offers) {
+                $node['hasOfferCatalog'] = ['@type' => 'OfferCatalog', '@id' => $entity['entityId'].'/catalog',
+                    'name' => ($translation['catalogName'] ?? '') ?: $node['name'], 'itemListElement' => $offers];
+            }
+        }
+        if (in_array($entity['entityType'], ['Organization', 'LocalBusiness'], true)) {
+            foreach ($this->connection->fetchAllAssociative('SELECT * FROM tl_schema_contact WHERE pid=? AND published=? ORDER BY id', [$id, '1']) as $contact) {
+                if (!$contact['telephone'] && !$contact['email']) { continue; }
+                $point = ['@type' => 'ContactPoint', '@id' => $entity['entityId'].'/contact-'.$contact['id'], 'contactType' => $contact['contactType']];
+                foreach (['telephone', 'email'] as $field) { if ($contact[$field]) { $point[$field] = $contact[$field]; } }
+                $languages = array_values(array_filter(array_map('trim', explode(',', $contact['availableLanguage']))));
+                if ($languages) { $point['availableLanguage'] = $languages; }
+                $countries = \Contao\StringUtil::deserialize($contact['areaServed'], true);
+                if ($countries) { $point['areaServed'] = array_values($countries); }
+                $node['contactPoint'][] = $point;
+            }
+        }
         foreach (['vatID', 'taxID'] as $field) {
             if (in_array($entity['entityType'], ['Organization','LocalBusiness'], true) && !empty($entity[$field])) {
                 $node[$field] = $entity[$field];

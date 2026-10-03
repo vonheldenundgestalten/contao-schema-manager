@@ -37,6 +37,26 @@ final class NewsGraph
             $this->tags->tagWithModelClass(\Contao\UserModel::class);
             $key = '#/schema/news/'.$record['id'];
             if ($mode === 'suppress') { $graph->hide(NewsArticle::class, $key); continue; }
+            if ($mode === 'JobPosting') {
+                $graph->hide(NewsArticle::class, $key);
+                if (empty($item['reader']) || !$record['published'] || (!empty($record['start']) && $record['start'] > time())
+                    || (!empty($record['stop']) && $record['stop'] <= time())) { continue; }
+                $employerId = (int) (($record['schemaJobEmployer'] ?? 0) ?: ($archive['schemaPublisher'] ?? 0));
+                $employerRecord = $this->entities->record($employerId);
+                if (!$employerRecord || !in_array($employerRecord['entityType'], ['Organization', 'LocalBusiness'], true)) { continue; }
+                $model = NewsModel::findById($record['id']);
+                if (!$model) { continue; }
+                $template = $item['template'];
+                $description = $this->decoder->htmlToPlainText((string) ($template->hasText ? $template->text : ($record['teaser'] ?? '')));
+                $node = (new JobMapper())->map($record, $archive, ['@id' => $employerRecord['entityId']],
+                    $this->urls->generate($model, [], UrlGeneratorInterface::ABSOLUTE_URL), $language,
+                    $this->decoder->htmlToPlainText($record['headline']), $description);
+                if (!$node) { continue; }
+                $this->entities->emit($employerId, $language, $manager, $emitted);
+                $graph->set($manager->createSchemaOrgTypeFromArray($node), $record['schemaIdentity']);
+                $subjects[] = ['@id' => $record['schemaIdentity']];
+                continue;
+            }
             if (!in_array($mode, ['BlogPosting','Article','NewsArticle'], true)) { continue; }
             if (!$item['detail'] && !$graph->has(NewsArticle::class, $key)) { continue; }
             $model = NewsModel::findById($record['id']);

@@ -45,7 +45,7 @@ final class PageMetadataListener
         }
         foreach($request->attributes->get('_schema_manager_news',[]) as $item){
             if(empty($item['reader']) || empty($item['record']['schemaIdentity'])){continue;}
-            foreach([\Spatie\SchemaOrg\BlogPosting::class,\Spatie\SchemaOrg\Article::class,\Spatie\SchemaOrg\NewsArticle::class] as $class){
+            foreach([\Spatie\SchemaOrg\BlogPosting::class,\Spatie\SchemaOrg\Article::class,\Spatie\SchemaOrg\NewsArticle::class,\Spatie\SchemaOrg\JobPosting::class] as $class){
                 $id=$item['record']['schemaIdentity'];
                 if($graph->has($class,$id)){
                     $article=$graph->get($class,$id);

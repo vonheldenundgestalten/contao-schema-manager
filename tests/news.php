@@ -50,7 +50,8 @@ try {
     $request=Symfony\Component\HttpFoundation\Request::create(getenv('SCHEMA_TEST_ORIGIN') ?: 'https://example.test/');
     $request->attributes->set('pageModel',$pages['en']);
     $c->get('request_stack')->push($request);
-    $render=static function(string $mode)use($db,$archive,$id,$news,$item):array{
+    $render=static function(string $mode, bool $reader=true)use($db,$archive,$id,$news,$item):array{
+        $item['reader']=$reader; $item['record']=$db->fetchAssociative('SELECT * FROM tl_news WHERE id=?',[$id]);
         $db->update('tl_news_archive',['schemaType'=>$mode],['id'=>$archive]);
         $context=new Contao\CoreBundle\Routing\ResponseContext\ResponseContext();
         $manager=new Contao\CoreBundle\Routing\ResponseContext\JsonLd\JsonLdManager($context);
@@ -75,7 +76,24 @@ try {
     $check(count($nodes)===1 && $nodes[0]['@id']==='https://example.org/#unrelated' && !$subjects,'Suppress only exact source node');
     [$nodes,$subjects]=$render('');
     $check(count($nodes)===2 && !$subjects,'Default mode preserves core output');
-    echo "PASS: 10 real Contao news replacement, suppression, reference and routing checks.\n";
+    $db->update('tl_news_archive',['schemaJobCity'=>'Stuttgart','schemaJobCountry'=>'DE','schemaJobEmployment'=>serialize(['FULL_TIME'])],['id'=>$archive]);
+    $db->update('tl_news',['teaser'=>'Public job description','schemaJobValidThrough'=>time()+3600],['id'=>$id]);
+    [$nodes,$subjects]=$render('JobPosting');
+    $jobs=array_values(array_filter($nodes,static fn($n)=>($n['@type']??'')==='JobPosting'));
+    $check(count($jobs)===1 && $jobs[0]['hiringOrganization']['@id'] && $subjects===[['@id'=>$idUri]],'Job replaces article and becomes page subject');
+    $check(!isset($jobs[0]['headline'],$jobs[0]['articleBody'],$jobs[0]['genre']) && $jobs[0]['title']==='Fixture & headline','No stale article properties in job');
+    $check(str_contains($jobs[0]['url'],'schema-test-'.$token),'Job uses actual news route');
+    [$nodes,$subjects]=$render('JobPosting',false);
+    $check(!array_filter($nodes,static fn($n)=>($n['@type']??'')==='JobPosting') && !$subjects,'No JobPosting on lists');
+    $db->update('tl_news',['schemaJobValidThrough'=>time()-10],['id'=>$id]);
+    [$nodes,$subjects]=$render('JobPosting');
+    $check(count($nodes)===1 && !$subjects,'Expired job suppresses its article without touching unrelated nodes');
+    $response=new Symfony\Component\HttpFoundation\Response(); $response->setPrivate(); $response->setMaxAge(7200);
+    $request->attributes->set('_schema_job_expires',time()+60);
+    $responseEvent=new Symfony\Component\HttpKernel\Event\ResponseEvent($kernel,$request,Symfony\Component\HttpKernel\HttpKernelInterface::MAIN_REQUEST,$response);
+    (new VHUG\SchemaManagerBundle\EventListener\JobExpiryListener())($responseEvent);
+    $check($response->getMaxAge()<=60 && $response->headers->hasCacheControlDirective('private'),'Expiry caps response cache without exposing private pages');
+    echo "PASS: news replacement and JobPosting routing, defaults, expiry, list suppression and cache checks.\n";
 } finally {
     if (isset($request)) { $c->get('request_stack')->pop(); }
     $db->rollBack();

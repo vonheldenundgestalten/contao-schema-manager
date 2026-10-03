@@ -9,7 +9,7 @@ if(getenv('SCHEMA_TEST_DB_TCP')==='1'){
 $kernel->boot();$c=$kernel->getContainer();$c->get('contao.framework')->initialize();$db=$c->get('database_connection');
 
 // List consumers pass these names to field metadata lookups and SQL builders.
-foreach (['tl_schema_entity', 'tl_schema_translation'] as $table) {
+foreach (['tl_schema_entity', 'tl_schema_translation', 'tl_schema_contact'] as $table) {
     Contao\Controller::loadDataContainer($table);
     $dca = $GLOBALS['TL_DCA'][$table];
     foreach (['sorting', 'label'] as $section) {

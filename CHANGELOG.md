@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Shared organization alternate name and founding date, public Person phone/email, and published contact points with languages and territories.
+- Localized service classification, audience and catalogue titles, shared territories and reusable subservices with cycle prevention.
+- Archive-controlled JobPosting with inherited defaults and record overrides, real reader URLs, remote/physical locations, deadlines, article replacement and expiry-aware cache lifetime.
+- Bilingual fields and illustrated editorial documentation. Existing 5.7.0 entities and articles retain their behavior.
+- Smart images, source-record bindings and specialized products remain deferred; their feature branches are unchanged.
+
 ## 5.7.0 — 2026-10-03
 
 First scoped release for Contao 5.7 and PHP 8.3+.

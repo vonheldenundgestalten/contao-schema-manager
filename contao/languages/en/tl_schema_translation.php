@@ -41,3 +41,9 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['offerAvailability'] = ['Availabili
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerDescription'] = ['Offer description', 'Optional localized price or quotation explanation matching visible content.'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerModes'] = ['' => 'No offer', 'exact' => 'Exact price', 'from' => 'Starting price', 'quote' => 'On request'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerUnits'] = ['' => 'One-off', 'MON' => 'Month', 'ANN' => 'Year', 'HUR' => 'Hour', 'DAY' => 'Day'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['serviceType'] = ['Service type', 'Localized classification, e.g. restructuring consultancy.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['audienceType'] = ['Audience', 'Localized description of the intended audience.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['catalogName'] = ['Catalogue title', 'Leave blank to use this service’s name.'];

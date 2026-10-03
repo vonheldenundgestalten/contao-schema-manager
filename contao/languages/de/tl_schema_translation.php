@@ -41,3 +41,9 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['offerAvailability'] = ['Verfügbar
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerDescription'] = ['Angebotsbeschreibung', 'Optionale lokalisierte Preis- oder Anfragebeschreibung passend zum Seiteninhalt.'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerModes'] = ['' => 'Ohne Angebot', 'exact' => 'Festpreis', 'from' => 'Ab-Preis', 'quote' => 'Auf Anfrage'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['offerUnits'] = ['' => 'Einmalig', 'MON' => 'Monat', 'ANN' => 'Jahr', 'HUR' => 'Stunde', 'DAY' => 'Tag'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['serviceType'] = ['Leistungsart', 'Lokalisierte Bezeichnung, z. B. Restrukturierungsberatung.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['audienceType'] = ['Zielgruppe', 'Lokalisierte Beschreibung der Zielgruppe.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['catalogName'] = ['Katalogtitel', 'Leer: Name dieser Leistung verwenden.'];

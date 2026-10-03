@@ -22,6 +22,9 @@ $GLOBALS['TL_DCA']['tl_schema_translation'] = [
         'offerMode_from' => 'offerPrice,offerCurrency,offerUnit,offerAvailability',
     ],
     'fields' => [
+        'serviceType' => ['inputType' => 'text', 'eval' => ['maxlength' => 255, 'tl_class' => 'w50'], 'sql' => "varchar(255) NOT NULL default ''"],
+        'audienceType' => ['inputType' => 'text', 'eval' => ['maxlength' => 255, 'tl_class' => 'w50'], 'sql' => "varchar(255) NOT NULL default ''"],
+        'catalogName' => ['inputType' => 'text', 'eval' => ['maxlength' => 255, 'tl_class' => 'clr long'], 'sql' => "varchar(255) NOT NULL default ''"],
         'offerMode' => ['inputType' => 'select', 'options' => ['', 'exact', 'from', 'quote'], 'reference' => &$GLOBALS['TL_LANG']['tl_schema_translation']['offerModes'], 'eval' => ['submitOnChange' => true, 'tl_class' => 'w50'], 'sql' => "varchar(16) NOT NULL default ''"],
         'offerPrice' => ['inputType' => 'text', 'eval' => ['mandatory' => true, 'maxlength' => 32, 'tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default ''"],
         'offerCurrency' => ['inputType' => 'text', 'eval' => ['mandatory' => true, 'maxlength' => 3, 'tl_class' => 'w50'], 'sql' => "varchar(3) NOT NULL default ''"],
