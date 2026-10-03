@@ -24,6 +24,7 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
         'LocalBusiness' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},legalName,vatID,taxID,telephone,email,streetAddress,postalCode,addressLocality,addressCountry,organization;{links_legend},sameAs,image;{publish_legend},published',
         'Person' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},organization;{links_legend},sameAs,image;{publish_legend},published',
         'Service' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},organization;{links_legend},sameAs,image;{publish_legend},published',
+        'Product' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},sku,mpn,brand,organization;{links_legend},sameAs,image;{publish_legend},published',
         'Event' => '{identity_legend},name,entityType,identityBase,entityId;{facts_legend},startDate,endDate,eventStatus,locationName,organization;{links_legend},sameAs,image;{publish_legend},published',
     ],
     'fields' => [
@@ -31,7 +32,7 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
         'tstamp' => ['sql' => 'int unsigned NOT NULL default 0'],
         'name' => $text(true) + ['search' => true],
         'entityType' => [
-            'inputType' => 'select', 'options' => ['Organization', 'LocalBusiness', 'Person', 'Service', 'Event'],
+            'inputType' => 'select', 'options' => ['Organization', 'LocalBusiness', 'Person', 'Service', 'Product', 'Event'],
             'eval' => ['mandatory' => true, 'submitOnChange' => true, 'tl_class' => 'w50'], 'filter' => true,
             'sql' => "varchar(32) NOT NULL default 'Organization'",
         ],
@@ -43,6 +44,7 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
         'vatID' => $text(), 'taxID' => $text(),
         'sameAs' => ['inputType' => 'textarea', 'eval' => ['tl_class' => 'clr'], 'sql' => 'text NULL'],
         'image' => ['inputType' => 'fileTree', 'eval' => ['fieldType' => 'radio', 'filesOnly' => true, 'extensions' => 'jpg,jpeg,png,webp,svg', 'tl_class' => 'clr'], 'sql' => 'binary(16) NULL'],
+        'sku' => $text(), 'mpn' => $text(), 'brand' => $text(),
         'legalName' => $text(), 'telephone' => $text(), 'email' => $text(),
         'streetAddress' => $text(), 'postalCode' => $text(), 'addressLocality' => $text(), 'addressCountry' => $text(),
         'organization' => [

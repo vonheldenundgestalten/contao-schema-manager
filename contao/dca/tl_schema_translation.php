@@ -14,12 +14,21 @@ $GLOBALS['TL_DCA']['tl_schema_translation'] = [
         'operations' => ['edit', 'delete', 'show'],
     ],
     'palettes' => [
+        '__selector__' => ['offerMode'],
         'default' => '{home_legend},page,language,isMainEntity;{content_legend},name,description,jobTitle;{publish_legend},published',
     ],
+    'subpalettes' => [
+        'offerMode_exact' => 'offerPrice,offerCurrency,offerUnit,offerAvailability',
+        'offerMode_from' => 'offerPrice,offerCurrency,offerUnit,offerAvailability',
+    ],
     'fields' => [
+        'offerMode' => ['inputType' => 'select', 'options' => ['', 'exact', 'from', 'quote'], 'reference' => &$GLOBALS['TL_LANG']['tl_schema_translation']['offerModes'], 'eval' => ['submitOnChange' => true, 'tl_class' => 'w50'], 'sql' => "varchar(16) NOT NULL default ''"],
+        'offerPrice' => ['inputType' => 'text', 'eval' => ['mandatory' => true, 'maxlength' => 32, 'tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default ''"],
+        'offerCurrency' => ['inputType' => 'text', 'eval' => ['mandatory' => true, 'maxlength' => 3, 'tl_class' => 'w50'], 'sql' => "varchar(3) NOT NULL default ''"],
+        'offerUnit' => ['inputType' => 'select', 'options' => ['', 'MON', 'ANN', 'HUR', 'DAY'], 'reference' => &$GLOBALS['TL_LANG']['tl_schema_translation']['offerUnits'], 'eval' => ['tl_class' => 'w50'], 'sql' => "varchar(3) NOT NULL default ''"],
+        'offerAvailability' => ['inputType' => 'select', 'options' => ['', 'InStock', 'OutOfStock', 'PreOrder', 'LimitedAvailability', 'Discontinued'], 'eval' => ['tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default ''"],
+        'offerDescription' => ['inputType' => 'textarea', 'eval' => ['tl_class' => 'clr'], 'sql' => 'text NULL'],
         'schemaPreview' => ['eval' => ['doNotSave' => true]],
-        'sourceContent' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'chosen' => true, 'submitOnChange' => true, 'tl_class' => 'w50'], 'sql' => 'int unsigned NOT NULL default 0'],
-        'sourceRow' => ['inputType' => 'select', 'eval' => ['includeBlankOption' => true, 'tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default ''"],
         'id' => ['sql' => 'int unsigned NOT NULL auto_increment'],
         'pid' => ['sql' => 'int unsigned NOT NULL default 0'],
         'tstamp' => ['sql' => 'int unsigned NOT NULL default 0'],

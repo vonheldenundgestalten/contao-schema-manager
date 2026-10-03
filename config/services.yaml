@@ -4,4 +4,4 @@ services:
         autoconfigure: true
     VHUG\SchemaManagerBundle\:
         resource: ../src/
-        exclude: ../src/{ContaoManager,Model,Metadata/SocialResponseContext.php,SchemaManagerBundle.php}
+        exclude: ../src/{ContaoManager,Model,SchemaManagerBundle.php}

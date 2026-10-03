@@ -10,19 +10,17 @@ use Contao\PageModel;
 use Doctrine\DBAL\Connection;
 use Spatie\SchemaOrg\WebPage;
 use Spatie\SchemaOrg\WebSite;
-use Spatie\SchemaOrg\ImageObject;
 use Spatie\SchemaOrg\BreadcrumbList;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use VHUG\SchemaManagerBundle\Metadata\PageImageResolver;
 
 #[AsEventListener(priority: -200)]
 final class PageMetadataListener
 {
     public const PAGE_TYPES=['WebPage','AboutPage','ContactPage','CollectionPage','ProfilePage','ItemPage'];
     public function __construct(
-        private readonly RequestStack $requests, private readonly PageImageResolver $images,
+        private readonly RequestStack $requests,
         private readonly ContentUrlGenerator $urls, private readonly Connection $connection,
         private readonly CacheTagManager $tags,
     ) {}
@@ -62,13 +60,6 @@ final class PageMetadataListener
         $this->tags->tagWithModelClass(PageModel::class);
         $this->tags->tagWithModelClass(\Contao\ContentModel::class);
         if($root){$this->website($root,$web,$manager);}
-        if($page->schemaImageMode === 'none'){
-            $web->setProperty('primaryImageOfPage',null);
-        }elseif($image=$this->images->resolve($page,$root)){
-            $node=$image['schema'];$id=$node['@id'];
-            if(!$graph->has(ImageObject::class,$id)){$graph->set($manager->createSchemaOrgTypeFromArray($node),$id);}
-            $web->setProperty('primaryImageOfPage',['@id'=>$id]);
-        }
         if($graph->has(BreadcrumbList::class)){
             $breadcrumb=$graph->get(BreadcrumbList::class);
             $data=$breadcrumb->toArray();

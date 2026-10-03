@@ -1,0 +1,23 @@
+<?php
+declare(strict_types=1);
+require_once dirname(__DIR__).'/src/Schema/EntityMapper.php';
+$mapper = new VHUG\SchemaManagerBundle\Schema\EntityMapper();
+$check = static function ($ok, $message) { if (!$ok) { throw new RuntimeException($message); } };
+$entity=['entityType'=>'Product','entityId'=>'https://example.org/#product','name'=>'Shared product','sku'=>'SKU-1','mpn'=>'MPN-1','brand'=>'Example'];
+$org=['entityId'=>'https://example.org/#seller'];
+$home=['name'=>'Produkt','description'=>'Beschreibung','offerMode'=>'exact','offerPrice'=>'0','offerCurrency'=>'EUR','offerUnit'=>'MON'];
+$node=$mapper->map($entity,$home,'https://example.org/de/produkt',$org);
+$check($node['name']==='Produkt' && $node['sku']==='SKU-1' && $node['brand']['name']==='Example','Product facts and localized text');
+$check(!isset($node['parentOrganization']) && !isset($node['manufacturer']) && $node['offers']['seller']['@id']===$org['entityId'],'Seller must not imply manufacturer');
+$check($node['offers']['priceSpecification']['price']==='0','Explicit zero is a valid price');
+$check($node['offers']['priceSpecification']['referenceQuantity']['unitCode']==='MON','Billing period preserved');
+$home['offerMode']='from';$home['offerPrice']='19.90';$node=$mapper->map($entity,$home,'https://example.org/de/produkt');
+$check($node['offers']['priceSpecification']['minPrice']==='19.90' && !isset($node['offers']['priceSpecification']['price']),'Starting price is not exact');
+$home['offerMode']='quote';$node=$mapper->map($entity,$home,'https://example.org/de/produkt');
+$check(!isset($node['offers']['priceSpecification']),'Quote must not reuse stale numeric price');
+$home['offerMode']='';$check(!isset($mapper->map($entity,$home,'https://example.org/de/produkt')['offers']),'No offer mode omits stale values');
+$home['offerMode']='exact';$home['offerPrice']='unknown';$check(!isset($mapper->map($entity,$home,'https://example.org/de/produkt')['offers']),'Malformed imported amount omitted');
+$check(!isset($mapper->map($entity,$home,null)['offers']),'No localized home means no localized offer');
+$entity['entityType']='Service';$home['offerPrice']='10';$node=$mapper->map($entity,$home,'https://example.org/service',$org);
+$check($node['provider']['@id']===$org['entityId'] && !isset($node['sku']),'Manual Service offers supported without Product facts');
+echo "PASS: 10 manual Product/Service offer checks.\n";

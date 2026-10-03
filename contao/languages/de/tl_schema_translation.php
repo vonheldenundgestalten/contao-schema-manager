@@ -29,8 +29,15 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['jobTitle'] = ['Berufsbezeichnung',
 $GLOBALS['TL_LANG']['tl_schema_translation']['isMainEntity'] = ['Hauptthema dieser Seite', 'Verknüpft die bestehende WebPage über mainEntity mit dieser Entität.'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['name'] = ['Übersetzter Name', 'Nur für Veranstaltungen und Leistungen. Leer lassen, um den gemeinsamen Namen zu verwenden.'];
 
-$GLOBALS['TL_LANG']['tl_schema_translation']['source_legend'] = 'Vorhandene Preisinhalte';
-$GLOBALS['TL_LANG']['tl_schema_translation']['sourceContent'] = ['ID des Preiselements', 'Optional: Name, Beschreibung und Preis aus einem Preiselement dieser Seite übernehmen.'];
-$GLOBALS['TL_LANG']['tl_schema_translation']['sourceRow'] = ['Schlüssel der Preiszeile', 'Zeilenschlüssel im Preiselement, normalerweise 1, 2 oder 3.'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['preview_legend'] = 'Vorschau der veröffentlichten JSON-LD-Daten';
 $GLOBALS['TL_LANG']['tl_schema_translation']['schemaPreview'] = ['Gespeicherte Ausgabe', 'Zum Aktualisieren zuerst speichern. Zeigt die veröffentlichte Entität und ihre Organisation; unveröffentlichte Datensätze werden ausgelassen.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['offer_legend'] = 'Manuelles Angebot';
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerMode'] = ['Angebotstyp', 'Dieses Angebot wird manuell gepflegt. Ohne Angebot werden keine Preise ausgegeben.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerPrice'] = ['Betrag', 'Nicht negativer Betrag ohne Währung oder Tausendertrennzeichen, z. B. 19,90.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerCurrency'] = ['Währung', 'Dreistelliger ISO-Währungscode, z. B. EUR.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerUnit'] = ['Abrechnungseinheit', 'Für einen einmaligen Betrag leer lassen.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerAvailability'] = ['Verfügbarkeit', 'Nur angeben, wenn die sichtbaren Seiteninhalte diese bestätigen.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerDescription'] = ['Angebotsbeschreibung', 'Optionale lokalisierte Preis- oder Anfragebeschreibung passend zum Seiteninhalt.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerModes'] = ['' => 'Ohne Angebot', 'exact' => 'Festpreis', 'from' => 'Ab-Preis', 'quote' => 'Auf Anfrage'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerUnits'] = ['' => 'Einmalig', 'MON' => 'Monat', 'ANN' => 'Jahr', 'HUR' => 'Stunde', 'DAY' => 'Tag'];

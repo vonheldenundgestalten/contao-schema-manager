@@ -1,6 +1,6 @@
-# Contao Schema Manager
+# Contao Schema Manager 5.7
 
-**Describe your company, people and services once. Connect them to your Contao content in every language.**
+**Describe your company, people, products and services once. Connect them to your Contao content in every language.**
 
 Contao Schema Manager adds shared Schema.org entities to Contao's existing JSON-LD graph. Editors manage company facts centrally, assign each entity a home page per language, and connect it to pages and news without maintaining JSON in HTML content elements.
 
@@ -8,9 +8,9 @@ For example, a hosting business can describe its company once, connect its hosti
 
 ![Structured data overview with company, people, hosting and maintenance services](docs/images/entities.png)
 
-*Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. The optional pricing adapter shown below belongs to that project.*
+*Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. The Product screenshots use an unpublished documentation example.*
 
-> **Development version:** use `dev-main` in a development environment first. Requires **PHP 8.3+** and **Contao 5.7+ within the 5.x series**; currently tested on Contao 5.7.13 with PHP 8.4. The News bundle is optional. This is not yet a complete editor for every Schema.org type.
+> **Release 5.7.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. This first release focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
 ## In this guide
 
@@ -18,7 +18,8 @@ For example, a hosting business can describe its company once, connect its hosti
 - [Understand entities, identities and translations](#understand-entities-identities-and-translations)
 - [Initial setup](#initial-setup)
 - [Manage services and solutions](#manage-services-and-solutions)
-- [Manage pages and sharing images](#manage-pages-and-sharing-images)
+- [Manage products and offers](#manage-products-and-offers)
+- [Manage pages](#manage-pages)
 - [Manage news and blog posts](#manage-news-and-blog-posts)
 - [People and standalone events](#people-and-standalone-events)
 - [Preview and validate](#preview-and-validate)
@@ -32,14 +33,14 @@ Run Composer commands from your **Contao application root**, not from this packa
 
 ### Option A: install directly from GitHub
 
-Register the repository and require the development version:
+Register the repository and require the first release:
 
 ```sh
 composer config repositories.schema-manager vcs https://github.com/vonheldenundgestalten/contao-schema-manager.git
-composer require vonheldenundgestalten/contao-schema-manager:dev-main
+composer require vonheldenundgestalten/contao-schema-manager:^5.7
 ```
 
-This explicitly uses the GitHub repository; it does not depend on a Packagist release. If the repository requires authentication, configure Composer's normal GitHub access separately.
+The Git tag supplies the package version; there is no separate Packagist publication assumed here. If the repository requires authentication, configure Composer's normal GitHub access separately.
 
 ### Option B: develop with a local package folder
 
@@ -92,7 +93,7 @@ When updating a local package, synchronize its files and rebuild the Contao cach
 
 ## Understand entities, identities and translations
 
-An **entity** is a real thing: a company, person, service or event. A **page** describes that thing. They are related, but their identifiers serve different purposes.
+An **entity** is a real thing: a company, person, product, service or event. A **page** describes that thing. They are related, but their identifiers serve different purposes.
 
 | Item | Example | Purpose |
 | --- | --- | --- |
@@ -111,11 +112,11 @@ The manager uses Contao to resolve representative-page URLs. Staging previews ca
 | --- | --- |
 | Permanent identity and type | Representative page and derived language |
 | Organization/person name and legal name | Description |
-| Address, telephone, email and legal identifiers | Service/event display name |
+| Address, telephone, email and legal identifiers | Product/service/event display name |
 | Related organization and official profile links | Person's job title |
 | Logo or portrait; event dates and venue | Main-subject assignment and publication |
 
-Company and person names are shared; you do not re-enter the legal company name for each language. A Service or Event can have a localized name, falling back to its shared name when empty.
+Company and person names are shared; you do not re-enter the legal company name for each language. A Product, Service or Event can have a localized name, falling back to its shared name when empty.
 
 Each entity can have **one localized home per language**. Several entities can use the same page—for example, several hosting packages described on one hosting page. News reader pages that require an item cannot be selected as these homes; news has its own integration.
 
@@ -163,17 +164,9 @@ Usually leave **Website homepage override** empty. The website homepage is indep
 
 ![Language-root settings: publisher, website name and sharing the website identity with the German root](docs/images/website.png)
 
-### 4. Set a fallback sharing image
-
-On each language root, choose a **Default sharing image** under **Social sharing**. This is useful for pages without a suitable image of their own. Add an image description or use the file's localized metadata.
-
-Enable **Manage social sharing metadata** if this extension should output Open Graph/Twitter cards. Have your integrator disable duplicate tags from other extensions or templates first. The VHUG pilot theme has a separate bridge for this; other themes need their own check.
-
-The representative image also feeds Schema.org's `primaryImageOfPage`; enabling social tags is a separate choice.
-
 ## Manage services and solutions
 
-Use a **Service** entity for a service you actually provide: website development, hosting, maintenance or a consulting solution. The extension currently has no separate Product editor.
+Use a **Service** entity for a service you actually provide: website development, hosting, maintenance or a consulting solution. Use Product for tangible or digital products; use Service for work you provide.
 
 1. Create a Service with its shared name and identity origin.
 2. Select the company as **Related organization**. The output connects it as the service's `provider`.
@@ -185,27 +178,35 @@ A service can be the main subject of its detail page and also be relevant to oth
 
 **Main subject** connects a page with what it primarily describes (`mainEntity`). **Related entities** connects subjects relevant to that page (`about`). Select only entities supported by the visible content.
 
-### Optional: derive a priced service from existing content
+## Manage products and offers
 
-The current adapter supports the VHUG **pricing** content element. This is an optional project integration, not a generic Contao price editor.
+Create a **Product** under **Content → Structured data**. Enter its shared name, identity origin, optional SKU, manufacturer part number (MPN), brand and product image. Related organization supplies the seller of its offers; it does not assert that the seller manufactured the product.
 
-On a localized Service record:
+![Manually maintained Product identity, SKU, MPN and brand](docs/images/product.png)
 
-1. Select a **Pricing element ID** from that service's home page.
-2. Select the **Pricing row key**, such as “CMS Hosting”.
-3. Save and open the preview.
+Add a localized child record for each language, select its representative page, and enter the localized name and description. Publish the entity and child when the corresponding page content is ready.
 
-The selected row supplies the localized name, description and price. This takes precedence over the manually entered localized name/description. Editors continue changing those values in the original pricing content element.
+Products and Services both support one **Manual offer** per localized record:
 
-![CMS Hosting localized home with the existing pricing element and row selected](docs/images/service-home.png)
+| Offer type | What to enter |
+| --- | --- |
+| No offer | No price data is emitted |
+| Exact price | Amount and three-letter currency, e.g. `19.90` and `EUR` |
+| Starting price | Minimum amount and currency; emitted as `minPrice` |
+| On request | Optional quotation explanation; no invented numeric price |
 
-*The localized text fields are empty here because this example takes its text and price from the selected CMS Hosting row.*
+An optional billing unit supports month, year, hour or day; leave it empty for a one-off price. Select availability only when the visible content confirms it. Keep identifiers and the commercial meaning of translated offers consistent. There is no automatic currency conversion, tax calculation, inventory sync, variant system or checkout integration.
 
-Exact amounts become `price`; “from”/“ab” amounts become `minPrice`. Recognized monthly/yearly prices retain the billing unit. Unknown or quote-based amounts are not turned into invented numeric prices. Offers reference the Service and its seller.
+![Localized product text and manual offer fields](docs/images/product-offer.png)
 
-After removing or reorganizing pricing rows, check the linked services. Row keys are references, not automatic identity tracking. An unavailable linked source suppresses that service's output rather than leaving an obsolete offer published.
+Amounts can use a decimal point or comma but no thousands separators; saving normalizes the decimal separator. An explicitly entered zero is allowed. For numeric prices, currency is required. The offer references its Product/Service and the selected seller using stable IDs.
 
-## Manage pages and sharing images
+**These values are maintained by hand.** Updating a pricing content element or shop record does not update this extension. When changing prices, update the visible page content and its manual offer together. Content-driven pricing is deferred to a separate feature branch.
+
+![CMS Hosting as a manual Service offer](docs/images/service-home.png)
+
+## Manage pages
+
 
 Continue editing page titles, descriptions and content in their normal Contao screens. The extension reuses resolved page metadata, canonical URLs, language and core breadcrumbs.
 
@@ -224,21 +225,9 @@ Edit a regular page in **Site structure → Structured data**:
 
 This changes the existing page node's type while preserving its other properties. The Service, Person or Article described on that page remains a separate linked entity. Selecting `ItemPage` does not create a Product.
 
-### Pick a representative image
+![Contact page linked to the company and assigned ContactPage purpose](docs/images/page.png)
 
-Under **Representative image**, use:
-
-- **Automatic:** news reader image → marked content image → page picker → explicitly assigned terminal42 page image → language-root fallback.
-- **Prefer page image:** the page picker/explicit terminal42 page image comes before the automatic sources.
-- **No representative image:** omit the page/social image. An article's own image data remains intact.
-
-![Contact page settings showing related company, ContactPage purpose and representative-image controls](docs/images/page.png)
-
-For a page with a hero or main image, edit that content element and enable **This image represents the page**. The adapter uses standard Contao `singleSRC`/`addImage` fields, only when the element is rendered and enabled. The first qualifying marked image wins. Custom hero structures need an adapter; the manager does not guess from every image, slider or logo strip.
-
-For pages with no suitable content image, use the page picker or the root fallback. File metadata supplies localized alternative text unless overridden. Existing ImageObject metadata is reused and connected to `primaryImageOfPage`.
-
-JPG, PNG and WebP are supported. The root's **Social image format** either fits the complete image or crops to 1200 × 630 using Contao's important image area. Missing/unusable files fall through to the next candidate. The optional terminal42 integration uses explicitly assigned images; it does not emulate that extension's module-specific parent-image inheritance.
+Release 5.7.0 leaves image selection and Open Graph/Twitter tags to Contao, your theme or your existing extension. Core ImageObject nodes and news article images are preserved. You can still assign a logo/portrait/product image directly to a managed entity; that is separate from page/social image selection.
 
 ## Manage news and blog posts
 
@@ -316,21 +305,21 @@ A password-protected development URL cannot be fetched by public validators. Use
 
 **Current behavior:** Organization and LocalBusiness records emit their full details on their published localized home. On other pages, they emit a compact node containing `@type`, `@id`, `name`, the localized home `url` when available, and `logo` when configured. Publisher/provider relationships still reference the same permanent identity. Saved entity previews remain complete.
 
-See [Organization output](docs/organization-output.md) for examples and the distinction between an ID reference and automatic data retrieval. The [pricing and image integration design](docs/generic-integrations.md) describes the next refactoring; those proposed controls are not yet implemented.
+See [Organization output](docs/organization-output.md) for examples and the distinction between an ID reference and automatic data retrieval. See the [roadmap](docs/roadmap.md) for the separate image and product-hook branches.
 
 ## Everyday maintenance
 
 | When something changes | Where to edit |
 | --- | --- |
 | Company name, address or phone | Shared Organization/LocalBusiness record, once |
-| Service wording in one language | Its localized child; for linked pricing, the source content row |
+| Service wording in one language | Its localized child and manual offer fields |
 | A service moves to another page | Its representative-page selection; retain its permanent ID |
 | Another page discusses a service/person | That page's Related entities |
 | News headline, body or main image | The existing news record/content |
 | A post's public author differs | The post's Author entity override |
 | A post receives a substantive update | Its content and Content last revised field |
 | A new language is added | Root setup and localized child records |
-| Sharing image is unsuitable | Mark a suitable content image or choose a page override |
+| Sharing image is unsuitable | Your existing theme/image/social extension; outside this release |
 | A service is withdrawn | Unpublish the entity and update the visible content |
 
 Preserve generated IDs when migrating or importing records. Removing and recreating an entity gives it a new identity; changing its home page does not.
@@ -340,38 +329,38 @@ Preserve generated IDs when migrating or importing records. Removing and recreat
 - **No localized output:** check parent publication, child publication, page publication/access and the page's derived language.
 - **News fields are missing:** enable a supported enrichment type on the archive and save it first.
 - **News keeps the old output:** confirm archive publisher and generated article IDs; save the archive to fill missing IDs.
-- **Preview seems stale:** save first, then reopen the preview. Linked pricing content is the source when configured.
+- **Preview seems stale:** save first, then reopen the preview. Manual values are the source in this release.
 - **Duplicate schema or social tags:** check old HTML elements, theme templates and other extensions. The manager does not automatically remove handcrafted scripts or FAQ microdata.
 - **Fields/module missing after an update:** review database updates, rebuild the application cache and check backend permissions.
 
 ## Current scope and limitations
 
-Available now: Organization, LocalBusiness, Person, Service, basic standalone Event; localized homes; page purposes; website publisher/identity; shared people as news authors; archive-controlled article enrichment; representative/social images; saved previews; optional VHUG pricing and terminal42 page-image integrations.
+Available in **5.7.0**: Organization, LocalBusiness, Person, Product, Service and basic standalone Event; manual offers; localized homes; compact supporting organizations; page purposes; website publisher/identity; public news authors; archive-controlled article enrichment; saved previews; English/German labels.
 
-Still pending: a full Event workflow, JobPosting replacement and fields, FAQ-checkbox adapters, Product-specific fields, generalized content adapters, language-home suggestions, a visual relationship/usage overview. Compact output is currently implemented for Organization and LocalBusiness, not all entity types. Existing HTML schemas need a deliberate migration per project.
+Not included: smart/automatic page images, social-tag generation, pricing-source hooks, Product variants/inventory/reviews, full Event rich-result fields, JobPosting, FAQ adapters or a visual relationship overview. A valid Product or Event node does not by itself guarantee eligibility for Google's feature-specific rich results.
+
+The [roadmap](docs/roadmap.md) links the separate ongoing feature branches. See [release notes](CHANGELOG.md) for the pilot-to-release transition.
 
 ## Developer notes
 
-The bundle integrates with Contao's JsonLdManager/JsonLdEvent. It extends the existing graph rather than adding a separate handcrafted JSON-LD script for each entity. Standard news fields remain authoritative, and the image resolver serves both page schema and social metadata.
+The bundle integrates with Contao's JsonLdManager/JsonLdEvent. It extends the existing graph rather than adding a separate handcrafted JSON-LD script for each entity. Standard news fields remain authoritative, while manually entered entity data is managed independently.
 
 Run pure checks from the package directory:
 
 ```sh
 php tests/mapper.php
-php tests/prices.php
-php tests/images.php
+php tests/manual-products.php
 ```
 
 Run integration checks from a configured Contao application root, adjusting the package path for a `vendor/` installation:
 
 ```sh
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/dca.php
-php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/contao-offers.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/integration.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/news.php
 php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/page-metadata.php
 ```
 
-The integration checks target the pilot fixtures: published DE/EN pages, a configured news archive/publisher/author and relevant image settings. Fixture database writes roll back. `SCHEMA_TEST_ORIGIN` sets the routing origin; `SCHEMA_TEST_DB_TCP=1` is an optional process-only workaround for jailed SSH without a local MySQL socket. Do not treat these as a universal fresh-install test suite.
+The integration checks target the pilot fixtures: published DE/EN pages, a configured news archive/publisher/author and their website roots. Fixture database writes roll back. `SCHEMA_TEST_ORIGIN` sets the routing origin; `SCHEMA_TEST_DB_TCP=1` is an optional process-only workaround for jailed SSH without a local MySQL socket. Do not treat these as a universal fresh-install test suite.
 
-See [development notes](docs/development.md) for the pilot's setup and verification history. Screenshot files in [docs/images](docs/images) were captured from the actual backend on 2026-10-02; credentials, browser sessions and capture helpers are not included.
+See [development notes](docs/development.md) for the pilot's setup and verification history. Screenshot files in [docs/images](docs/images) were captured from the actual backend on 2026-10-03; credentials, browser sessions and capture helpers are not included.

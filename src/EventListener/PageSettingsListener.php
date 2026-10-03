@@ -32,14 +32,4 @@ final class PageSettingsListener
         if((int)$page->rootId!==(int)$dc->id){throw new \InvalidArgumentException('Select a homepage in this website root.');}
         return (int)$value;
     }
-    #[AsCallback(table:'tl_content',target:'config.onload')]
-    public function contentPalette(): void
-    {
-        foreach($GLOBALS['TL_DCA']['tl_content']['palettes'] as $name=>&$palette){
-            if(!is_string($palette) || str_contains($palette,'schemaPrimaryImage')){continue;}
-            if(str_contains($palette,'singleSRC') || str_contains($palette,'addImage')){
-                $palette.=';{schema_image_legend:hide},schemaPrimaryImage';
-            }
-        }
-    }
 }

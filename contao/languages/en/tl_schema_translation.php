@@ -27,10 +27,17 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['language'] = ['Language', 'Derived
 $GLOBALS['TL_LANG']['tl_schema_translation']['description'] = ['Description', 'Plain text matching the visible content in this language.'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['jobTitle'] = ['Job title', 'Localized role of this person.'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['isMainEntity'] = ['Main subject of this page', 'Link the existing WebPage to this entity using mainEntity.'];
-$GLOBALS['TL_LANG']['tl_schema_translation']['name'] = ['Localized name', 'For events and services only. Leave empty to use the shared name.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['name'] = ['Localized name', 'For products, events and services. Leave empty to use the shared name.'];
 
-$GLOBALS['TL_LANG']['tl_schema_translation']['source_legend'] = 'Existing pricing content';
-$GLOBALS['TL_LANG']['tl_schema_translation']['sourceContent'] = ['Pricing element ID', 'Optional: derive offer name, description and price from a pricing element on this home page.'];
-$GLOBALS['TL_LANG']['tl_schema_translation']['sourceRow'] = ['Pricing row key', 'Row key in the pricing element, usually 1, 2 or 3.'];
 $GLOBALS['TL_LANG']['tl_schema_translation']['preview_legend'] = 'Published JSON-LD preview';
 $GLOBALS['TL_LANG']['tl_schema_translation']['schemaPreview'] = ['Saved output', 'Save first to refresh. Shows the published entity and its referenced organization; unpublished records are omitted.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['offer_legend'] = 'Manual offer';
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerMode'] = ['Offer type', 'Maintain this offer by hand. Select no offer to omit pricing.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerPrice'] = ['Amount', 'Non-negative amount without currency/thousands separators; e.g. 19.90.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerCurrency'] = ['Currency', 'Three-letter ISO currency code, e.g. EUR.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerUnit'] = ['Billing unit', 'Leave empty for a one-off amount.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerAvailability'] = ['Availability', 'Only select a status confirmed by the visible page content.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerDescription'] = ['Offer description', 'Optional localized price or quotation explanation matching visible content.'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerModes'] = ['' => 'No offer', 'exact' => 'Exact price', 'from' => 'Starting price', 'quote' => 'On request'];
+$GLOBALS['TL_LANG']['tl_schema_translation']['offerUnits'] = ['' => 'One-off', 'MON' => 'Month', 'ANN' => 'Year', 'HUR' => 'Hour', 'DAY' => 'Day'];
