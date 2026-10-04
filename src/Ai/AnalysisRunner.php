@@ -5,22 +5,22 @@ use Contao\BackendUser;
 use Doctrine\DBAL\Connection;
 final class AnalysisRunner
 {
-    public function __construct(private readonly Connection $db,private readonly RunStore $store,private readonly SiteInventory $inventory,private readonly OpenAiProvider $provider,private readonly ProposalEngine $proposals,private readonly PublicTextFetcher $fetcher,private readonly SchemaAudit $audit) {}
+    public function __construct(private readonly Connection $db,private readonly RunStore $store,private readonly SiteInventory $inventory,private readonly OpenAiProvider $provider,private readonly ProposalEngine $proposals,private readonly PublicTextFetcher $fetcher,private readonly SchemaAudit $audit,private readonly SchemaImport $importer) {}
     public function start(BackendUser $user,int $root,string $mode,string $origin,bool $changed,bool $multilingual=true,string $stage='content'): int
     {
-        if(!in_array($stage,['foundation','content','audit'],true))throw new \InvalidArgumentException('Choose a setup stage.');
+        if(!in_array($stage,['foundation','content','import'],true))throw new \InvalidArgumentException('Choose a setup stage.');
         if (!in_array($mode,['discover','improve'],true)) { throw new \InvalidArgumentException('Choose an analysis action.'); }
-        if($stage==='audit'){$mode='improve';$origin='https://schema-audit.invalid';$changed=false;}
+        if($stage==='import'){$mode='improve';$origin='https://schema-import.invalid';$changed=false;}
         $origin=rtrim(trim($origin),'/');
         if (!preg_match('~^https://[a-z0-9.-]+(?::[0-9]+)?$~iD',$origin) || strlen($origin)>180) { throw new \InvalidArgumentException('Enter the public HTTPS identity origin, without a path.'); }
-        $inventory=$this->inventory->collect($root,$user,$multilingual);$previous=$this->store->previous((int)$user->id,$root);
+        $inventory=$this->inventory->collect($root,$user,$multilingual);if($stage==='import'&&$inventory['sources']){$u=parse_url(reset($inventory['sources'])['url']);$origin=$u['scheme'].'://'.$u['host'].(isset($u['port'])?':'.$u['port']:'');}$previous=$this->store->previous((int)$user->id,$root);
         if($stage==='foundation'){$inventory['sources']=array_filter($inventory['sources'],static fn($s)=>str_starts_with($s['id'],'page:'));$changed=false;}
         $queue=[];
         // Root grouping is part of the scan scope; a new multilingual scan must not
         // skip all the primary-language context because a single-language run exists.
         if($multilingual && count($inventory['roots'])>1)$changed=false;
         foreach ($inventory['sources'] as $key=>$source) { if (!$changed || ($previous['hashes'][($stage==='foundation'?'foundation:':'').$mode.':'.$key] ?? '')!==$source['hash']) { $queue[]=$key; } }
-        return $this->store->create((int)$user->id,$root,['audit'=>$stage==='audit','auditResults'=>[],'root'=>$root,'stage'=>$stage,'mode'=>$mode,'origin'=>$origin,'inventory'=>$inventory,'queue'=>$queue,'processed'=>[],
+        return $this->store->create((int)$user->id,$root,['import'=>$stage==='import','auditResults'=>[],'importSources'=>[],'importPlan'=>[],'root'=>$root,'stage'=>$stage,'mode'=>$mode,'origin'=>$origin,'inventory'=>$inventory,'queue'=>$queue,'processed'=>[],
             'localizationQueue'=>[],'localizationPrepared'=>false,'editorLanguage'=>$GLOBALS['TL_LANGUAGE'] ?? 'en','proposals'=>[],'mapped'=>[],'decisions'=>$previous['decisions'],'status'=>$queue?'ready':'complete','usage'=>['input_tokens'=>0,'output_tokens'=>0],'warnings'=>[],'createdAt'=>time()]);
     }
     /** A refinement is a separate proposal set. Never overwrite the source review. */
@@ -29,7 +29,7 @@ final class AnalysisRunner
         $feedback=trim($feedback);
         if ($feedback==='' || mb_strlen($feedback)>4000) { throw new \InvalidArgumentException('Enter feedback between 1 and 4000 characters.'); }
         $original=$this->store->get($id,(int)$user->id);
-        if(!empty($original['configuration'])||!empty($original['audit']))throw new \RuntimeException('Prepare a new parent review to change configuration.');
+        if(!empty($original['configuration'])||!empty($original['import']))throw new \RuntimeException('Prepare a new parent review to change configuration.');
         if ($original['status']!=='complete') { throw new \RuntimeException('Finish this analysis before refining it.'); }
         foreach($original['proposals'] as $p){if($p['status']==='applied')throw new \RuntimeException('Some suggestions have been applied. Start a fresh analysis to refine the current schema.');}
         $run=$original;
@@ -53,6 +53,7 @@ final class AnalysisRunner
         $this->db->beginTransaction();
         try {
             $run=$this->store->get($id,$owner,true);
+            if(($run['stage']??'')==='audit')throw new \RuntimeException('This old review has been replaced. Start an import scan.');
             if ($run['status']==='complete') { $this->db->commit();return self::progress($run); }
             if ($run['status']==='working' && time()-($run['workingAt'] ?? time())<180) { $this->db->commit();return self::progress($run); }
             // A late duplicate must not start the next batch after the first completes.
@@ -67,18 +68,18 @@ final class AnalysisRunner
         else {
             // Include the remaining members of each page's language family in this batch.
             $families=[];foreach($batch as $key){if(!isset($run['inventory']['sources'][$key]))continue;$page=$run['inventory']['sources'][$key]['page'];$families[]=$run['inventory']['pages'][$page]['languageFamily'] ?? $page;}
-            foreach($run['queue'] as $key){if(!isset($run['inventory']['sources'][$key]))continue;$page=$run['inventory']['sources'][$key]['page'];if(empty($run['audit'])&&in_array($run['inventory']['pages'][$page]['languageFamily'] ?? $page,$families,true)&&!in_array($key,$batch,true))$batch[]=$key;}
+            foreach($run['queue'] as $key){if(!isset($run['inventory']['sources'][$key]))continue;$page=$run['inventory']['sources'][$key]['page'];if(empty($run['import'])&&in_array($run['inventory']['pages'][$page]['languageFamily'] ?? $page,$families,true)&&!in_array($key,$batch,true))$batch[]=$key;}
             $sources=array_intersect_key($run['inventory']['sources'],array_flip($batch));
         }
         try {
             @set_time_limit(120);
-            if(!empty($run['audit'])){
+            if(!empty($run['import'])){
                 $fresh=$this->inventory->collect((int)$run['root'],$user,!empty($run['inventory']['multilingual']));
                 foreach($batch as $key){
-                    if(isset($fresh['sources'][$key]))$run['auditResults'][$key]=$this->audit->inspect($fresh['sources'][$key]);
+                    if(isset($fresh['sources'][$key]))$run['importSources'][$key]=$this->importer->scan($fresh['sources'][$key]);
                     $run['processed'][$key]='audited';
                 }
-                $run['queue']=array_values(array_diff($run['queue'],$batch));$run['status']=$run['queue']?'ready':'complete';
+                $run['queue']=array_values(array_diff($run['queue'],$batch));$run['status']=$run['queue']?'ready':'complete';if(!$run['queue'])$run['importPlan']=$this->importer->plan($run);
             }else{
             // Re-read publication state and text: prepared snapshots and cached HTML
             // must never resurrect content that an editor has since disabled.

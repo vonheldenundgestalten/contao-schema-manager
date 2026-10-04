@@ -11,3 +11,5 @@ $GLOBALS['TL_LANG']['tl_page']['schemaWebsiteHome'] = ['Abweichende Website-Star
 $GLOBALS['TL_LANG']['tl_page']['schemaPageType'] = ['Zweck der Seite', 'Beschreibt die Seite; Artikel, Dienstleistung oder Person bleibt eine verknüpfte eigene Entität.'];
 
 $GLOBALS['TL_LANG']['tl_page']['schemaLocationOverview'] = ['Standortübersicht mit Kontaktdaten', 'Nur aktivieren, wenn diese Seite die ausgegebenen Standorte samt Kontaktdaten sichtbar zeigt. Behält Adresse, Telefon und E-Mail in Standortreferenzen.'];
+
+$GLOBALS['TL_LANG']['tl_page']['schemaImportedData'] = ['Erhaltene importierte Eigenschaften', 'Original-IDs und Eigenschaften ohne eigenes Eingabefeld. Native Felder haben Vorrang.'];

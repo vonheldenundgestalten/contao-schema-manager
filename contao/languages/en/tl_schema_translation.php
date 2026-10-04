@@ -55,3 +55,7 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['knowsAbout'] = ['Expertise', 'One 
 $GLOBALS['TL_LANG']['tl_schema_translation']['award'] = ['Awards', 'One public award per line, including its year where useful.'];
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['credentials'] = ['Professional qualifications', 'One substantiated public qualification per line.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['schemaImportedData'] = ['Preserved imported properties', 'Original IDs and properties without a native editor field. Native fields take precedence.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['import_legend'] = 'Imported structured data';

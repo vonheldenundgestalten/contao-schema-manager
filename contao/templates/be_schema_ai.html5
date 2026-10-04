@@ -37,10 +37,9 @@ $renderKey=function()use($e,$l,$token):void { ?>
 <div class="sai" data-schema-ai>
 <header><h2><?= $e($l['title']) ?></h2><a href="?do=schema_manager"><?= $e($l['back']) ?></a></header>
 <p><?= $e($l['intro']) ?></p>
-<p><a class="tl_submit" href="?do=schema_manager&amp;key=ai&amp;stage=audit&amp;root=<?= (int)$this->selectedRoot ?>"><?= $e($l['auditTitle']) ?></a> <?= $e($l['auditEntry']) ?></p>
 <?php foreach($this->draftHomes as $home): ?><p class="tl_info"><?= $e(sprintf($l['draftHome'],$home['name'],$home['language'])) ?> <a href="?do=schema_manager&amp;table=tl_schema_translation&amp;act=edit&amp;id=<?= (int)$home['id'] ?>"><?= $e($l['auditEdit']) ?></a></p><?php endforeach ?>
 <?php if($stage==='content'&&!$this->hasPublishedOrganization): ?><p class="tl_info"><?= $e($l['foundationDraftWarning']) ?></p><?php endif ?>
-<nav class="sai-stages" aria-label="<?= $e($l['stages']) ?>"><?php foreach(['foundation','configuration','content'] as $step): ?><a href="?do=schema_manager&amp;key=ai&amp;stage=<?= $step ?>&amp;root=<?= (int)$this->selectedRoot ?>" <?= $stage===$step?'aria-current="step"':'' ?>><strong><?= $e($l['stage_'.$step]) ?></strong><span><?= $e($l['stage_'.$step.'_help']) ?></span></a><?php endforeach ?></nav>
+<nav class="sai-stages" aria-label="<?= $e($l['stages']) ?>"><?php foreach(['import','foundation','configuration','content'] as $step): ?><a href="?do=schema_manager&amp;key=ai&amp;stage=<?= $step ?>&amp;root=<?= (int)$this->selectedRoot ?>" <?= $stage===$step?'aria-current="step"':'' ?>><strong><?= $e($l['stage_'.$step]) ?></strong><span><?= $e($l['stage_'.$step.'_help']) ?></span></a><?php endforeach ?></nav>
 
 <?php if($this->error): ?><p class="tl_error" role="alert"><?= $e($this->error) ?></p><?php endif ?>
 <?php if($this->message): ?><p class="tl_confirm" role="status"><?= $e($this->message) ?></p><?php endif ?>

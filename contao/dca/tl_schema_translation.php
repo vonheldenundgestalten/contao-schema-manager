@@ -71,3 +71,5 @@ $GLOBALS['TL_DCA']['tl_schema_translation'] = [
 foreach (['slogan', 'knowsAbout', 'award', 'credentials'] as $field) {
     $GLOBALS['TL_DCA']['tl_schema_translation']['fields'][$field] = ['inputType' => 'textarea', 'eval' => ['tl_class' => 'clr'], 'sql' => 'text NULL'];
 }
+
+$GLOBALS['TL_DCA']['tl_schema_translation']['fields']['schemaImportedData'] = ['inputType'=>'textarea','eval'=>['readonly'=>true,'tl_class'=>'clr','style'=>'min-height:12em'],'sql'=>'mediumtext NULL'];

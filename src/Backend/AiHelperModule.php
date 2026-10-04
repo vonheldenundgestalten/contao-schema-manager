@@ -13,7 +13,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use VHUG\SchemaManagerBundle\Ai\{ApiKeyStore,RunStore,AnalysisRunner,SiteInventory,ProposalEngine,OpenAiProvider,SetupPlanner};
 final class AiHelperModule
 {
-    public function __construct(private readonly Connection $db,private readonly RequestStack $requests,private readonly ApiKeyStore $keys,private readonly RunStore $runs,private readonly AnalysisRunner $runner,private readonly SiteInventory $inventory,private readonly ProposalEngine $proposals,private readonly SetupPlanner $setup,private readonly \VHUG\SchemaManagerBundle\Ai\SchemaAudit $audit) {}
+    public function __construct(private readonly Connection $db,private readonly RequestStack $requests,private readonly ApiKeyStore $keys,private readonly RunStore $runs,private readonly AnalysisRunner $runner,private readonly SiteInventory $inventory,private readonly ProposalEngine $proposals,private readonly SetupPlanner $setup,private readonly \VHUG\SchemaManagerBundle\Ai\SchemaAudit $audit,private readonly \VHUG\SchemaManagerBundle\Ai\SchemaImport $importer) {}
     public function generate(): string
     {
         $user=BackendUser::getInstance();
@@ -34,15 +34,24 @@ final class AiHelperModule
                     $stage=$request->request->getString('stage','content');
                     if($stage==='configuration'){$id=$this->setup->prepare($user,$request->request->getInt('root'),$request->request->getBoolean('multilingual'));}
                     else {
-                    if ($stage!=='audit'&&!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
+                    if ($stage!=='import'&&!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
                     $id=$this->runner->start($user,$request->request->getInt('root'),$request->request->getString('mode'),$request->request->getString('origin'),$request->request->getBoolean('changed'),$request->request->getBoolean('multilingual'),$stage);
                     }
                     Controller::redirect($container->get('router')->generate('contao_backend',['do'=>'schema_manager','key'=>'ai','run'=>$id]));
+                } elseif(in_array($action,['import_apply','import_publish'],true)){
+                    $this->db->beginTransaction();
+                    try{$importRun=$this->runs->get($id,(int)$user->id,true);$selected=$request->request->all('import_selected');$count=$action==='import_apply'?$this->importer->apply($importRun,$selected,$user):$this->importer->publish($importRun,$selected,$user);$this->runs->save($id,(int)$user->id,$importRun);$this->db->commit();$message=sprintf($l[$action==='import_apply'?'importApplied':'importPublished'],$count);}
+                    catch(\Throwable $e){$this->db->rollBack();throw $e;}
+                    $this->proposals->invalidate();
                 } elseif($action==='retire'){
                     $this->db->beginTransaction();
-                    try{$auditRun=$this->runs->get($id,(int)$user->id,true);$count=$this->audit->retire($auditRun,$request->request->all('retire'),$user);$this->runs->save($id,(int)$user->id,$auditRun);$this->db->commit();$message=sprintf($l['auditRetired'],$count);}
+                    try{$auditRun=$this->runs->get($id,(int)$user->id,true);$this->importer->verify($auditRun);$auditRun['audit']=true;$count=$this->audit->retire($auditRun,$request->request->all('retire'),$user);unset($auditRun['audit']);$this->runs->save($id,(int)$user->id,$auditRun);$this->db->commit();$message=sprintf($l['auditRetired'],$count);}
                     catch(\Throwable $e){$this->db->rollBack();throw $e;}
                     $container->get('contao.cache.tag_manager')->invalidateTagsForModelClass(\Contao\ContentModel::class);
+                } elseif($action==='import_verify'){
+                    $this->db->beginTransaction();
+                    try{$importRun=$this->runs->get($id,(int)$user->id,true);$this->importer->verify($importRun);$this->runs->save($id,(int)$user->id,$importRun);$this->db->commit();}
+                    catch(\Throwable $e){$this->db->rollBack();throw $e;}
                 } elseif ($action==='refine') {
                     if (!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
                     if ($request->hasSession()) { $request->getSession()->save(); }
@@ -51,7 +60,7 @@ final class AiHelperModule
                 } elseif ($action==='status') {
                     throw new \Contao\CoreBundle\Exception\ResponseException(new JsonResponse($this->runner->status($id,$user)));
                 } elseif ($action==='step') {
-                    if (empty($this->runs->get($id,(int)$user->id)['audit'])&&!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
+                    if (empty($this->runs->get($id,(int)$user->id)['import'])&&!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
                     // Release the backend session lock while the provider works. Other tabs
                     // and status/review requests must remain responsive.
                     if ($request->hasSession()) { $request->getSession()->save(); }
@@ -94,16 +103,17 @@ final class AiHelperModule
         $template->selectedRoot=$run['root'] ?? $request->query->getInt('root',(int)array_key_first($template->roots));
         $orgCount=(int)$this->db->fetchOne("SELECT COUNT(*) FROM tl_schema_entity WHERE entityType IN ('Organization','LocalBusiness')");
         $configured=(int)$this->db->fetchOne('SELECT schemaPublisher FROM tl_page WHERE id=?',[$template->selectedRoot]);
-        $recommended=$orgCount?($configured?'content':'configuration'):'foundation';
+        $recommended=$orgCount?($configured?'content':'configuration'):'import';
         $stage=$run['stage'] ?? $request->query->getString('stage',$recommended);
-        $template->stage=in_array($stage,['foundation','configuration','content','audit'],true)?$stage:$recommended;
+        if($stage==='audit'){$stage='import';$run=null;$template->run=null;}
+        $template->stage=in_array($stage,['foundation','configuration','content','import'],true)?$stage:$recommended;
         $template->draftHomes=$this->audit->warnings();
         $template->hasOrganizations=$orgCount>0;
         $template->hasPublishedOrganization=(bool)$this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE entityType IN ('Organization','LocalBusiness') AND published='1' LIMIT 1");
         $origins=$this->db->fetchFirstColumn("SELECT DISTINCT identityBase FROM tl_schema_entity WHERE identityBase<>''");$template->origin=count($origins)===1?$origins[0]:'';
         $GLOBALS['TL_CSS'][]='bundles/schemamanager/ai-helper.css?v='.filemtime(__DIR__.'/../../public/ai-helper.css');
         $GLOBALS['TL_JAVASCRIPT'][]='bundles/schemamanager/ai-helper.js?v='.filemtime(__DIR__.'/../../public/ai-helper.js');
-        if($template->stage==='audit'){$auditTemplate=new BackendTemplate('be_schema_audit');$auditTemplate->setData($template->getData());return $auditTemplate->parse();}
+        if($template->stage==='import'){$auditTemplate=new BackendTemplate('be_schema_import');$auditTemplate->setData($template->getData());return $auditTemplate->parse();}
         return $template->parse();
     }
 }

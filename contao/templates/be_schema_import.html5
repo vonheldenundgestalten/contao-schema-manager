@@ -1,0 +1,48 @@
+<?php
+$e=static fn($s)=>htmlspecialchars((string)$s,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');$l=$this->l;$run=$this->run;
+$token='<input type="hidden" name="REQUEST_TOKEN" value="'.$e($this->token).'">';
+?>
+<div class="sai" data-schema-ai>
+<header><h2><?= $e($l['stage_import']) ?></h2><a href="?do=schema_manager"><?= $e($l['back']) ?></a></header>
+<nav class="sai-stages"><?php foreach(['import','foundation','configuration','content'] as $step): ?><a href="?do=schema_manager&amp;key=ai&amp;stage=<?= $step ?>&amp;root=<?= (int)$this->selectedRoot ?>" <?= $step==='import'?'aria-current="step"':'' ?>><strong><?= $e($l['stage_'.$step]) ?></strong><span><?= $e($l['stage_'.$step.'_help']) ?></span></a><?php endforeach ?></nav>
+<p><?= $e($l['importHelp']) ?></p>
+<?php if($this->error): ?><p class="tl_error"><?= $e($this->error) ?></p><?php endif ?>
+<?php if($this->message): ?><p class="tl_confirm"><?= $e($this->message) ?></p><?php endif ?>
+<?php if(!$run): ?>
+<form method="post" data-turbo="false"><?= $token ?><input type="hidden" name="ai_action" value="start"><input type="hidden" name="stage" value="import"><input type="hidden" name="mode" value="improve">
+<div class="sai-fields"><label><?= $e($l['root']) ?><select name="root"><?php foreach($this->roots as $id=>$name): ?><option value="<?= (int)$id ?>" <?= (int)$id===(int)$this->selectedRoot?'selected':'' ?>><?= $e($name) ?></option><?php endforeach ?></select></label></div>
+<label><input type="checkbox" name="multilingual" value="1" checked><?= $e($l['multilingual']) ?></label>
+<button class="tl_submit"><?= $e($l['importPrepare']) ?></button></form>
+<?php else: ?>
+<section><h3><?= $e($l['run']) ?> #<?= (int)$this->runId ?></h3><p><?= count($run['processed']) ?> / <?= count($run['inventory']['sources']) ?> <?= $e($l['sources']) ?></p>
+<?php if($run['queue']): ?><form method="post" data-sai-run data-cursor="<?= $e(\VHUG\SchemaManagerBundle\Ai\AnalysisRunner::cursor($run)) ?>" data-waiting-label="<?= $e($l['auditRunning']) ?>" data-phase="analyze" data-total="<?= count($run['inventory']['sources']) ?>" data-remaining="<?= count($run['queue']) ?>" data-turbo="false"><?= $token ?><p data-sai-loading><?= $e($l['controlsLoading']) ?></p><button type="button" class="tl_submit" data-sai-start disabled><?= $e($l['importScan']) ?></button><button type="button" class="tl_submit" data-sai-stop hidden><?= $e($l['stop']) ?></button><p data-sai-progress data-label="<?= $e($l['auditRunning']) ?>"></p></form><?php endif ?>
+<?php foreach($run['warnings'] as $warning): ?><p class="tl_info"><?= $e($warning) ?></p><?php endforeach ?></section>
+<?php if(!$run['queue']): ?>
+<?php foreach($run['importSources'] as $source): ?><?php foreach($source['warnings'] as $warning): ?><p class="tl_info"><?= $e($warning) ?></p><?php endforeach ?><?php endforeach ?>
+<?php if(!$run['importPlan']): ?><p><?= $e($l['importEmpty']) ?></p><?php endif ?>
+<form method="post" data-turbo="false"><?= $token ?>
+<?php foreach($run['importPlan'] as $key=>$g): ?>
+<details class="sai-entity"><summary><strong><?= $e($g['type'].' — '.$g['name']) ?></strong> · <?= $e($l['import_'.$g['status']]) ?></summary>
+<?php if(!$g['conflicts']&&$g['status']!=='published'): ?><label><input type="checkbox" name="import_selected[]" value="<?= $e($key) ?>"> <?= $e($l['importSelect']) ?></label><?php endif ?>
+<?php if($g['existing']): ?><p><?= $e($l['importMerge']) ?> #<?= (int)$g['existing'] ?></p><?php endif ?>
+<?php foreach($g['conflicts'] as $conflict): ?><p class="tl_error"><?= $e($conflict) ?></p><?php endforeach ?>
+<p><strong><?= $e($l['importIds']) ?></strong><br><?= implode('<br>',array_map($e,$g['ids'])) ?></p>
+<?php foreach($g['variants'] as $language=>$v): ?><h4><?= $e($language) ?> · <?= $e($run['inventory']['pages'][$v['page']]['title']??$l['importNoHome']) ?></h4>
+<dl><?php foreach($v['fields']+$v['localized'] as $field=>$value): ?><dt><?= $e($GLOBALS['TL_LANG']['tl_schema_entity'][$field][0]??$GLOBALS['TL_LANG']['tl_schema_translation'][$field][0]??$field) ?></dt><dd><?= $e($value) ?></dd><?php endforeach ?></dl>
+<details><summary><?= $e($l['importRetained']) ?></summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere"><?= $e(json_encode($v['retained'],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)) ?></pre></details>
+<?php endforeach ?>
+<?php foreach($g['sources'] as $url): ?><p><a href="<?= $e($url) ?>" target="_blank" rel="noopener"><?= $e($url) ?></a></p><?php endforeach ?>
+<?php if(!empty($g['record'])): ?><a href="?do=schema_manager&amp;act=edit&amp;id=<?= (int)$g['record'] ?>"><?= $e($l['auditEdit']) ?></a><?php endif ?>
+</details><?php endforeach ?>
+<p><?= $e($l['importPublishHelp']) ?></p><button class="tl_submit" name="ai_action" value="import_apply"><?= $e($l['importApply']) ?></button> <button class="tl_submit" name="ai_action" value="import_publish"><?= $e($l['importPublish']) ?></button>
+</form>
+<section><h3><?= $e($l['importRetireTitle']) ?></h3><p><?= $e($l['importRetireHelp']) ?></p><form method="post"><?= $token ?><button class="tl_submit" name="ai_action" value="import_verify"><?= $e($l['importVerify']) ?></button></form>
+<?php if(!empty($run['auditResults'])): ?><form method="post"><?= $token ?><input type="hidden" name="ai_action" value="retire">
+<?php foreach($run['auditResults'] as $key=>$result): ?><?php foreach($result['elements'] as $item): ?><div class="sai-proposal"><strong><?= $e($l['auditElement']) ?> #<?= (int)$item['id'] ?></strong> <a href="?do=<?= $e($item['module']) ?>&amp;table=tl_content&amp;act=edit&amp;id=<?= (int)$item['id'] ?>"><?= $e($l['auditEdit']) ?></a>
+<?php foreach($item['reasons'] as $reason): ?><p><?= $e($reason) ?></p><?php endforeach ?>
+<?php if($item['status']==='disabled'): ?><p><?= $e($l['auditDisabled']) ?></p><?php elseif($item['ready']): ?><label><input type="checkbox" name="retire[]" value="<?= $e($key.'|'.$item['id']) ?>"><?= $e($l['auditSelect']) ?></label><?php endif ?></div><?php endforeach ?>
+<?php foreach($result['errors'] as $error): ?><p class="tl_error"><?= $e($error) ?></p><?php endforeach ?>
+<?php if(!$result['elements']): ?><p><?= $e($result['title'].': '.$l['importUnknownOrigin']) ?></p><?php endif ?>
+<?php endforeach ?><button class="tl_submit"><?= $e($l['auditRetire']) ?></button></form><?php endif ?></section>
+<p><a class="tl_submit" href="?do=schema_manager&amp;key=ai&amp;stage=foundation&amp;root=<?= (int)$this->selectedRoot ?>"><?= $e($l['importNext']) ?></a></p>
+<?php endif ?><?php endif ?></div>

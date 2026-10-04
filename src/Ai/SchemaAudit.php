@@ -29,6 +29,7 @@ class SchemaAudit
         $managed=[];
         foreach($this->db->fetchFirstColumn("SELECT entityId FROM tl_schema_entity WHERE entityId<>'' AND published='1'") as $id)$managed[$id]=true;
         foreach($this->db->fetchFirstColumn("SELECT schemaWebsiteId FROM tl_page WHERE schemaWebsiteId<>''") as $id)$managed[$id]=true;
+        foreach($this->db->fetchFirstColumn("SELECT t.schemaImportedData FROM tl_schema_translation t JOIN tl_schema_entity e ON e.id=t.pid WHERE t.published='1' AND e.published='1'") as $json){$n=json_decode($json??'',true);if(!empty($n['@id']))$managed[$n['@id']]=true;}
         $managerNodes=array_values(array_filter($rendered['nodes'],static fn($n)=>isset($managed[$n['@id']??''])));
         foreach($rendered['nodes'] as $node){
             if(!in_array($node['@type']??'', ['Organization','LocalBusiness','Person','Service','Product','Event','WebSite','WebPage','BlogPosting','Article','NewsArticle'],true))continue;
@@ -48,8 +49,10 @@ class SchemaAudit
             if($result['errors'])$reasons[]='The page has JSON-LD errors.';
             // Top-level entities are checked recursively, so nested data cannot disappear unnoticed.
             $top=[];foreach($parsed['blocks'] as $block){foreach($block['@graph']??(array_is_list($block)?$block:[$block]) as $n)if(is_array($n))$top[]=$n;}
+            $remaining=$rendered['blocks'];foreach($parsed['blocks'] as $legacyBlock){foreach($remaining as $index=>$block){if($block===$legacyBlock){unset($remaining[$index]);break;}}}
+            $replacementNodes=[];foreach($remaining as $block){foreach(SchemaMarkup::parse('<script type="application/ld+json">'.json_encode($block).'</script>')['nodes'] as $n)if(isset($managed[$n['@id']??''])||in_array($n['@type']??'', ['WebPage','AboutPage','ContactPage','CollectionPage','ProfilePage','ItemPage'],true))$replacementNodes[json_encode($n)]=$n;}
             foreach($top as $node){
-                $matches=array_values(array_filter($managerNodes,static fn($n)=>SchemaMarkup::sameThing($node,$n)&&$n!==$node));
+                $matches=array_values(array_filter($replacementNodes,static fn($n)=>SchemaMarkup::sameThing($node,$n)));
                 if(count($matches)!==1){$reasons[]='No unique published replacement: '.SchemaMarkup::label($node);continue;}
                 if(!empty($node['@id'])&&$node['@id']!==($matches[0]['@id']??''))$reasons[]='Different identity: review references to '.$node['@id'].' before retiring this definition.';
                 $missing=SchemaMarkup::missing($node,$matches[0]);if($missing)$reasons[]=SchemaMarkup::label($node).': review '.implode(', ',$missing);

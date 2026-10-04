@@ -37,3 +37,6 @@ PaletteManipulator::create()->addField('schemaPageType','schema_legend',PaletteM
 
 $fields['schemaLocationOverview'] = ['inputType' => 'checkbox', 'eval' => ['tl_class' => 'clr'], 'sql' => "char(1) NOT NULL default ''"];
 PaletteManipulator::create()->addField('schemaLocationOverview','schema_legend',PaletteManipulator::POSITION_APPEND)->applyToPalette('regular','tl_page');
+
+$GLOBALS['TL_DCA']['tl_page']['fields']['schemaImportedData'] = ['inputType'=>'textarea','eval'=>['readonly'=>true,'tl_class'=>'clr','style'=>'min-height:12em'],'sql'=>'mediumtext NULL'];
+$GLOBALS['TL_DCA']['tl_page']['fields']['schemaImportedActive'] = ['inputType'=>'checkbox','eval'=>['tl_class'=>'w50'],'sql'=>"char(1) NOT NULL default ''"];

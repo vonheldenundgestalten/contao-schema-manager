@@ -137,11 +137,11 @@ $GLOBALS['TL_LANG']['schema_ai']['localizing'] = 'Fehlende Spracheinträge werde
 $GLOBALS['TL_LANG']['schema_ai']['waitingBatch'] = 'Warten auf den laufenden Verarbeitungsschritt …';
 
 $GLOBALS['TL_LANG']['schema_ai']['stages'] = 'Einrichtungsschritte';
-$GLOBALS['TL_LANG']['schema_ai']['stage_foundation'] = '1 · Organisation';
+$GLOBALS['TL_LANG']['schema_ai']['stage_foundation'] = '2 · Organisation';
 $GLOBALS['TL_LANG']['schema_ai']['stage_foundation_help'] = 'Betreiber und Sprachversionen anlegen oder verbessern. Übernommene Entwürfe vor der Inhaltsanreicherung prüfen und veröffentlichen.';
-$GLOBALS['TL_LANG']['schema_ai']['stage_configuration'] = '2 · Websites und Archive';
+$GLOBALS['TL_LANG']['schema_ai']['stage_configuration'] = '3 · Websites und Archive';
 $GLOBALS['TL_LANG']['schema_ai']['stage_configuration_help'] = 'Website-Herausgeber und Archivvorgaben vor einzelnen Beiträgen prüfen. Keine KI-Anfrage erforderlich.';
-$GLOBALS['TL_LANG']['schema_ai']['stage_content'] = '3 · Inhalte anreichern';
+$GLOBALS['TL_LANG']['schema_ai']['stage_content'] = '4 · Inhalte anreichern';
 $GLOBALS['TL_LANG']['schema_ai']['stage_content_help'] = 'Neue Themen finden oder bestehende Leistungen, Personen, Produkte und Nachrichten auf Basis der geprüften Grundlagen verbessern.';
 $GLOBALS['TL_LANG']['schema_ai']['reviewParents'] = 'Übergeordnete Einstellungen prüfen';
 $GLOBALS['TL_LANG']['schema_ai']['parentReviewHelp'] = 'Einstellungen prüfen und gewünschte Änderungen auswählen. Archivtypen bleiben ohne Ihre Auswahl unverändert. Entwürfe können als Herausgeber zugewiesen werden, erscheinen aber erst nach Veröffentlichung im Schema. Diese Vorgaben gelten für bestehende und zukünftige Inhalte; es entstehen keine Archiv-Entitäten.';
@@ -212,3 +212,51 @@ $GLOBALS['TL_LANG']['schema_ai']['auditRetire'] = 'Ausgewählte alte Elemente de
 $GLOBALS['TL_LANG']['schema_ai']['auditRetired'] = '%d alte Elemente deaktiviert.';
 
 $GLOBALS['TL_LANG']['schema_ai']['auditData'] = 'Vorhandene Daten und Ersatz ansehen';
+
+$GLOBALS['TL_LANG']['schema_ai']['stage_import'] = '1. Vorhandenes Schema importieren';
+
+$GLOBALS['TL_LANG']['schema_ai']['stage_import_help'] = 'Vorhandene Identitäten erhalten, bevor Neues entsteht.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importHelp'] = 'Hier beginnen, wenn die Website bereits manuelles JSON-LD enthält. Wiederholte Definitionen werden zusammengeführt, IDs erhalten, unterstützte Felder zugeordnet und zusätzliche Eigenschaften bewahrt. Automatische Contao-Seiten, Bilder und Artikel erscheinen nicht als Import-Entitäten. Ohne KI.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importPrepare'] = 'Importprüfung vorbereiten';
+
+$GLOBALS['TL_LANG']['schema_ai']['importScan'] = 'Vorhandene Entitäten suchen';
+
+$GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'Keine alten Entitäten gefunden. Nach Prüfung eventueller Warnungen mit der Grundlage fortfahren.';
+
+$GLOBALS['TL_LANG']['schema_ai']['import_pending'] = 'Zur Prüfung';
+
+$GLOBALS['TL_LANG']['schema_ai']['import_imported'] = 'Importierter Entwurf';
+
+$GLOBALS['TL_LANG']['schema_ai']['import_published'] = 'Veröffentlicht';
+
+$GLOBALS['TL_LANG']['schema_ai']['importSelect'] = 'Diese Entität auswählen';
+
+$GLOBALS['TL_LANG']['schema_ai']['importMerge'] = 'Lücken in bestehender Entität ergänzen';
+
+$GLOBALS['TL_LANG']['schema_ai']['importIds'] = 'Öffentliche IDs bleiben erhalten';
+
+$GLOBALS['TL_LANG']['schema_ai']['importNoHome'] = 'Startseite prüfen';
+
+$GLOBALS['TL_LANG']['schema_ai']['importRetained'] = 'Erhaltene IDs und zusätzliche Eigenschaften';
+
+$GLOBALS['TL_LANG']['schema_ai']['importApply'] = 'Auswahl als Entwürfe importieren';
+
+$GLOBALS['TL_LANG']['schema_ai']['importPublish'] = 'Ausgewählte Importe mit Sprachversionen veröffentlichen';
+
+$GLOBALS['TL_LANG']['schema_ai']['importPublishHelp'] = 'Zuerst ausgewählte neue Einträge als Entwürfe importieren. Prüfen, danach importierte Einträge auswählen und gemeinsam mit ihren Sprachversionen veröffentlichen. Bestehende Angaben und Identitäten werden nicht stillschweigend ersetzt.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importApplied'] = '%d Einträge importiert. Entwürfe vor Veröffentlichung prüfen.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importPublished'] = '%d Importe mit Sprachversionen veröffentlicht.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importRetireTitle'] = 'Umstellung abschließen';
+
+$GLOBALS['TL_LANG']['schema_ai']['importRetireHelp'] = 'Nach Veröffentlichung prüfen, ob der Manager die Originaldaten erhält. Erst dann passende reine Schema-Inhaltselemente deaktivieren. Templates und nicht zuordenbare Quellen bleiben manuell zu prüfen.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importVerify'] = 'Importierte Ausgabe prüfen';
+
+$GLOBALS['TL_LANG']['schema_ai']['importUnknownOrigin'] = 'Keine lokale HTML-Quelle gefunden; Template oder Erweiterung manuell prüfen.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importNext'] = 'Weiter: Grundlage ergänzen';

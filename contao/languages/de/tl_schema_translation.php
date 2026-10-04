@@ -55,3 +55,7 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['knowsAbout'] = ['Fachgebiete', 'Ei
 $GLOBALS['TL_LANG']['tl_schema_translation']['award'] = ['Auszeichnungen', 'Eine öffentliche Auszeichnung pro Zeile, mit Jahr wenn sinnvoll.'];
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['credentials'] = ['Berufliche Qualifikationen', 'Eine belegte öffentliche Qualifikation pro Zeile.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['schemaImportedData'] = ['Erhaltene importierte Eigenschaften', 'Original-IDs und Eigenschaften ohne eigenes Eingabefeld. Native Felder haben Vorrang.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['import_legend'] = 'Importierte strukturierte Daten';

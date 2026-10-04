@@ -142,7 +142,7 @@ final class DataContainerListener
         };
         $GLOBALS['TL_DCA']['tl_schema_translation']['palettes']['default'] =
             '{home_legend},page,language,isMainEntity;{content_legend},'.$fields.
-            (in_array($type, ['Service', 'Product'], true) ? ';{offer_legend},offerMode,offerDescription' : '').';{publish_legend},published;{preview_legend:hide},schemaPreview';
+            (in_array($type, ['Service', 'Product'], true) ? ';{offer_legend},offerMode,offerDescription' : '').';{publish_legend},published;{import_legend:hide},schemaImportedData;{preview_legend:hide},schemaPreview';
     }
 
 
