@@ -16,14 +16,21 @@ final class ProposalEngine
             [$table,,$type]=$this->resolve($key,$run);
             $keep=array_merge(FieldPolicy::fields($table,$type),array_keys(FieldPolicy::links($table,$type)),['id','pid','entityType','entityId','name','headline','title','page','language','published']);
             if (array_key_exists('published',$row) && empty($row['published'])) {
-                // Identity-only draft metadata prevents a translated duplicate without
-                // using unpublished prose as source evidence.
-                if(in_array($table,['tl_schema_entity','tl_schema_translation'],true))$records[$key]=array_intersect_key($row,array_flip(['id','pid','entityType','entityId','name','page','language','published']));
                 continue;
             }
             $records[$key]=array_intersect_key($row,array_flip($keep));
             foreach (array_keys(FieldPolicy::links($table,$type)) as $field) { if (isset($records[$key][$field]) && $field!=='organization') { $records[$key][$field]=StringUtil::deserialize($records[$key][$field],true); } }
         }
+        // Omit inactive relation targets from the prompt, but retain original DB
+        // values in the inventory for optimistic concurrency checks when applying.
+        foreach($records as $key=>&$record){
+            [$table,,$type]=$this->resolve($key,$run);
+            foreach(array_keys(FieldPolicy::links($table,$type)) as $field){
+                if(!isset($record[$field]))continue;
+                if($field==='organization'){if(!isset($records['entity:'.$record[$field]]))$record[$field]=0;}
+                else{$record[$field]=array_values(array_filter(StringUtil::deserialize($record[$field],true),static fn($id)=>isset($records['entity:'.$id])));}
+            }
+        }unset($record);
         $fields=[];
         foreach (FieldPolicy::TYPES as $type) { $fields[$type]=['entity'=>FieldPolicy::fields('tl_schema_entity',$type),'translation'=>FieldPolicy::fields('tl_schema_translation',$type),'links'=>FieldPolicy::links('tl_schema_entity',$type)]; }
         return ['editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,

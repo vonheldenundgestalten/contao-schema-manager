@@ -62,16 +62,26 @@ final class AnalysisRunner
         if($localizing){$sources=array_filter($run['inventory']['sources'],static fn($source)=>in_array($source['page'],$task['pages'],true));}
         else {
             // Include the remaining members of each page's language family in this batch.
-            $families=[];foreach($batch as $key){$page=$run['inventory']['sources'][$key]['page'];$families[]=$run['inventory']['pages'][$page]['languageFamily'] ?? $page;}
-            foreach($run['queue'] as $key){$page=$run['inventory']['sources'][$key]['page'];if(in_array($run['inventory']['pages'][$page]['languageFamily'] ?? $page,$families,true)&&!in_array($key,$batch,true))$batch[]=$key;}
+            $families=[];foreach($batch as $key){if(!isset($run['inventory']['sources'][$key]))continue;$page=$run['inventory']['sources'][$key]['page'];$families[]=$run['inventory']['pages'][$page]['languageFamily'] ?? $page;}
+            foreach($run['queue'] as $key){if(!isset($run['inventory']['sources'][$key]))continue;$page=$run['inventory']['sources'][$key]['page'];if(in_array($run['inventory']['pages'][$page]['languageFamily'] ?? $page,$families,true)&&!in_array($key,$batch,true))$batch[]=$key;}
             $sources=array_intersect_key($run['inventory']['sources'],array_flip($batch));
         }
         try {
             @set_time_limit(120);
-            if(!$localizing && !isset($run['refinementOf'])){foreach($sources as $key=>$source){$sources[$key]=$this->fetcher->enrich($source);$run['inventory']['sources'][$key]=$sources[$key];}}
-            $context=$this->proposals->context($run,$sources);
-            if($localizing){$context['localizationTask']=$task;$context['mode']='localize';}
-            $result=$this->provider->analyze($context);
+            // Re-read publication state and text: prepared snapshots and cached HTML
+            // must never resurrect content that an editor has since disabled.
+            $fresh=$this->inventory->collect((int)$run['root'],$user,!empty($run['inventory']['multilingual']));
+            $sources=array_intersect_key($fresh['sources'],$sources);
+            $run['sourceTotal'] ??= count($run['inventory']['sources']);
+            $run['inventory']=$fresh;
+            foreach($run['proposals'] as &$proposal){if($proposal['status']==='pending'&&!isset($fresh['sources'][$proposal['source']])){$proposal['status']='invalid';$proposal['reason']='The source is no longer active.';}}unset($proposal);
+            if(isset($run['previousSuggestions']))$run['previousSuggestions']=array_values(array_filter($run['previousSuggestions'],static fn($p)=>isset($fresh['sources'][$p['source']])));
+            if(!$sources){$result=['suggestions'=>[],'usage'=>[],'warning'=>null,'explanation'=>''];}
+            else {
+                $context=$this->proposals->context($run,$sources);
+                if($localizing){$context['localizationTask']=$task;$context['mode']='localize';}
+                $result=$this->provider->analyze($context);
+            }
             if($localizing)$run['_localizationTask']=$task;
             $this->proposals->ingest($run,$result['suggestions'],$sources);
             unset($run['_localizationTask']);
@@ -119,7 +129,7 @@ final class AnalysisRunner
             'phase'=>!$run['queue']&&!empty($run['localizationQueue'])?'localize':'analyze',
             'done'=>$run['status']==='complete','paused'=>$run['status']==='paused'||$expired,
             'remaining'=>count($run['queue'])+count($run['localizationQueue'] ?? []),
-            'total'=>count($run['inventory']['sources'])+($run['localizationTotal'] ?? 0),
+            'total'=>($run['sourceTotal'] ?? count($run['inventory']['sources']))+($run['localizationTotal'] ?? 0),
             'suggestions'=>count($run['proposals']),
             'message'=>$expired?'The previous batch did not finish. Continuing retries it and may incur additional API usage.':($run['status']==='paused'?(end($run['warnings']) ?: 'Analysis paused.'):''),
         ];

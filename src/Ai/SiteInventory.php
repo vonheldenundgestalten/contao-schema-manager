@@ -8,7 +8,10 @@ use VHUG\SchemaManagerBundle\Backend\ContentMapSource;
 final class SiteInventory
 {
     public function __construct(private readonly Connection $db,private readonly ContentMapSource $content) {}
-    public function roots(): array { return $this->db->fetchAllKeyValue("SELECT id,title FROM tl_page WHERE type='root' ORDER BY sorting,id"); }
+    public function roots(): array
+    {
+        $roots=[];foreach($this->db->fetchAllAssociative("SELECT * FROM tl_page WHERE type='root' ORDER BY sorting,id") as $row){if($this->visible($row))$roots[(int)$row['id']]=$row['title'];}return $roots;
+    }
     public static function text(string $html): string
     {
         $html=preg_replace('~<(script|style|nav|header|footer)\b[^>]*>.*?</\1>~is',' ',$html);
@@ -16,7 +19,7 @@ final class SiteInventory
     }
     private function visible(array $row,bool $invert=false): bool
     {
-        $now=time(); return ($invert?empty($row['invisible']):!empty($row['published'])) && empty($row['protected']) && (empty($row['start'])||(int)$row['start']<=$now) && (empty($row['stop'])||(int)$row['stop']>$now);
+        $now=(int) floor(time()/60)*60; return ($invert?empty($row['invisible']):!empty($row['published'])) && empty($row['protected']) && (empty($row['start'])||(int)$row['start']<=$now) && (empty($row['stop'])||(int)$row['stop']>$now);
     }
     public function collect(int $root,BackendUser $user,bool $multilingual=false): array
     {
@@ -28,12 +31,12 @@ final class SiteInventory
                 if((int)$candidate['id']!==$root && $this->visible($candidate) && strtolower(trim($candidate['dns']))===strtolower(trim($selected['dns'])) && $candidate['language']!==$selected['language'])$roots[]=(int)$candidate['id'];
             }
         }
-        $data=$this->content->load($user); $pages=[]; $sources=[]; $records=[];
+        $data=$this->content->load($user);$allPages=[];foreach($data['pages'] as $page)$allPages[(int)$page['id']]=$page; $pages=[]; $sources=[]; $records=[];
         foreach ($data['pages'] as $p) {
             if (!in_array((int)$p['_root'],$roots,true) || $p['type']!=='regular' || !$this->visible($p) || preg_match('/(?:^|[,\s])noindex(?:$|[,\s])/i',$p['robots'] ?? '')) { continue; }
             $parent=(int)($p['pid'] ?? 0);$seen=[];$valid=true;
             while ($parent && !isset($seen[$parent])) { $seen[$parent]=true; $ancestor=$this->db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$parent]); if (!$ancestor || !$this->visible($ancestor)) { $valid=false;break; } $parent=(int)$ancestor['pid']; }
-            if (!$valid) { continue; }
+            if (!$valid || $parent) { continue; }
             $pages[$p['id']]=$p;
             if (!empty($p['requireItem'])) { continue; }
             $text=$p['title'].' '.($p['description'] ?? '');
@@ -44,16 +47,18 @@ final class SiteInventory
             $key='page:'.$p['id'];$sources[$key]=$this->source($key,$p['title'],$p['language'],$p['url'],$text,(int)$p['id']);
             $records[$key]=$p;
         }
+        $archives=$data['news']?$this->db->fetchAllAssociativeIndexed('SELECT id,protected FROM tl_news_archive'):[];
         foreach ($data['news'] as $post) {
             $reader=$pages[$post['_reader']] ?? null;
-            if (!$reader || !$this->visible($post) || !in_array($post['source'] ?? '',['','default'],true)) { continue; }
+            if (!$reader || !isset($archives[$post['pid']]) || !empty($archives[$post['pid']]['protected']) || !$this->visible($post) || !in_array($post['source'] ?? '',['','default'],true)) { continue; }
             $key='news:'.$post['id'];$sources[$key]=$this->source($key,$post['headline'],$reader['language'],$post['url'],$post['headline'].' '.($post['teaser'] ?? '').' '.$this->elements('tl_news',(int)$post['id']),(int)$reader['id']);
             if (in_array($post['_mode'],['Article','NewsArticle','BlogPosting'],true)) { $records[$key]=$post; }
         }
-        foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_entity ORDER BY id') as $row) { $records['entity:'.$row['id']]=$row; }
+        foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_entity ORDER BY id') as $row) { if($this->visible($row))$records['entity:'.$row['id']]=$row; }
         foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_translation ORDER BY id') as $row) {
-            // Keep out-of-scope homes as identity metadata so we never duplicate a language.
-            $records['translation:'.$row['id']]=isset($pages[$row['page']])?$row:array_intersect_key($row,array_flip(['id','pid','page','language','published']));
+            if(!$this->visible($row) || !isset($records['entity:'.$row['pid']]) || !isset($pages[$row['page']]))continue;
+            // Only active homes on eligible public pages enter the analysis.
+            $records['translation:'.$row['id']]=$row;
         }
         // Keep only schema-editable text/relations and routing metadata. Binary UUIDs,
         // backend configuration and unrelated custom fields must not enter prompts/history.
@@ -69,7 +74,7 @@ final class SiteInventory
         $pages=array_filter($pages,static fn($p)=>empty($p['requireItem']));
         foreach($pages as $id=>&$page){
             $family=(int)$id;$seen=[];
-            while(!isset($seen[$family]) && !empty($data['pages'][$family]['languageMain'])){$seen[$family]=true;$family=(int)$data['pages'][$family]['languageMain'];}
+            while(!isset($seen[$family]) && !empty($allPages[$family]['languageMain'])){$seen[$family]=true;$family=(int)$allPages[$family]['languageMain'];}
             $page['languageFamily']=$family;
         }unset($page);
         // Keep linked page translations adjacent, so discovery sees them together.

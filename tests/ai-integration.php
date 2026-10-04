@@ -93,12 +93,49 @@ try {
  $content=new VHUG\SchemaManagerBundle\Backend\ContentMapSource($db,$c->get('contao.routing.content_url_generator'),$security);
  $inventory=(new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content))->collect((int)$page->rootId,$user);
  $check(count($inventory['sources'])>0,'Public source inventory collected');
+ // Publication checks use raw DB state even if Contao models were loaded earlier.
+ $siteInventory=new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content);
+ $fixturePage=(int)array_key_first($inventory['pages']);
+ foreach([['published'=>0],['start'=>(string)(time()+3600)],['stop'=>(string)(time()-3600)],['protected'=>'1']] as $change){
+  $original=$db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$fixturePage]);$db->update('tl_page',$change,['id'=>$fixturePage]);
+  $filtered=$siteInventory->collect((int)$page->rootId,$user);
+  $check(!isset($filtered['sources']['page:'.$fixturePage])&&!isset($filtered['pages'][$fixturePage]),'Inactive/scheduled/protected page excluded from sources and homes');
+  $db->update('tl_page',array_intersect_key($original,$change),['id'=>$fixturePage]);
+ }
+ $check(!isset($inventory['records']['entity:'.$entity]),'Draft schema identity excluded from AI context');
+ $db->insert('tl_article',['pid'=>$fixturePage,'title'=>'Active article fixture','published'=>1,'inColumn'=>'main']);$articleId=(int)$db->lastInsertId();
+ $sentinel='UNPUBLISHED_SENTINEL_'.bin2hex(random_bytes(6));
+ $db->insert('tl_content',['pid'=>$articleId,'ptable'=>'tl_article','type'=>'text','text'=>$sentinel,'invisible'=>0]);$elementId=(int)$db->lastInsertId();
+ $readText=static fn()=> $siteInventory->collect((int)$page->rootId,$user)['sources']['page:'.$fixturePage]['text'];
+ $check(str_contains($readText(),$sentinel),'Active element is included');
+ foreach([['invisible'=>1],['start'=>(string)(time()+3600)],['stop'=>(string)(time()-3600)]] as $change){
+  $original=$db->fetchAssociative('SELECT * FROM tl_content WHERE id=?',[$elementId]);$db->update('tl_content',$change,['id'=>$elementId]);
+  $check(!str_contains($readText(),$sentinel),'Invisible or scheduled element excluded');
+  $db->update('tl_content',array_intersect_key($original,$change),['id'=>$elementId]);
+ }
+ $db->update('tl_article',['published'=>0],['id'=>$articleId]);
+ $check(!str_contains($readText(),$sentinel),'Unpublished article excludes its active children');
+ $db->delete('tl_content',['id'=>$elementId]);$db->delete('tl_article',['id'=>$articleId]);
+
+ foreach($inventory['sources'] as $key=>$item){if(str_starts_with($key,'news:')){
+  $newsId=(int)substr($key,5);$original=$db->fetchAssociative('SELECT * FROM tl_news WHERE id=?',[$newsId]);
+  foreach([['published'=>0],['start'=>(string)(time()+3600)],['stop'=>(string)(time()-3600)]] as $change){
+   $db->update('tl_news',$change,['id'=>$newsId]);$filtered=$siteInventory->collect((int)$page->rootId,$user);
+   $check(!isset($filtered['sources'][$key])&&!isset($filtered['records'][$key]),'Inactive/scheduled news excluded');
+   $db->update('tl_news',array_intersect_key($original,$change),['id'=>$newsId]);
+  }
+  $archive=$db->fetchAssociative('SELECT * FROM tl_news_archive WHERE id=?',[$original['pid']]);
+  $db->update('tl_news_archive',['protected'=>'1'],['id'=>$original['pid']]);
+  $check(!isset($siteInventory->collect((int)$page->rootId,$user)['sources'][$key]),'Protected archive news excluded');
+  $db->update('tl_news_archive',['protected'=>$archive['protected']],['id'=>$original['pid']]);break;
+ }}
+
  $multiInventory=(new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content))->collect((int)$page->rootId,$user,true);
  $pair=[];
  foreach($multiInventory['pages'] as $a){foreach($multiInventory['pages'] as $b){if($a['language']!==$b['language'] && $a['languageFamily']===$b['languageFamily']){$pair=[$a,$b];break 2;}}}
  $check(count($pair)===2,'Pilot has linked published language pages');
  [$firstPage,$secondPage]=$pair;
- $multiSource=['id'=>'page:'.$firstPage['id'],'page'=>(int)$firstPage['id'],'title'=>'Translation fixture','text'=>'Example provides reliable website maintenance.','hash'=>'multi-fixture','language'=>$firstPage['language']];
+ $multiSource=['id'=>'page:'.$firstPage['id'],'page'=>(int)$firstPage['id'],'title'=>'Translation fixture','text'=>$multiInventory['sources']['page:'.$firstPage['id']]['text'],'hash'=>'multi-fixture','language'=>$firstPage['language']];
  $multi=['mode'=>'discover','root'=>(int)$firstPage['_root'],'origin'=>'https://example.org','inventory'=>['records'=>[],'pages'=>[$firstPage['id']=>$firstPage,$secondPage['id']=>$secondPage],'roots'=>[(int)$firstPage['_root'],(int)$secondPage['_root']],'multilingual'=>true,'sources'=>[$multiSource['id']=>$multiSource]],'mapped'=>[],'proposals'=>[],'decisions'=>[],'warnings'=>[]];
  $mp=static fn($action,$target,$field,$value)=>['action'=>$action,'target'=>$target,'field'=>$field,'value'=>$value,'source'=>$multiSource['id'],'quote'=>$multiSource['text'],'reason'=>'Translation fixture'];
  $multiName='Shared multilingual fixture '.bin2hex(random_bytes(6));
@@ -134,6 +171,13 @@ try {
   $started=$store->get($newRun,1);$check($started['status']==='ready' && count($started['queue'])>0,'Full analysis run prepares without provider use');
   // Blank URLs ensure this mock test makes no public fetches either.
   foreach($started['inventory']['sources'] as &$src){$src['url']='';}unset($src);$store->save($newRun,1,$started);
+  $stale=$started;$stale['inventory']['multilingual']=false;$stale['localizationPrepared']=true;
+  $staleKey='page:'.$fixturePage;$stale['queue']=[$staleKey];$stale['inventory']['sources']=[$staleKey=>$inventory['sources'][$staleKey]];
+  $staleId=$store->create(1,(int)$page->rootId,$stale);
+  $originalPublished=$db->fetchOne('SELECT published FROM tl_page WHERE id=?',[$fixturePage]);$db->update('tl_page',['published'=>0],['id'=>$fixturePage]);
+  $skipped=$runner->step($staleId,$user);
+  $check($skipped['done'] && $store->get($staleId,1)['usage']['input_tokens']===0,'Source disabled after preparation is skipped without an AI call');
+  $db->update('tl_page',['published'=>$originalPublished],['id'=>$fixturePage]);
   $cursor=$runner::cursor($started);
   $working=$started;$working['status']='working';$working['workingAt']=time();$store->save($newRun,1,$working);
   $busy=$runner->step($newRun,$user,$cursor);
