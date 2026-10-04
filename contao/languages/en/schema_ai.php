@@ -128,3 +128,8 @@ $GLOBALS['TL_LANG']['schema_ai']['lastUpdated'] = 'Updated';
 $GLOBALS['TL_LANG']['schema_ai']['viewingAnalysis'] = 'Viewing';
 
 $GLOBALS['TL_LANG']['schema_ai']['openAnalysis'] = 'Open analysis';
+
+$GLOBALS['TL_LANG']['schema_ai']['multilingual'] = 'Include the other languages of this website';
+$GLOBALS['TL_LANG']['schema_ai']['multilingualHelp'] = 'Scans published language roots on the same domain and translates new entries using linked pages. Existing translations stay unchanged. Multilingual scans include all sources, even when “only changed” is selected.';
+
+$GLOBALS['TL_LANG']['schema_ai']['localizing'] = 'Translating missing language entries…';

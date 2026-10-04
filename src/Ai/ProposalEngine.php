@@ -15,15 +15,54 @@ final class ProposalEngine
         foreach ($run['inventory']['records'] as $key=>$row) {
             [$table,,$type]=$this->resolve($key,$run);
             $keep=array_merge(FieldPolicy::fields($table,$type),array_keys(FieldPolicy::links($table,$type)),['id','pid','entityType','entityId','name','headline','title','page','language','published']);
-            if (array_key_exists('published',$row) && empty($row['published'])) { continue; }
+            if (array_key_exists('published',$row) && empty($row['published'])) {
+                // Identity-only draft metadata prevents a translated duplicate without
+                // using unpublished prose as source evidence.
+                if(in_array($table,['tl_schema_entity','tl_schema_translation'],true))$records[$key]=array_intersect_key($row,array_flip(['id','pid','entityType','entityId','name','page','language','published']));
+                continue;
+            }
             $records[$key]=array_intersect_key($row,array_flip($keep));
             foreach (array_keys(FieldPolicy::links($table,$type)) as $field) { if (isset($records[$key][$field]) && $field!=='organization') { $records[$key][$field]=StringUtil::deserialize($records[$key][$field],true); } }
         }
         $fields=[];
         foreach (FieldPolicy::TYPES as $type) { $fields[$type]=['entity'=>FieldPolicy::fields('tl_schema_entity',$type),'translation'=>FieldPolicy::fields('tl_schema_translation',$type),'links'=>FieldPolicy::links('tl_schema_entity',$type)]; }
-        return ['editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url'])),$run['inventory']['pages'])),'allowed'=>$fields,
+        return ['editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,
             'pending'=>array_map(static fn($p)=>array_intersect_key($p,array_flip(['action','target','field','value'])),array_values(array_filter($run['proposals'],static fn($p)=>$p['status']==='pending'))),
             'pageLinks'=>['schemaEntities'],'newsLinks'=>['schemaAbout','schemaMentions'],'pageFields'=>['schemaPageType']];
+    }
+    /** Missing linked language homes only; existing editorial translations are preserved. */
+    public function localizationTasks(array &$run): array
+    {
+        if(empty($run['inventory']['multilingual']))return [];
+        $pages=$run['inventory']['pages'];$anchors=[];$existing=[];$descriptions=[];
+        foreach($run['inventory']['records'] as $key=>$row){
+            if(!str_starts_with($key,'translation:'))continue;
+            $target='entity:'.$row['pid'];$existing[$target][$row['language']]=true;
+            if(isset($pages[$row['page']]))$anchors[$target][]=(int)$row['page'];
+        }
+        foreach($run['proposals'] as $p){
+            if(in_array($p['status'],['invalid','rejected'],true))continue;
+            if($p['action']==='home')$anchors[$p['target']][]=(int)$p['value'];
+            if($p['action']==='set' && $p['field']==='description')$descriptions[$p['target']]=true;
+        }
+        $tasks=[];
+        foreach($anchors as $target=>$homePages){
+            $families=[];foreach($homePages as $id)if(isset($pages[$id]))$families[]=$pages[$id]['languageFamily'] ?? $id;
+            $related=[];$missing=[];$byLanguage=[];
+            foreach($pages as $id=>$page){
+                if(!in_array($page['languageFamily'] ?? $id,$families,true))continue;
+                $related[]=(int)$id;$byLanguage[$page['language']][]=(int)$id;
+            }
+            foreach($byLanguage as $language=>$ids){
+                if(isset($existing[$target][$language]))continue;
+                if(count($ids)!==1){$run['warnings'][]='Ambiguous linked pages for '.$target.' ('.$language.'); choose its page manually.';continue;}
+                $page=$ids[0];if(!isset($descriptions[$target.'@'.$page]))$missing[]=$page;
+            }
+            if($missing)$tasks[]=['target'=>$target,'pages'=>$related,'missingPages'=>$missing];
+            $languages=array_unique(array_column($pages,'language'));
+            foreach($languages as $language){if(!isset($byLanguage[$language])&&!isset($existing[$target][$language]))$run['warnings'][]='No linked '.$language.' page for '.$target.'. Link the translated page in Contao to add its localized content.';}
+        }
+        return $tasks;
     }
     public function resolve(string $key,array $run): array
     {
@@ -45,7 +84,7 @@ final class ProposalEngine
     public function ingest(array &$run,array $suggestions,array $sources): void
     {
         // Define candidates before their fields, irrespective of provider ordering.
-        usort($suggestions,static fn($a,$b)=>(int)($b['action']==='create')<=>(int)($a['action']==='create'));
+        usort($suggestions,static fn($a,$b)=>(['create'=>0,'home'=>1][$a['action']] ?? 2)<=>(['create'=>0,'home'=>1][$b['action']] ?? 2));
         foreach ($suggestions as $item) {
             $p=array_intersect_key($item,array_flip(['action','target','field','value','source','quote','reason']));
             if (count($p)!==7 || count(array_filter($p,'is_string'))!==7) { continue; }
@@ -59,8 +98,14 @@ final class ProposalEngine
                 $source=$sources[$p['source']] ?? null;
                 if (!$source || mb_strlen(trim($p['quote']))<8 || !str_contains($source['text'],trim($p['quote']))) { throw new \InvalidArgumentException('The quotation was not found in the supplied source.'); }
                 if (mb_strlen($p['reason'])>2000 || mb_strlen($p['value'])>6000 || mb_strlen($p['quote'])>2000) { throw new \InvalidArgumentException('Suggestion exceeds the field limits.'); }
-                if ($run['mode']==='discover' && !str_starts_with($p['target'],'new:') && !($p['action']==='add' && preg_match('/^(news|page):[1-9][0-9]*$/D',$p['target']) && str_starts_with($p['value'],'new:'))) { throw new \InvalidArgumentException('New-subject analysis cannot edit existing records.'); }
-                if ($run['mode']==='improve' && str_starts_with($p['target'],'new:')) { throw new \InvalidArgumentException('Improvement analysis cannot create new entities.'); }
+                if (empty($run['_localizationTask']) && $run['mode']==='discover' && !str_starts_with($p['target'],'new:') && !($p['action']==='add' && preg_match('/^(news|page):[1-9][0-9]*$/D',$p['target']) && str_starts_with($p['value'],'new:'))) { throw new \InvalidArgumentException('New-subject analysis cannot edit existing records.'); }
+                if (empty($run['_localizationTask']) && $run['mode']==='improve' && str_starts_with($p['target'],'new:')) { throw new \InvalidArgumentException('Improvement analysis cannot create new entities.'); }
+                if(!empty($run['_localizationTask'])){
+                    $task=$run['_localizationTask'];
+                    $home=$p['action']==='home'&&$p['target']===$task['target']&&in_array((int)$p['value'],$task['missingPages'],true);
+                    $field=$p['action']==='set'&&preg_match('/^'.preg_quote($task['target'],'/').'@([0-9]+)$/D',$p['target'],$match)&&in_array((int)$match[1],$task['missingPages'],true);
+                    if(!$home&&!$field)throw new \InvalidArgumentException('Translation phase can only add the requested localized homes and fields.');
+                }
                 if ($p['action']==='create') {
                     if (!preg_match('/^new:[a-z0-9-]{1,64}$/D',$p['target']) || !in_array($p['field'],FieldPolicy::TYPES,true)) { throw new \InvalidArgumentException('Invalid new entity.'); }
                     $p['value']=$this->policy->validate('tl_schema_entity',$p['field'],'name',$p['value']);
@@ -70,12 +115,13 @@ final class ProposalEngine
                     [$table,,$type,$row]=$this->resolve($p['target'],$run);
                     if ($p['action']==='home') {
                         if ($table!=='tl_schema_entity' || $p['field']!=='page' || !ctype_digit($p['value']) || !isset($run['inventory']['pages'][(int)$p['value']])) { throw new \InvalidArgumentException('Choose an eligible page as home.'); }
+                        foreach($run['proposals'] as $prior){if($prior['action']==='home'&&$prior['target']===$p['target']&&!in_array($prior['status'],['invalid','rejected'],true)&&($run['inventory']['pages'][(int)$prior['value']]['language']??'')===$run['inventory']['pages'][(int)$p['value']]['language'])throw new \InvalidArgumentException('A home is already proposed for this language.');}
                         foreach ($run['inventory']['records'] as $key=>$home) { if (str_starts_with($key,'translation:') && 'entity:'.$home['pid']===$p['target'] && $home['language']===$run['inventory']['pages'][(int)$p['value']]['language']) { throw new \InvalidArgumentException('A home already exists for this language. Edit it normally.'); } }
                     } elseif ($p['action']==='set') {
                         $p['value']=$this->policy->validate($table,$type,$p['field'],$p['value']);
                         if ($table==='tl_schema_translation') {
                             $page=(int)($row['page'] ?? substr(strrchr($p['target'],'@'),1));
-                            if (($run['inventory']['pages'][$page]['language'] ?? '')!==$source['language']) { throw new \InvalidArgumentException('Source and translation language differ.'); }
+                            if (empty($run['_localizationTask']) && ($run['inventory']['pages'][$page]['language'] ?? '')!==$source['language']) { throw new \InvalidArgumentException('Source and translation language differ.'); }
                         }
                         $p['old']=(string)($row[$p['field']] ?? '');
                         if ($p['old']===$p['value']) { continue; }
@@ -113,7 +159,7 @@ final class ProposalEngine
                 if (!$current) { throw new \RuntimeException('A target record was removed. Rescan.'); }
                 if ($p['action']==='home') {
                     $page=\Contao\PageModel::findById((int)$value);$page?->loadDetails();
-                    if (!$page || !$page->published || $page->protected || $page->requireItem || (int)$page->rootId!==$run['root']) { throw new \RuntimeException('The proposed home is no longer eligible.'); }
+                    if (!$page || !$page->published || $page->protected || $page->requireItem || !in_array((int)$page->rootId,$run['inventory']['roots'] ?? [$run['root']],true)) { throw new \RuntimeException('The proposed home is no longer eligible.'); }
                     if ($this->db->fetchOne('SELECT id FROM tl_schema_translation WHERE pid=? AND language=?',[$id,$page->language])) { throw new \RuntimeException('A home for this language already exists.'); }
                     $this->db->insert('tl_schema_translation',['tstamp'=>time(),'pid'=>$id,'page'=>(int)$value,'language'=>$page->language,'published'=>'']);
                     $id=(int)$this->db->lastInsertId();$table='tl_schema_translation';$run['mapped'][$p['target'].'@'.$value]=$id;

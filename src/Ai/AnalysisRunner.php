@@ -6,16 +6,19 @@ use Doctrine\DBAL\Connection;
 final class AnalysisRunner
 {
     public function __construct(private readonly Connection $db,private readonly RunStore $store,private readonly SiteInventory $inventory,private readonly OpenAiProvider $provider,private readonly ProposalEngine $proposals,private readonly PublicTextFetcher $fetcher) {}
-    public function start(BackendUser $user,int $root,string $mode,string $origin,bool $changed): int
+    public function start(BackendUser $user,int $root,string $mode,string $origin,bool $changed,bool $multilingual=true): int
     {
         if (!in_array($mode,['discover','improve'],true)) { throw new \InvalidArgumentException('Choose an analysis action.'); }
         $origin=rtrim(trim($origin),'/');
         if (!preg_match('~^https://[a-z0-9.-]+(?::[0-9]+)?$~iD',$origin) || strlen($origin)>180) { throw new \InvalidArgumentException('Enter the public HTTPS identity origin, without a path.'); }
-        $inventory=$this->inventory->collect($root,$user);$previous=$this->store->previous((int)$user->id,$root);
+        $inventory=$this->inventory->collect($root,$user,$multilingual);$previous=$this->store->previous((int)$user->id,$root);
         $queue=[];
+        // Root grouping is part of the scan scope; a new multilingual scan must not
+        // skip all the primary-language context because a single-language run exists.
+        if($multilingual && count($inventory['roots'])>1)$changed=false;
         foreach ($inventory['sources'] as $key=>$source) { if (!$changed || ($previous['hashes'][$mode.':'.$key] ?? '')!==$source['hash']) { $queue[]=$key; } }
         return $this->store->create((int)$user->id,$root,['root'=>$root,'mode'=>$mode,'origin'=>$origin,'inventory'=>$inventory,'queue'=>$queue,'processed'=>[],
-            'editorLanguage'=>$GLOBALS['TL_LANGUAGE'] ?? 'en','proposals'=>[],'mapped'=>[],'decisions'=>$previous['decisions'],'status'=>$queue?'ready':'complete','usage'=>['input_tokens'=>0,'output_tokens'=>0],'warnings'=>[],'createdAt'=>time()]);
+            'localizationQueue'=>[],'localizationPrepared'=>false,'editorLanguage'=>$GLOBALS['TL_LANGUAGE'] ?? 'en','proposals'=>[],'mapped'=>[],'decisions'=>$previous['decisions'],'status'=>$queue?'ready':'complete','usage'=>['input_tokens'=>0,'output_tokens'=>0],'warnings'=>[],'createdAt'=>time()]);
     }
     /** A refinement is a separate proposal set. Never overwrite the source review. */
     public function refine(int $id,BackendUser $user,string $feedback): int
@@ -32,6 +35,7 @@ final class AnalysisRunner
         $history[]=['role'=>'user','text'=>$feedback];$run['conversation']=array_slice($history,-10);
         $run['previousSuggestions']=array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['action','target','field','value','source','quote','reason'])),array_filter($original['proposals'],static fn($p)=>$p['status']==='pending')));
         foreach($original['proposals'] as $p){if($p['status']==='rejected')$run['decisions'][$p['fingerprint']]='rejected';}
+        $run['localizationQueue']=[];$run['localizationPrepared']=false;
         $run['proposals']=[];$run['mapped']=[];$run['processed']=[];$run['warnings']=[];$run['explanation']='';
         $run['queue']=array_keys($run['inventory']['sources']);$run['status']='ready';$run['usage']=['input_tokens'=>0,'output_tokens'=>0];$run['createdAt']=time();
         unset($run['claim'],$run['workingAt'],$run['reviewNotes']);
@@ -50,26 +54,51 @@ final class AnalysisRunner
             if (!in_array($run['status'],['ready','paused','working'],true)) { throw new \RuntimeException('This run cannot continue.'); }
             $run['status']='working';$run['workingAt']=time();$claim=bin2hex(random_bytes(8));$run['claim']=$claim;$this->store->save($id,$owner,$run);$this->db->commit();
         } catch (\Throwable $e) { $this->db->rollBack();throw $e; }
-        $batch=isset($run['refinementOf'])?$run['queue']:array_slice($run['queue'],0,3);$sources=array_intersect_key($run['inventory']['sources'],array_flip($batch));
+        $localizing=empty($run['queue']) && !empty($run['localizationQueue']);
+        $task=$localizing?$run['localizationQueue'][0]:null;
+        $batch=isset($run['refinementOf'])?$run['queue']:array_slice($run['queue'],0,3);
+        if($localizing){$sources=array_filter($run['inventory']['sources'],static fn($source)=>in_array($source['page'],$task['pages'],true));}
+        else {
+            // Include the remaining members of each page's language family in this batch.
+            $families=[];foreach($batch as $key){$page=$run['inventory']['sources'][$key]['page'];$families[]=$run['inventory']['pages'][$page]['languageFamily'] ?? $page;}
+            foreach($run['queue'] as $key){$page=$run['inventory']['sources'][$key]['page'];if(in_array($run['inventory']['pages'][$page]['languageFamily'] ?? $page,$families,true)&&!in_array($key,$batch,true))$batch[]=$key;}
+            $sources=array_intersect_key($run['inventory']['sources'],array_flip($batch));
+        }
         try {
             @set_time_limit(120);
-            if(!isset($run['refinementOf'])){foreach($sources as $key=>$source){$sources[$key]=$this->fetcher->enrich($source);$run['inventory']['sources'][$key]=$sources[$key];}}
-            $result=$this->provider->analyze($this->proposals->context($run,$sources));
+            if(!$localizing && !isset($run['refinementOf'])){foreach($sources as $key=>$source){$sources[$key]=$this->fetcher->enrich($source);$run['inventory']['sources'][$key]=$sources[$key];}}
+            $context=$this->proposals->context($run,$sources);
+            if($localizing){$context['localizationTask']=$task;$context['mode']='localize';}
+            $result=$this->provider->analyze($context);
+            if($localizing)$run['_localizationTask']=$task;
             $this->proposals->ingest($run,$result['suggestions'],$sources);
+            unset($run['_localizationTask']);
             if(!empty($result['explanation'])){$run['explanation']=trim(($run['explanation'] ?? '')."\n\n".$result['explanation']);}
             foreach (['input_tokens','output_tokens'] as $field) { $run['usage'][$field]+=(int)($result['usage'][$field] ?? 0); }
             if ($result['warning']) { $run['warnings'][]=$result['warning'];$run['status']='paused'; }
             else {
                 foreach($sources as $key=>$source){$run['processed'][$run['mode'].':'.$key]=$source['hash'];}
-                $run['queue']=array_slice($run['queue'],count($batch));$run['status']=$run['queue']?'ready':'complete';
+                if($localizing){
+                    foreach($task['missingPages'] as $pageId){
+                        $complete=false;foreach($run['proposals'] as $proposal){if($proposal['status']==='pending'&&$proposal['action']==='set'&&$proposal['target']===$task['target'].'@'.$pageId&&$proposal['field']==='description'){$complete=true;break;}}
+                        if(!$complete)$run['warnings'][]='Translation needs manual review: '.$task['target'].' / '.($run['inventory']['pages'][$pageId]['language'] ?? '').'. No supported description was returned.';
+                    }
+                    array_shift($run['localizationQueue']);
+                }
+                else{$run['queue']=array_values(array_diff($run['queue'],$batch));}
+                if(!$run['queue'] && empty($run['localizationPrepared'])){
+                    $run['localizationQueue']=$this->proposals->localizationTasks($run);$run['localizationPrepared']=true;
+                    $run['localizationTotal']=count($run['localizationQueue']);
+                }
+                $run['status']=($run['queue']||!empty($run['localizationQueue']))?'ready':'complete';
             }
-        } catch (\Throwable $e) { $run['status']='paused';$run['warnings'][]=$e instanceof \RuntimeException?$e->getMessage():'Analysis failed; no schema changes were applied.'; }
+        } catch (\Throwable $e) { unset($run['_localizationTask']);$run['status']='paused';$run['warnings'][]=$e instanceof \RuntimeException?$e->getMessage():'Analysis failed; no schema changes were applied.'; }
         $this->db->beginTransaction();
         try {
             $latest=$this->store->get($id,$owner,true);
             if (($latest['claim'] ?? null)!==$claim) { throw new \RuntimeException('Run state changed; reload.'); }
             $this->store->save($id,$owner,$run);$this->db->commit();
         } catch (\Throwable $e) { $this->db->rollBack();throw $e; }
-        return ['done'=>$run['status']==='complete','paused'=>$run['status']==='paused','remaining'=>count($run['queue']),'total'=>count($run['inventory']['sources']),'suggestions'=>count($run['proposals']),'message'=>end($run['warnings']) ?: ''];
+        return ['phase'=>!$run['queue']&&!empty($run['localizationQueue'])?'localize':'analyze','done'=>$run['status']==='complete','paused'=>$run['status']==='paused','remaining'=>count($run['queue'])+count($run['localizationQueue'] ?? []),'total'=>count($run['inventory']['sources'])+($run['localizationTotal'] ?? 0),'suggestions'=>count($run['proposals']),'message'=>end($run['warnings']) ?: ''];
     }
 }

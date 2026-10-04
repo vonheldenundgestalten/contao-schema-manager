@@ -93,6 +93,36 @@ try {
  $content=new VHUG\SchemaManagerBundle\Backend\ContentMapSource($db,$c->get('contao.routing.content_url_generator'),$security);
  $inventory=(new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content))->collect((int)$page->rootId,$user);
  $check(count($inventory['sources'])>0,'Public source inventory collected');
+ $multiInventory=(new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content))->collect((int)$page->rootId,$user,true);
+ $pair=[];
+ foreach($multiInventory['pages'] as $a){foreach($multiInventory['pages'] as $b){if($a['language']!==$b['language'] && $a['languageFamily']===$b['languageFamily']){$pair=[$a,$b];break 2;}}}
+ $check(count($pair)===2,'Pilot has linked published language pages');
+ [$firstPage,$secondPage]=$pair;
+ $multiSource=['id'=>'page:'.$firstPage['id'],'page'=>(int)$firstPage['id'],'title'=>'Translation fixture','text'=>'Example provides reliable website maintenance.','hash'=>'multi-fixture','language'=>$firstPage['language']];
+ $multi=['mode'=>'discover','root'=>(int)$firstPage['_root'],'origin'=>'https://example.org','inventory'=>['records'=>[],'pages'=>[$firstPage['id']=>$firstPage,$secondPage['id']=>$secondPage],'roots'=>[(int)$firstPage['_root'],(int)$secondPage['_root']],'multilingual'=>true,'sources'=>[$multiSource['id']=>$multiSource]],'mapped'=>[],'proposals'=>[],'decisions'=>[],'warnings'=>[]];
+ $mp=static fn($action,$target,$field,$value)=>['action'=>$action,'target'=>$target,'field'=>$field,'value'=>$value,'source'=>$multiSource['id'],'quote'=>$multiSource['text'],'reason'=>'Translation fixture'];
+ $multiName='Shared multilingual fixture '.bin2hex(random_bytes(6));
+ $engine->ingest($multi,[$mp('create','new:multi','Service',$multiName),$mp('home','new:multi','page',(string)$firstPage['id']),$mp('set','new:multi@'.$firstPage['id'],'description','Reliable website maintenance.')],[$multiSource['id']=>$multiSource]);
+ $tasks=$engine->localizationTasks($multi);
+ $check(count($tasks)===1 && $tasks[0]['missingPages']===[(int)$secondPage['id']],'Missing linked language is scheduled');
+ $translationPending=$multi;
+ $multi['_localizationTask']=$tasks[0];
+ $engine->ingest($multi,[$mp('home','new:multi','page',(string)$secondPage['id']),$mp('set','new:multi@'.$secondPage['id'],'description','Zuverlaessige Wartung der Website.')],[$multiSource['id']=>$multiSource]);
+ $check(array_column($multi['proposals'],'status')===array_fill(0,5,'pending'),'Localized output accepts original-language evidence only in the translation task');
+ $engine->ingest($multi,[$mp('set','new:multi','name','Unwanted translated identity')],[$multiSource['id']=>$multiSource]);
+ $check(end($multi['proposals'])['status']==='invalid','Translation phase cannot change the shared identity');
+ unset($multi['_localizationTask']);
+ $engine->apply($multi,[0,1,2,3,4],$user);
+ $multiId=$multi['mapped']['new:multi'];
+ $homes=$db->fetchAllAssociative('SELECT * FROM tl_schema_translation WHERE pid=?',[$multiId]);
+ $check(count($homes)===2 && count(array_unique(array_column($homes,'language')))===2,'One entity gets two distinct language homes');
+ $check($db->fetchOne('SELECT name FROM tl_schema_entity WHERE id=?',[$multiId])===$multiName && !array_filter($homes,static fn($home)=>!empty($home['published'])),'Shared identity unchanged and localized homes stay unpublished');
+ $existing=$multi;$existing['proposals']=[];$existing['inventory']['records']['entity:'.$multiId]=$db->fetchAssociative('SELECT * FROM tl_schema_entity WHERE id=?',[$multiId]);
+ foreach($homes as $home)$existing['inventory']['records']['translation:'.$home['id']]=$home;
+ $check($engine->localizationTasks($existing)===[],'Existing translations are never scheduled for overwrite');
+ $withoutLink=$multi;$withoutLink['proposals']=array_slice($withoutLink['proposals'],0,3);$withoutLink['inventory']['pages'][$secondPage['id']]['languageFamily']=999999;
+ $check($engine->localizationTasks($withoutLink)===[] && count($withoutLink['warnings'])>0,'Missing counterpart produces a notice instead of a guessed page');
+
  $check((bool)json_encode($inventory,JSON_THROW_ON_ERROR),'Inventory is JSON-safe and excludes binary fields');
  foreach($inventory['records'] as $record){$check(!array_key_exists('image',$record),'Unrelated binary fields excluded');}
  $keyPath=sys_get_temp_dir().'/schema-ai-runner-'.bin2hex(random_bytes(6));mkdir($keyPath,0700);mkdir($keyPath.'/var',0700);
@@ -108,6 +138,16 @@ try {
   $check($after['usage']['input_tokens']===10 && count($after['queue'])<count($started['queue']),'Resumable batch advances and records usage');
   $after['status']='complete';$after['queue']=[];$store->save($newRun,1,$after);
   $before=$store->get($newRun,1);
+  $translationPending+=['status'=>'ready','queue'=>[],'processed'=>[],'usage'=>['input_tokens'=>0,'output_tokens'=>0],'localizationPrepared'=>true,'localizationQueue'=>$tasks,'localizationTotal'=>1];
+  $translationId=$store->create(1,$translationPending['root'],$translationPending);
+  $localHttp=new Symfony\Component\HttpClient\MockHttpClient(function($method,$url,$options)use($check,$mp,$secondPage){
+    $ctx=json_decode(json_decode($options['body'],true)['input'],true);
+    $check($ctx['mode']==='localize' && $ctx['localizationTask']['target']==='new:multi','Runner sends a constrained localization request');
+    return new Symfony\Component\HttpClient\Response\MockResponse(json_encode(['status'=>'completed','usage'=>['input_tokens'=>5,'output_tokens'=>5],'output'=>[['content'=>[['type'=>'output_text','text'=>json_encode(['suggestions'=>[$mp('home','new:multi','page',(string)$secondPage['id']),$mp('set','new:multi@'.$secondPage['id'],'description','Translated maintenance description.')],'explanation'=>'Localized the linked page.'])]]]]]));
+  });
+  $localRunner=new VHUG\SchemaManagerBundle\Ai\AnalysisRunner($db,$store,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content),new VHUG\SchemaManagerBundle\Ai\OpenAiProvider($localHttp,$keys),$engine,new VHUG\SchemaManagerBundle\Ai\PublicTextFetcher());
+  $localResponse=$localRunner->step($translationId,$user);$localized=$store->get($translationId,1);
+  $check($localResponse['done'] && $localResponse['remaining']===0 && count($localized['proposals'])===5 && $localized['mapped']===[],'Localization batch completes and leaves all changes for review');
   $refineHttp=new Symfony\Component\HttpClient\MockHttpClient(function($method,$url,$options)use($check){
    $request=json_decode($options['body'],true);$context=json_decode($request['input'],true);
    $check($context['editorFeedback']==='Keep broad services. Explain missing relationships.','Feedback reaches provider context');

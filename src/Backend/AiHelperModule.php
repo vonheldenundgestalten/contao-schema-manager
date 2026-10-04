@@ -32,7 +32,7 @@ final class AiHelperModule
                 elseif (!$installed) { throw new \RuntimeException($l['migrate']); }
                 elseif ($action==='start') {
                     if (!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
-                    $id=$this->runner->start($user,$request->request->getInt('root'),$request->request->getString('mode'),$request->request->getString('origin'),$request->request->getBoolean('changed'));
+                    $id=$this->runner->start($user,$request->request->getInt('root'),$request->request->getString('mode'),$request->request->getString('origin'),$request->request->getBoolean('changed'),$request->request->getBoolean('multilingual'));
                     Controller::redirect($container->get('router')->generate('contao_backend',['do'=>'schema_manager','key'=>'ai','run'=>$id]));
                 } elseif ($action==='refine') {
                     if (!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }

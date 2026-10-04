@@ -18,12 +18,19 @@ final class SiteInventory
     {
         $now=time(); return ($invert?empty($row['invisible']):!empty($row['published'])) && empty($row['protected']) && (empty($row['start'])||(int)$row['start']<=$now) && (empty($row['stop'])||(int)$row['stop']>$now);
     }
-    public function collect(int $root,BackendUser $user): array
+    public function collect(int $root,BackendUser $user,bool $multilingual=false): array
     {
         if (!isset($this->roots()[$root])) { throw new \InvalidArgumentException('Select a website root.'); }
+        $roots=[$root];
+        if($multilingual){
+            $selected=$this->db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$root]);
+            foreach($this->db->fetchAllAssociative("SELECT * FROM tl_page WHERE type='root' ORDER BY sorting,id") as $candidate){
+                if((int)$candidate['id']!==$root && $this->visible($candidate) && strtolower(trim($candidate['dns']))===strtolower(trim($selected['dns'])) && $candidate['language']!==$selected['language'])$roots[]=(int)$candidate['id'];
+            }
+        }
         $data=$this->content->load($user); $pages=[]; $sources=[]; $records=[];
         foreach ($data['pages'] as $p) {
-            if ((int)$p['_root']!==$root || $p['type']!=='regular' || !$this->visible($p) || preg_match('/(?:^|[,\s])noindex(?:$|[,\s])/i',$p['robots'] ?? '')) { continue; }
+            if (!in_array((int)$p['_root'],$roots,true) || $p['type']!=='regular' || !$this->visible($p) || preg_match('/(?:^|[,\s])noindex(?:$|[,\s])/i',$p['robots'] ?? '')) { continue; }
             $parent=(int)($p['pid'] ?? 0);$seen=[];$valid=true;
             while ($parent && !isset($seen[$parent])) { $seen[$parent]=true; $ancestor=$this->db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$parent]); if (!$ancestor || !$this->visible($ancestor)) { $valid=false;break; } $parent=(int)$ancestor['pid']; }
             if (!$valid) { continue; }
@@ -44,7 +51,10 @@ final class SiteInventory
             if (in_array($post['_mode'],['Article','NewsArticle','BlogPosting'],true)) { $records[$key]=$post; }
         }
         foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_entity ORDER BY id') as $row) { $records['entity:'.$row['id']]=$row; }
-        foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_translation ORDER BY id') as $row) { if (isset($pages[$row['page']])) { $records['translation:'.$row['id']]=$row; } }
+        foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_translation ORDER BY id') as $row) {
+            // Keep out-of-scope homes as identity metadata so we never duplicate a language.
+            $records['translation:'.$row['id']]=isset($pages[$row['page']])?$row:array_intersect_key($row,array_flip(['id','pid','page','language','published']));
+        }
         // Keep only schema-editable text/relations and routing metadata. Binary UUIDs,
         // backend configuration and unrelated custom fields must not enter prompts/history.
         foreach ($records as $key=>&$record) {
@@ -54,9 +64,17 @@ final class SiteInventory
             $record=array_intersect_key($record,array_flip($allowed));
         }
         unset($record);
-        foreach ($pages as &$p) { $p=array_intersect_key($p,array_flip(['id','pid','title','language','published','protected','start','stop','requireItem','robots','url','_root'])); } unset($p);
+        foreach ($pages as &$p) { $p=array_intersect_key($p,array_flip(['id','pid','title','language','published','protected','start','stop','requireItem','robots','url','_root','languageMain'])); } unset($p);
         if (count($sources)>200) { throw new \RuntimeException('This root has more than 200 sources. Use a smaller site root for this first version.'); }
-        return ['sources'=>$sources,'records'=>$records,'pages'=>array_filter($pages,static fn($p)=>empty($p['requireItem']))];
+        $pages=array_filter($pages,static fn($p)=>empty($p['requireItem']));
+        foreach($pages as $id=>&$page){
+            $family=(int)$id;$seen=[];
+            while(!isset($seen[$family]) && !empty($data['pages'][$family]['languageMain'])){$seen[$family]=true;$family=(int)$data['pages'][$family]['languageMain'];}
+            $page['languageFamily']=$family;
+        }unset($page);
+        // Keep linked page translations adjacent, so discovery sees them together.
+        uasort($sources,static fn($a,$b)=>($pages[$a['page']]['languageFamily'] ?? $a['page'])<=>($pages[$b['page']]['languageFamily'] ?? $b['page']));
+        return ['sources'=>$sources,'records'=>$records,'pages'=>$pages,'roots'=>$roots,'multilingual'=>$multilingual];
     }
     private function elements(string $table,int $id): string
     {

@@ -44,13 +44,14 @@ $renderKey=function()use($e,$l,$token):void { ?>
 <label><?= $e($l['origin']) ?><input name="origin" type="url" required value="<?= $e($this->origin) ?>" placeholder="https://www.example.org"></label></div><p><?= $e($l['originHelp']) ?></p>
 <label><input type="radio" name="mode" value="discover" checked> <?= $e($l['discover']) ?></label>
 <label><input type="radio" name="mode" value="improve"> <?= $e($l['improve']) ?></label>
+<label><input type="checkbox" name="multilingual" value="1" checked> <?= $e($l['multilingual']) ?></label><p class="sai-hint"><?= $e($l['multilingualHelp']) ?></p>
 <label><input type="checkbox" name="changed" value="1" checked> <?= $e($l['changed']) ?></label>
 <p><?= $e($l['coverage']) ?></p><p><?= $e($l['noAutomatic']) ?></p><button class="tl_submit"><?= $e($l['prepare']) ?></button></form></section>
 <?php endif ?>
 <?php if($run): ?>
 <section class="sai-run-summary"><h3><?= $e($l['run']) ?> #<?= (int)$this->runId ?></h3>
-<p><?= $e($l['status']) ?>: <?= $e($l[$run['status']] ?? $run['status']) ?> · <?= count($run['inventory']['sources']) ?> <?= $e($l['sources']) ?> · <?= count($run['queue']) ?> <?= $e($l['remaining']) ?></p>
-<?php if($run['queue'] && $this->hasKey): ?><form method="post" data-sai-run data-total="<?= count($run['inventory']['sources']) ?>" data-remaining="<?= count($run['queue']) ?>" data-turbo="false"><?= $token ?><input type="hidden" name="ai_action" value="step"><p><?= $e($l['disclosure']) ?></p><p role="status" data-sai-loading><?= $e($l['controlsLoading']) ?></p><button type="button" class="tl_submit" disabled data-sai-start><?= $e($l['continue']) ?></button> <button type="button" class="tl_submit" data-sai-stop hidden><?= $e($l['stop']) ?></button><p role="status" data-sai-progress data-label="<?= $e($l['progress']) ?>"></p></form><?php endif ?>
+<p><?= $e($l['status']) ?>: <?= $e($l[$run['status']] ?? $run['status']) ?> · <?= count($run['inventory']['sources']) ?> <?= $e($l['sources']) ?> · <?= (count($run['queue'])+count($run['localizationQueue'] ?? [])) ?> <?= $e($l['remaining']) ?></p>
+<?php if(($run['queue'] || !empty($run['localizationQueue'])) && $this->hasKey): ?><form method="post" data-sai-run data-phase="<?= !$run['queue']&&!empty($run['localizationQueue'])?'localize':'analyze' ?>" data-translation-label="<?= $e($l['localizing']) ?>" data-total="<?= count($run['inventory']['sources'])+($run['localizationTotal'] ?? 0) ?>" data-remaining="<?= (count($run['queue'])+count($run['localizationQueue'] ?? [])) ?>" data-turbo="false"><?= $token ?><input type="hidden" name="ai_action" value="step"><p><?= $e($l['disclosure']) ?></p><p role="status" data-sai-loading><?= $e($l['controlsLoading']) ?></p><button type="button" class="tl_submit" disabled data-sai-start><?= $e($l['continue']) ?></button> <button type="button" class="tl_submit" data-sai-stop hidden><?= $e($l['stop']) ?></button><p role="status" data-sai-progress data-label="<?= $e($l['progress']) ?>"></p></form><?php endif ?>
 <details><summary><?= $e($l['analysisDetails']) ?></summary><p><?= $e($l['usage']) ?>: <?= (int)$run['usage']['input_tokens'] ?> <?= $e($l['input']) ?> / <?= (int)$run['usage']['output_tokens'] ?> <?= $e($l['output']) ?>.<br><?= $e($l['cost']) ?>: $<?= number_format(($run['usage']['input_tokens']*2+$run['usage']['output_tokens']*10)/1000000,4) ?></p>
 <?php foreach($run['warnings'] as $warning): ?><p class="tl_info"><?= $e($warning) ?></p><?php endforeach ?>
 
@@ -102,7 +103,7 @@ $actionLabel=$p['action']==='create'?$l['createAction']:($p['action']==='home'?$
 <article class="sai-proposal <?= $p['status']==='pending'?'':'sai-inactive' ?>">
 <div class="sai-proposal-heading">
 <?php if($p['status']==='pending'): ?><input id="sai-p-<?= (int)$i ?>" type="checkbox" name="selected[]" value="<?= (int)$i ?>" data-depends="<?= $e(json_encode($deps)) ?>" data-bulk="1" aria-label="<?= $e($name($p['target']).': '.$actionLabel.' '.$fieldLabel($p)) ?>"><?php endif ?>
-<div><span class="sai-action-label"><?= $e($actionLabel) ?></span><h4><?php if($p['status']==='pending'): ?><label for="sai-p-<?= (int)$i ?>"><?= $e($fieldLabel($p)) ?></label><?php else: ?><?= $e($fieldLabel($p)) ?> <small><?= $e($l[$p['status']==='applied'?'appliedState':($p['status']==='rejected'?'rejectedState':$p['status'])] ?? $p['status']) ?></small><?php endif ?></h4></div>
+<div><span class="sai-action-label"><?= $e($actionLabel) ?><?php $localePage=$p['action']==='home'?(int)$p['value']:(str_contains($p['target'],'@')?(int)substr(strrchr($p['target'],'@'),1):0);if($localePage): ?> · <?= $e(strtoupper($run['inventory']['pages'][$localePage]['language'] ?? '')) ?><?php endif ?></span><h4><?php if($p['status']==='pending'): ?><label for="sai-p-<?= (int)$i ?>"><?= $e($fieldLabel($p)) ?></label><?php else: ?><?= $e($fieldLabel($p)) ?> <small><?= $e($l[$p['status']==='applied'?'appliedState':($p['status']==='rejected'?'rejectedState':$p['status'])] ?? $p['status']) ?></small><?php endif ?></h4></div>
 </div>
 <div class="sai-proposal-body">
 <?php if($help): ?><p class="sai-hint"><?= $e($help) ?></p><?php endif ?>

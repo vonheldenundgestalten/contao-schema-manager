@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const scriptVersion='2026-10-04-batch-controls-3';
+const scriptVersion='2026-10-04-multilingual-1';
 if(window.schemaAiLoaded===scriptVersion)return;
 // Turbo can load a new asset into a window still running the old handlers.
 // Refresh once so old and new versions cannot coexist. GET never starts analysis.
@@ -14,12 +14,12 @@ const syncRunView=()=>{
  const start=form.querySelector('[data-sai-start]'),cancel=form.querySelector('[data-sai-stop]'),progress=form.querySelector('[data-sai-progress]');
  start.disabled=true;cancel.hidden=false;cancel.disabled=run.stop;
  form.dataset.remaining=String(run.remaining);
- progress.textContent=`${progress.dataset.label} ${run.total-run.remaining}/${run.total} · ${Math.floor((Date.now()-run.begun)/1000)}s`;
+ progress.textContent=`${run.phase==='localize'?form.dataset.translationLabel:progress.dataset.label} ${run.total-run.remaining}/${run.total} · ${Math.floor((Date.now()-run.begun)/1000)}s`;
  document.querySelectorAll('[data-sai-review] button').forEach(el=>el.disabled=true);
 };
 const analyze=async form=>{
  if(activeRun)return;
- const run={url:location.href,body:new FormData(form),total:Number(form.dataset.total),remaining:Number(form.dataset.remaining),begun:Date.now(),stop:false,leave:false};
+ const run={url:location.href,body:new FormData(form),total:Number(form.dataset.total),remaining:Number(form.dataset.remaining),phase:form.dataset.phase,begun:Date.now(),stop:false,leave:false};
  activeRun=run;syncRunView();const timer=setInterval(syncRunView,1000);
  try{do{
   run.begun=Date.now();syncRunView();
@@ -28,6 +28,8 @@ const analyze=async form=>{
   const result=await response.json();
   if(run.leave||location.href!==run.url)return;
   if(!response.ok||result.paused)throw new Error(result.message||'Analysis paused. Reload to review.');
+  run.phase=result.phase||'analyze';
+  if(Number.isFinite(result.total))run.total=result.total;
   if(Number.isFinite(result.remaining))run.remaining=result.remaining;
   syncRunView();
   if(result.done||run.stop){location.reload();return;}

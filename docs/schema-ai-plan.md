@@ -197,3 +197,14 @@ Discovery can propose page/news links to its new entities, subject to the same f
 Remaining modelling gaps are explained rather than filled with substitute relations. In particular, Product.organization currently maps to an offer seller, not software authorship or compatibility. SoftwareApplication/softwareRequirements is not yet exposed by the AI allowlist. A platform requirement can ultimately be text or a URL; a managed platform entity is optional. An external client may be the subject of a case study through about, but this is not an explicit customer relationship. Do not misuse parentOrganization, memberOf or customer to manufacture that relation.
 
 Validation: mocked provider integration covers separate refinement runs, preserved originals, explanation/usage, and refusal to refine applied reviews. Browser checks intercept refinement POSTs and cover collapsed summaries, full selection, dependency selection and review navigation. No additional paid API request was made for these checks; real refinement quality still needs pilot testing.
+
+
+## Automatic language entries (2026-10-04)
+
+New runs include the selected root plus published roots with another language and the same configured domain by default. The editor can disable this for a single-language run. Cross-domain language sites are not automatically grouped. A multilingual run deliberately scans all included sources, even if the changed-content checkbox is set, so it retains the evidence needed to match entities and translations.
+
+Page counterparts come from Contao's `languageMain` links where available. Discovery batches keep page families together. After source discovery, a resumable localization pass fills missing page assignments and localized fields for new candidates and existing entities with linked homes. It preserves one shared entity/identity, never translates legal identity fields and never overwrites existing translations. Draft identity metadata is included only to avoid duplicate candidates, not as source evidence. Localized proposals may cite the exact original-language source while translating its supported content into the destination page language.
+
+Each locale is labelled in the review. Creation and publication remain explicit editorial actions; translated records start unpublished. Missing/ambiguous page links or insufficient evidence produce review notices rather than invented homes or content. Old saved analyses are unchanged; prepare a new analysis to use the multilingual scope.
+
+Validation includes two linked language roots, one shared entity with two unpublished homes, protected shared names, preserved existing translations, missing-counterpart notices, and a complete mocked localization batch that saves proposals without applying them. No paid provider call is part of these tests.

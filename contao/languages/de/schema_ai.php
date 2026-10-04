@@ -128,3 +128,8 @@ $GLOBALS['TL_LANG']['schema_ai']['lastUpdated'] = 'Aktualisiert';
 $GLOBALS['TL_LANG']['schema_ai']['viewingAnalysis'] = 'Geöffnet';
 
 $GLOBALS['TL_LANG']['schema_ai']['openAnalysis'] = 'Analyse öffnen';
+
+$GLOBALS['TL_LANG']['schema_ai']['multilingual'] = 'Weitere Sprachen dieser Website einbeziehen';
+$GLOBALS['TL_LANG']['schema_ai']['multilingualHelp'] = 'Analysiert veröffentlichte Sprachwurzeln derselben Domain und übersetzt neue Einträge anhand verknüpfter Seiten. Bestehende Übersetzungen bleiben unverändert. Mehrsprachige Analysen beziehen alle Quellen ein, auch bei Auswahl von „nur geändert“.';
+
+$GLOBALS['TL_LANG']['schema_ai']['localizing'] = 'Fehlende Spracheinträge werden übersetzt …';
