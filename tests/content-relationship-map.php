@@ -35,6 +35,16 @@ $check(!isset($nodes['reader-34'])&&in_array('suppressed',$nodes['news-34']['war
 $check(count(array_unique(array_column($edges,'id')))===count($edges),'Unique relationship identifiers');
 $empty=(new ContentRelationshipMap())->extend((new RelationshipMap())->build([],[]),[],[],[]);
 $check($empty===['nodes'=>[],'edges'=>[]],'Empty and core-only content source');
+$requiredPages=$pages;
+foreach ($requiredPages as &$p) { if (in_array($p['id'],[12,21],true)) { $p['requireItem']=1; } } unset($p);
+$required=(new ContentRelationshipMap())->extend((new RelationshipMap())->build($entities,$translations),$requiredPages,$posts,$translations);
+$requiredNodes=array_column(array_column($required['nodes'],'data'),null,'id');
+$requiredEdges=array_column($required['edges'],'data');
+$check(!isset($requiredNodes['page-12']) && !isset($requiredNodes['page-21']), 'Require-item containers excluded');
+$check(isset($requiredNodes['news-31'],$requiredNodes['reader-31'],$requiredNodes['reader-32'],$requiredNodes['page-11']), 'Posts, actual detail pages and ordinary pages retained');
+$check($requiredNodes['news-32']['language']==='en', 'Reader language retained');
+foreach ($requiredEdges as $edge) { $check(isset($requiredNodes[$edge['source']],$requiredNodes[$edge['target']]), 'No dangling container relationships'); }
+$check(count(array_filter($requiredEdges,fn($e)=>$e['source']==='reader-31'&&$e['target']==='entity-3'&&$e['label']==='about'))===1, 'Detail page inherits reader subjects');
 $noindexPages=$pages;
 foreach ($noindexPages as &$p) { if ($p['id']===12) {$p['robots']='noindex,follow';} if ($p['id']===11) {$p['robots']='index,nofollow';} } unset($p);
 $filtered=(new ContentRelationshipMap())->extend((new RelationshipMap())->build($entities,$translations),$noindexPages,$posts,$translations);

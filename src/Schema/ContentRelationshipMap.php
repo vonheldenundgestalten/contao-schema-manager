@@ -46,7 +46,8 @@ final class ContentRelationshipMap
             $link('site-'.$siteId,'entity-'.($site['schemaPublisher'] ?? 0),'publisher');
         }
         foreach ($pages as $page) {
-            if ($page['type'] !== 'regular') { continue; }
+            // Keep reader metadata for real detail URLs, but omit its bare container.
+            if ($page['type'] !== 'regular' || !empty($page['requireItem'])) { continue; }
             $key='page-'.$page['id']; $url=$page['url'] ?? '';
             $type=in_array($page['schemaPageType'] ?? '', ['WebPage','AboutPage','ContactPage','CollectionPage','ProfilePage','ItemPage'],true)?$page['schemaPageType']:'WebPage';
             $add($key,$type,$page['title'],(int)$page['id'],'page',['identity'=>$url?$url.'#webpage':'','detail'=>$page['language'] ?? '', 'published'=>(bool)$page['published']]);

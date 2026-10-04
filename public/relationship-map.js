@@ -26,7 +26,6 @@
     const xml=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[char]));
     function card(data){
       const wide=['news','page'].includes(data.kind), width=wide?230:190;
-      const height=wide||data.type==='LocalBusiness'?140:90;
       function lines(text,size,weight,maxLines){
         measure.font=`${weight} ${size}px Arial`;
         const result=[''];
@@ -46,9 +45,12 @@
       }
       const title=lines(data.name,17,600,wide?4:3);
       const location=data.type==='LocalBusiness'&&data.detail?lines(data.detail,11,400,2):[];
-      const titleY=location.length?47:Math.max(39,(height+26-title.length*19)/2+14);
+      const titleY=43, titleBottom=titleY+(title.length-1)*19;
+      const locationY=titleBottom+21;
+      const height=(location.length?locationY+(location.length-1)*13:titleBottom)+14;
+      data.cardHeight=height;
       const text=(line,y,size,weight,color)=>`<text x="${width/2}" y="${y}" text-anchor="middle" font-family="Arial, sans-serif" font-size="${size}" font-weight="${weight}" fill="${color}">${xml(line)}</text>`;
-      const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${text(data.type,19,11,400,'#42566c')}${title.map((line,i)=>text(line,titleY+i*19,17,600,'#14253b')).join('')}${location.map((line,i)=>text(line,height-25+i*13,11,400,'#42566c')).join('')}</svg>`;
+      const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${text(data.type,19,11,400,'#42566c')}${title.map((line,i)=>text(line,titleY+i*19,17,600,'#14253b')).join('')}${location.map((line,i)=>text(line,locationY+i*13,11,400,'#42566c')).join('')}</svg>`;
       return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
     }
     function visibleElements(){
@@ -66,9 +68,8 @@
       return {nodes,edges};
     }
     const cy = window.cytoscape({container:q('[data-sg-canvas]'),elements:visibleElements(), minZoom:.12,maxZoom:2.5,wheelSensitivity:.25,
-      style:[{selector:'node',style:{label:'','background-image':'data(card)','background-fit':'contain','background-color':'data(color)',shape:'round-rectangle',width:190,height:90,'text-wrap':'wrap','text-max-width':174,'font-size':17,'line-height':1.35,color:'#14253b','text-valign':'center','border-width':1,'border-color':'#8597aa'}},
-        {selector:'node[type = "LocalBusiness"]',style:{height:140}},
-        {selector:'node[kind = "news"], node[kind = "page"]',style:{width:230,height:140,'text-max-width':212}},
+      style:[{selector:'node',style:{label:'','background-image':'data(card)','background-fit':'contain','background-color':'data(color)',shape:'round-rectangle',width:190,height:'data(cardHeight)','text-wrap':'wrap','text-max-width':174,'font-size':17,'line-height':1.35,color:'#14253b','text-valign':'center','border-width':1,'border-color':'#8597aa'}},
+        {selector:'node[kind = "news"], node[kind = "page"]',style:{width:230,'text-max-width':212}},
         {selector:'node[!published]',style:{'border-style':'dashed','border-width':2}},
         {selector:'node[?missing]',style:{'border-color':'#b42318','border-width':3}},
         {selector:'edge',style:{width:1.6,'curve-style':'bezier','target-arrow-shape':'triangle','line-color':'#9baabd','target-arrow-color':'#9baabd'}},

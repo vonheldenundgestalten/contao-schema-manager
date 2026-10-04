@@ -56,4 +56,4 @@ $GLOBALS['TL_LANG']['schema_graph']['byRelationships'] = 'By relationships';
 
 $GLOBALS['TL_LANG']['schema_graph']['byType'] = 'Grouped by type';
 
-$GLOBALS['TL_LANG']['schema_graph']['scope'] = 'Noindex pages are excluded. Counts and relationships reflect the selected language.';
+$GLOBALS['TL_LANG']['schema_graph']['scope'] = 'Noindex pages and bare “Require an item” containers are excluded. Actual detail pages remain visible. Counts and relationships reflect the selected language.';
