@@ -31,7 +31,7 @@ final class RelationshipMapModule
         $template = new BackendTemplate('be_schema_relationships');
         $template->labels = $GLOBALS['TL_LANG']['schema_graph'];
         $content = $this->content->load($user);
-        $elements = $this->contentMap->extend($this->map->build($rows,$homes), $content['pages'], $content['news'], $homes);
+        $elements = $this->contentMap->extend($this->map->build($rows,$homes), $content['pages'], $content['news'], $homes,$content['events'] ?? []);
         $template->payload = json_encode(['elements'=>$elements, 'labels'=>$template->labels], JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_THROW_ON_ERROR);
         return $template->parse();
     }

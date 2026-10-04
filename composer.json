@@ -31,5 +31,8 @@
             "@php tests/relationship-map.php",
             "@php tests/content-relationship-map.php"
         ]
+    },
+    "suggest": {
+        "contao/calendar-bundle": "Calendar-backed Event enrichment (install the version matching your Contao application)."
     }
 }

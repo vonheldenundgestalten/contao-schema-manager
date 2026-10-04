@@ -27,6 +27,7 @@ final class JsonLdListener
         private readonly CacheTagManager $cacheTags,
         private readonly EntityGraph $entities,
         private readonly NewsGraph $news,
+        private readonly ?\VHUG\SchemaManagerBundle\Schema\CalendarEventGraph $events=null,
     ) {}
     public function __invoke(JsonLdEvent $event): void
     {
@@ -67,6 +68,8 @@ final class JsonLdListener
 
         }
         $newsSubjects = $this->news->apply($request->attributes->get('_schema_manager_news', []), $language, $manager, $emitted);
+        $eventSubjects=$this->events?->apply($request->attributes->get('_schema_manager_events',[]),$language,$manager,$emitted) ?? [];
+        $newsSubjects=array_merge($newsSubjects,$eventSubjects);
         foreach ($newsSubjects as $subject) { $main[$subject['@id']] = $subject; }
         foreach ($request->attributes->get('_schema_manager_news', []) as $item) {
             $expiry = (int) ($item['record']['schemaJobValidThrough'] ?? 0);

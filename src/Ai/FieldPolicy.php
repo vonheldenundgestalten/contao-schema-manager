@@ -9,6 +9,8 @@ final class FieldPolicy
     public const TYPES=['Organization','LocalBusiness','Person','Service','Product','Event'];
     public static function fields(string $table,string $type): array
     {
+        if($table==='tl_calendar')return array_merge(['schemaMode'],array_keys(\VHUG\SchemaManagerBundle\Schema\CalendarEventFields::defaults()));
+        if($table==='tl_calendar_events')return array_values(array_diff(array_keys(\VHUG\SchemaManagerBundle\Schema\CalendarEventFields::defaults()),['schemaOrganizer']));
         $org=in_array($type,['Organization','LocalBusiness'],true);
         if ($table==='tl_schema_entity') {
             $fields=['name','sameAs'];
@@ -31,6 +33,7 @@ final class FieldPolicy
     }
     public static function links(string $table,string $type): array
     {
+        if($table==='tl_calendar_events')return ['schemaOrganizer'=>['Organization','LocalBusiness'],'schemaPerformer'=>['Person','Organization','LocalBusiness'],'schemaAbout'=>self::TYPES];
         if ($table==='tl_news') { return ['schemaAbout'=>self::TYPES,'schemaMentions'=>self::TYPES]; }
         if ($table==='tl_page') { return ['schemaEntities'=>self::TYPES]; }
         if ($table!=='tl_schema_entity') { return []; }
@@ -46,7 +49,13 @@ final class FieldPolicy
     {
         if (!in_array($field,self::fields($table,$type),true)) { throw new \InvalidArgumentException('Unsupported field.'); }
         $value=trim($value);
-        if($field==='schemaPublisher'){
+        if($table==='tl_calendar'&&$value==='')return '';
+        if($field==='schemaMode'){if(!in_array($value,['','enrich','suppress'],true))throw new \InvalidArgumentException('Invalid calendar mode.');return $value;}
+        if($field==='schemaEventStatus'&&!in_array($value,['EventScheduled','EventCancelled','EventPostponed','EventRescheduled','EventMovedOnline'],true))throw new \InvalidArgumentException('Invalid event status.');
+        if($field==='schemaAttendanceMode'&&!in_array($value,['OfflineEventAttendanceMode','OnlineEventAttendanceMode','MixedEventAttendanceMode'],true))throw new \InvalidArgumentException('Invalid attendance mode.');
+        if($field==='schemaAddressCountry'&&!\Symfony\Component\Intl\Countries::exists($value))throw new \InvalidArgumentException('Use an ISO country code.');
+        if($field==='schemaEventUrl')return $this->business->url($value);
+        if($field==='schemaPublisher'||$field==='schemaOrganizer'){
             if(!ctype_digit($value))throw new \InvalidArgumentException('Choose an organization.');
             return $value;
         }

@@ -14,6 +14,7 @@ final class Plugin implements BundlePluginInterface, ConfigPluginInterface
     {
         $after = [ContaoCoreBundle::class];
         if (class_exists(\Contao\NewsBundle\ContaoNewsBundle::class)) { $after[] = \Contao\NewsBundle\ContaoNewsBundle::class; }
+        if(class_exists(\Contao\CalendarBundle\ContaoCalendarBundle::class)){$after[]=\Contao\CalendarBundle\ContaoCalendarBundle::class;}
         return [BundleConfig::create(SchemaManagerBundle::class)->setLoadAfter($after)];
     }
     public function registerContainerConfiguration(LoaderInterface $loader, array $config): void

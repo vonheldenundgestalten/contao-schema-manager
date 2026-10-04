@@ -81,7 +81,7 @@ The helper now separates initial setup into three stages:
 2. **Websites and archives:** prepare a configuration review without an API call. Review each language root's publisher and public site name, then each accessible news archive's type and publisher. Existing types are preserved; choose BlogPosting, NewsArticle, Article, JobPosting or suppression explicitly when appropriate. A sole existing organisation is offered as a publisher, never silently applied. Draft publishers are labelled and can be assigned without publishing them. Selected changes use Contao versions, stale-value protection, identity backfills and cache invalidation. These settings affect child output; they do not create archive schema entities.
 3. **Content enrichment:** discover new subjects or improve existing services, people, products and news using the reviewed foundation. Existing installations can open this stage directly. The helper recommends a starting stage from existing organisation and selected-root publisher settings; it does not certify every archive as complete.
 
-Calendars with a public reader in the selected website are listed in parent review, but **calendar-event enrichment and calendar schema defaults are not implemented**. Standalone Event entities remain available. Parent review deliberately does not write unsupported calendar settings.
+On the events development branch, calendars with a public reader in the selected website participate in parent review: mode, organiser, event status, attendance and venue defaults can be reviewed before individual event enrichment. Standalone Event entities remain available.
 
 Prepare a website/language inventory, then explicitly start analysis. Review grouped proposals before applying them; new entities and localized page assignments remain unpublished. Feedback can produce a separate revised review while preserving the original. Analysis and feedback send public source text and schema context to OpenAI and incur API usage. No API call is needed for ordinary schema management.
 
@@ -377,6 +377,23 @@ For a contact page that visibly lists office addresses and phone numbers, enable
 For a Person, put the name, portrait, public telephone/email and actual related organization on the shared entity. Put the biography/description, job title and representative page on the localized children. The related organization becomes `worksFor`, so only set it when that relationship is accurate. Choose physical offices separately under **Workplaces**. Expertise, awards and professional qualifications are localized; one qualification per line becomes an EducationalOccupationalCredential. Names and public contact details remain shared.
 
 ![Localized professional qualifications and expertise](docs/images/person-qualifications.png)
+
+### Calendar-backed events (development branch)
+
+The `codex/feature-calendar-events` branch adds optional integration with `contao/calendar-bundle`. Install the Calendar bundle matching your Contao version, update the extension, run `contao:migrate`, clear the application cache and install assets. Websites without Calendar can continue using standalone Event entities.
+
+1. Create a normal Contao calendar, published event list page and event reader page. Set the calendar's reader page as usual.
+2. In **AI helper → Websites and archives**, or the calendar editor, review its schema defaults: organiser, status, attendance mode and venue/address. **Enrich** enables the integration; **Suppress** removes only that calendar's Event nodes. Default mode preserves core output unless enrichment fields are configured.
+3. Manage each event's title, dates, times, teaser, content and image in Contao. Blank schema fields inherit calendar defaults; event-specific values override them. Add an online URL for online/hybrid events, and explicitly mark cancellation or postponement. Changing schema status does not change the visible event title or body—keep those consistent yourself.
+4. Link organiser, speakers/performers and relevant services/topics. AI content analysis can suggest supported extra metadata and relationships on active event records; it cannot change core scheduling or recurrence fields and must not create duplicate standalone Event entities.
+
+The integration extends the Event emitted by Contao's template, preserving dates, description, image and contributions from other extensions. It respects the template's decision not to emit teaser-list events, connects emitted reader events to WebPage.mainEntity, and includes calendar events in the relationship graph. Organizer and related entity references only emit published entities. Calendar defaults and per-event changes invalidate the relevant caches.
+
+**Current boundaries:** no ticket/Offer editor, booking integration, performer inference from author fields, automatic calendar-event translation creation or recurrence/exception expansion. Recurring records retain core dates and identity rather than inventing separate occurrences or an EventSeries. Translated event records currently keep their own identities. Standalone Event and calendar event records are separate workflows.
+
+The development pilot has fictional EN/DE examples covering physical, online and cancelled hybrid events. Their list pages are `/en/schema-test-events-en.html` and `/de/schema-test-events-de.html`. All created record IDs are recorded in the application's `var/schema-event-fixtures.json` for targeted cleanup; these fixtures are not installed by the extension or its migrations.
+
+Run `tests/calendars.php` from the pilot application root for rollback-only integration checks. It uses the fictional fixtures and tests inheritance, overrides, preservation of core data, suppression, publication filtering, AI target validation/application and parent review.
 
 A **standalone Event** can use the entire homepage as its localized home. You do not need to create a Contao Calendar event. This is useful when a complete landing page represents one conference.
 

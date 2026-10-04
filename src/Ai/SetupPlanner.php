@@ -36,7 +36,10 @@ final class SetupPlanner
             $add('archive:'.$row['id'],array_intersect_key($row,array_flip(['id','title','schemaType','schemaPublisher'])),['schemaType'=>$row['schemaType'],'schemaPublisher'=>$row['schemaPublisher']?:$candidate],'archiveImpact');
         }
         $calendars=[];
-        if($this->db->createSchemaManager()->tablesExist(['tl_calendar']))foreach($this->db->fetchAllAssociative('SELECT * FROM tl_calendar ORDER BY title,id') as $row){if(empty($row['protected'])&&$inScope((int)$row['jumpTo']))$calendars[]=['id'=>$row['id'],'title'=>$row['title']];}
+        if($this->db->createSchemaManager()->tablesExist(['tl_calendar']))foreach($this->db->fetchAllAssociative('SELECT * FROM tl_calendar ORDER BY title,id') as $row){if(empty($row['protected'])&&$inScope((int)$row['jumpTo'])){
+            $fields=array_merge(['schemaMode'],array_keys(\VHUG\SchemaManagerBundle\Schema\CalendarEventFields::defaults()));$values=[];foreach($fields as $field)$values[$field]=$row[$field]??'';$values['schemaOrganizer']=$values['schemaOrganizer']?:$candidate;
+            $add('calendar:'.$row['id'],array_intersect_key($row,array_flip(array_merge(['id','title'],$fields))),$values,'calendarImpact');
+        }}
         return $this->store->create((int)$user->id,$root,['root'=>$root,'mode'=>'improve','stage'=>'configuration','configuration'=>true,'inventory'=>['records'=>$records,'pages'=>[],'sources'=>[],'roots'=>$inventory['roots']],'organizations'=>$choices,'calendars'=>$calendars,'proposals'=>$proposals,'queue'=>[],'processed'=>[],'mapped'=>[],'decisions'=>[],'warnings'=>[],'usage'=>['input_tokens'=>0,'output_tokens'=>0],'status'=>'complete','createdAt'=>time()]);
     }
 }
