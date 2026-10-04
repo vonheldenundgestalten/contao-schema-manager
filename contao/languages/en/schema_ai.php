@@ -260,3 +260,5 @@ $GLOBALS['TL_LANG']['schema_ai']['importVerify'] = 'Verify imported output';
 $GLOBALS['TL_LANG']['schema_ai']['importUnknownOrigin'] = 'No local HTML source found; check the template or extension manually.';
 
 $GLOBALS['TL_LANG']['schema_ai']['importNext'] = 'Continue: complete the foundation';
+
+$GLOBALS['TL_LANG']['schema_ai']['import_conflict'] = 'Needs review';
