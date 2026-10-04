@@ -106,3 +106,7 @@ foreach (['Organization','LocalBusiness','Service'] as $type) {
 foreach (['Organization','LocalBusiness'] as $type) {
     $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace('vatID,taxID,', 'vatID,taxID,registrationIdentifiers,', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
 }
+
+foreach (['Organization','LocalBusiness'] as $type) {
+    $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace('sameAs,', '', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
+}

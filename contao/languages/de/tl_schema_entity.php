@@ -104,3 +104,5 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['registrationIdentifiers'] = ["Registerk
 $GLOBALS['TL_LANG']['tl_schema_entity']['registerName'] = "Registername";
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['registerNumber'] = "Registernummer";
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['registerName'] = "Standard-Registername";
