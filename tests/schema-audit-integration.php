@@ -30,15 +30,18 @@ try{
  $db->insert('tl_schema_entity',['name'=>$name,'entityType'=>'Service','published'=>'1','identityBase'=>'https://example.org','entityId'=>$identity]);$entity=(int)$db->lastInsertId();
  $old=['@context'=>'https://schema.org','@type'=>'Service','name'=>$name];$new=$old+['@id'=>$identity];
  $markup=static fn($node)=>'<script type="application/ld+json">'.json_encode($node).'</script>';
- $db->insert('tl_content',['pid'=>$article,'ptable'=>'tl_article','type'=>'html','html'=>$markup($old),'invisible'=>'']);$element=(int)$db->lastInsertId();
+ $db->insert('tl_content',['pid'=>$article,'ptable'=>'tl_article','type'=>'html','html'=>$markup($old),'invisible'=>0]);$element=(int)$db->lastInsertId();
  $audit=new class($db,$inventory) extends VHUG\SchemaManagerBundle\Ai\SchemaAudit {public string $html='';public function fetch(string $url):string{return $this->html;}};
  $audit->html=$markup($old).$markup($new);$result=$audit->inspect($source);
  $check(count($result['elements'])===1&&$result['elements'][0]['ready'],'Exact local schema-only source with complete replacement ready');
  $run=['audit'=>true,'status'=>'complete','root'=>2,'inventory'=>$data,'auditResults'=>[$source['id']=>$result]];
+ $stale=$run;$db->update('tl_content',['html'=>$markup($old).' '],['id'=>$element]);
+ try{$audit->retire($stale,[$source['id'].'|'.$element],$user);throw new LogicException('Stale content accepted');}catch(RuntimeException $expected){}
+ $db->update('tl_content',['html'=>$markup($old)],['id'=>$element]);
  $check($audit->retire($run,[$source['id'].'|'.$element],$user)===1,'Explicit retirement succeeds');
- $check($db->fetchOne('SELECT invisible FROM tl_content WHERE id=?',[$element])==='1','Content disabled, not deleted');
+ $check((int)$db->fetchOne('SELECT invisible FROM tl_content WHERE id=?',[$element])===1,'Content disabled, not deleted');
  $check($db->fetchOne('SELECT name FROM tl_schema_entity WHERE id=?',[$entity])===$name,'Existing entity unchanged');
- $db->update('tl_content',['invisible'=>'','html'=>'<p>Visible content</p>'.$markup($old)],['id'=>$element]);$result=$audit->inspect($source);$check(!$result['elements'][0]['ready'],'Mixed visible content blocked');
+ $db->update('tl_content',['invisible'=>0,'html'=>'<p>Visible content</p>'.$markup($old)],['id'=>$element]);$result=$audit->inspect($source);$check(!$result['elements'][0]['ready'],'Mixed visible content blocked');
  $old['description']='Important legacy detail';$db->update('tl_content',['html'=>$markup($old)],['id'=>$element]);$audit->html=$markup($old).$markup($new);$result=$audit->inspect($source);$check(!$result['elements'][0]['ready'],'Missing replacement property blocked');
  $old=['@context'=>'https://schema.org','@type'=>'Service','name'=>$name,'@id'=>'https://example.org/#old'];$db->update('tl_content',['html'=>$markup($old)],['id'=>$element]);$audit->html=$markup($old).$markup($new);$result=$audit->inspect($source);$check(!$result['elements'][0]['ready'],'Changed identity requires manual reference review');
  $db->insert('tl_schema_translation',['pid'=>$entity,'language'=>'en','page'=>$source['page'],'published'=>'']);

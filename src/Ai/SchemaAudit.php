@@ -16,18 +16,18 @@ class SchemaAudit
     {
         $p=parse_url($url);if(!$p||!in_array($p['scheme']??'',['http','https'],true)||isset($p['user'])||isset($p['pass']))throw new \RuntimeException('Unsupported public URL.');
         $client=new NoPrivateNetworkHttpClient(HttpClient::create(['max_redirects'=>0,'timeout'=>4,'max_duration'=>6]));
-        $response=$client->request('GET',$url,['headers'=>['Accept'=>'text/html','User-Agent'=>'Contao-Schema-Manager/Audit']]);
+        $response=$client->request('GET',$url,['headers'=>['Accept'=>'text/html','Cache-Control'=>'no-cache','User-Agent'=>'Contao-Schema-Manager/Audit']]);
         if($response->getStatusCode()!==200||!str_contains($response->getHeaders(false)['content-type'][0]??'','text/html')){$response->cancel();throw new \RuntimeException('Public HTML unavailable (authentication, redirect or HTTP error). No retirement can be approved.');}
         $html='';foreach($client->stream($response) as $chunk){$html.=$chunk->getContent();if(strlen($html)>2000000){$response->cancel();throw new \RuntimeException('Page exceeds the audit size limit.');}}
         return $html;
     }
     public function inspect(array $source): array
     {
-        $result=['url'=>$source['url'],'title'=>$source['title'],'errors'=>[],'nodes'=>[],'elements'=>[]];
+        $result=['url'=>$source['url'],'title'=>html_entity_decode($source['title'],ENT_QUOTES|ENT_HTML5,'UTF-8'),'language'=>$source['language']??'','errors'=>[],'nodes'=>[],'elements'=>[]];
         try{$rendered=SchemaMarkup::parse($this->fetch($source['url']));$result['errors']=$rendered['errors'];}
         catch(\Throwable $e){$result['errors'][]=$e instanceof \RuntimeException?$e->getMessage():'Public HTML could not be read.';$rendered=['blocks'=>[],'nodes'=>[]];}
         $managed=[];
-        foreach($this->db->fetchFirstColumn("SELECT entityId FROM tl_schema_entity WHERE entityId<>''") as $id)$managed[$id]=true;
+        foreach($this->db->fetchFirstColumn("SELECT entityId FROM tl_schema_entity WHERE entityId<>'' AND published='1'") as $id)$managed[$id]=true;
         foreach($this->db->fetchFirstColumn("SELECT schemaWebsiteId FROM tl_page WHERE schemaWebsiteId<>''") as $id)$managed[$id]=true;
         $managerNodes=array_values(array_filter($rendered['nodes'],static fn($n)=>isset($managed[$n['@id']??''])));
         foreach($rendered['nodes'] as $node){
@@ -54,7 +54,7 @@ class SchemaAudit
                 if(!empty($node['@id'])&&$node['@id']!==($matches[0]['@id']??''))$reasons[]='Different identity: review references to '.$node['@id'].' before retiring this definition.';
                 $missing=SchemaMarkup::missing($node,$matches[0]);if($missing)$reasons[]=SchemaMarkup::label($node).': review '.implode(', ',$missing);
             }
-            $result['elements'][]=['id'=>(int)$row['id'],'hash'=>hash('sha256',$row['html']),'ready'=>!$reasons,'reasons'=>$reasons,'status'=>'pending'];
+            $result['elements'][]=['id'=>(int)$row['id'],'module'=>$table==='tl_news'?'news':($table==='tl_calendar_events'?'calendar':'article'),'hash'=>hash('sha256',$row['html']),'ready'=>!$reasons,'reasons'=>$reasons,'status'=>'pending'];
         }
         return $result;
     }
@@ -73,7 +73,7 @@ class SchemaAudit
             if(!$ready)throw new \RuntimeException('Markup or replacement changed. Run a fresh audit.');
             $row=$this->db->fetchAssociative('SELECT * FROM tl_content WHERE id=? FOR UPDATE',[$id]);
             if(!$row||$row['type']!=='html'||$row['invisible']||hash('sha256',$row['html'])!==$saved['hash'])throw new \RuntimeException('Content element changed. Nothing was disabled.');
-            $v=new \Contao\Versions('tl_content',$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->initialize();
+            $v=new \Contao\Versions('tl_content',$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.($row['ptable']==='tl_news'?'news':($row['ptable']==='tl_calendar_events'?'calendar':'article')).'&table=tl_content&act=edit&id='.$id);$v->initialize();
             $this->db->update('tl_content',['invisible'=>'1','tstamp'=>time()],['id'=>$id]);$v->create();
             foreach($run['auditResults'] as &$result)foreach($result['elements'] as &$item)if($item['id']===$id)$item['status']='disabled';unset($result,$item);
             ++$count;
