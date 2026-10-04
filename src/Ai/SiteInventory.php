@@ -112,7 +112,8 @@ final class SiteInventory
     }
     private function source(string $key,string $title,string $language,string $url,string $text,int $page): array
     {
+        $markup=SchemaMarkup::parse($text);
         $text=mb_substr(self::text($text),0,18000);
-        return ['id'=>$key,'title'=>$title,'language'=>$language,'url'=>$url,'page'=>$page,'text'=>$text,'hash'=>hash('sha256',$text),'coverage'=>'Contao text fields; custom module output may be incomplete.'];
+        return ['existingMarkup'=>array_slice($markup['nodes'],0,30),'id'=>$key,'title'=>$title,'language'=>$language,'url'=>$url,'page'=>$page,'text'=>$text,'hash'=>hash('sha256',$text),'coverage'=>'Contao text fields; custom module output may be incomplete.'];
     }
 }

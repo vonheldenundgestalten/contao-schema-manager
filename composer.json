@@ -29,7 +29,8 @@
             "@php tests/jobs.php",
             "@php tests/business-mapper.php",
             "@php tests/relationship-map.php",
-            "@php tests/content-relationship-map.php"
+            "@php tests/content-relationship-map.php",
+            "@php tests/schema-markup.php"
         ]
     }
 }

@@ -162,3 +162,47 @@ $GLOBALS['TL_LANG']['schema_ai']['parentApplyHelp'] = 'Selected settings take ef
 $GLOBALS['TL_LANG']['schema_ai']['foundationDraftWarning'] = 'Publish the reviewed organisation and its localized homes before content enrichment. Existing drafts are reserved against duplication, but are not used as active content.';
 
 $GLOBALS['TL_LANG']['schema_ai']['authorGroup'] = 'Author mapping';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditTitle'] = 'Existing structured data';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditEntry'] = 'Check existing markup before setup or repeat the migration audit. No API key or AI charges.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditHelp'] = 'Reads public JSON-LD and compares it with published Schema Manager output. Existing entities are never edited. Only schema-only HTML elements with a verified replacement can be selected for disabling. Unknown origins and differences require manual review.';
+
+$GLOBALS['TL_LANG']['schema_ai']['draftHome'] = '“%s” is published, but its %s translation/home is still unpublished. Its localized details are not emitted.';
+
+$GLOBALS['TL_LANG']['schema_ai']['preserveHelp'] = 'Select all selects additions and empty-field suggestions only. Replacements of existing values must be selected individually after comparing current and proposed values.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditPrepare'] = 'Prepare audit';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditScan'] = 'Scan public pages';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditRunning'] = 'Checking pages';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditNodes'] = 'schema nodes';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditManaged'] = 'Schema Manager identity';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditAdditional'] = 'Additional/core markup — check origin';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditReplacement'] = 'Possible replacement; missing or differing properties:';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditCovered'] = 'Compared properties are preserved.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditUnmapped'] = 'No exact HTML content-element source identified. This can be Contao output, a template, an extension or dynamically generated markup.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditElement'] = 'HTML content element';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditEdit'] = 'Open editor';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditDisabled'] = 'Disabled by this audit.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditSelect'] = 'Disable this verified legacy schema element';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditRetireHelp'] = 'Nothing is selected automatically. The page and replacement are checked again when applying. Content is disabled, not deleted; restore it in the content editor if needed.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditRetire'] = 'Disable selected legacy elements';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditRetired'] = '%d legacy elements disabled.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditData'] = 'Inspect existing data and replacement';

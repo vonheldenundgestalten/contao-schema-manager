@@ -215,7 +215,7 @@ try {
  try {
   $keys=new VHUG\SchemaManagerBundle\Ai\ApiKeyStore($keyPath);$keys->save('sk-'.str_repeat('z',40));
   $provider=new VHUG\SchemaManagerBundle\Ai\OpenAiProvider(new Symfony\Component\HttpClient\MockHttpClient(new Symfony\Component\HttpClient\Response\MockResponse('{"status":"completed","usage":{"input_tokens":10,"output_tokens":5},"output":[{"content":[{"type":"output_text","text":"{\\"suggestions\\":[]}"}]}]}')),$keys);
-  $runner=new VHUG\SchemaManagerBundle\Ai\AnalysisRunner($db,$store,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content),$provider,$engine,new VHUG\SchemaManagerBundle\Ai\PublicTextFetcher());
+  $runner=new VHUG\SchemaManagerBundle\Ai\AnalysisRunner($db,$store,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content),$provider,$engine,new VHUG\SchemaManagerBundle\Ai\PublicTextFetcher(),new VHUG\SchemaManagerBundle\Ai\SchemaAudit($db,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content)));
   $newRun=$runner->start($user,(int)$page->rootId,'improve','https://example.org',false);
   $started=$store->get($newRun,1);$check($started['status']==='ready' && count($started['queue'])>0,'Full analysis run prepares without provider use');
   // Blank URLs ensure this mock test makes no public fetches either.
@@ -248,7 +248,7 @@ try {
     $check($ctx['mode']==='localize' && $ctx['localizationTask']['target']==='new:multi','Runner sends a constrained localization request');
     return new Symfony\Component\HttpClient\Response\MockResponse(json_encode(['status'=>'completed','usage'=>['input_tokens'=>5,'output_tokens'=>5],'output'=>[['content'=>[['type'=>'output_text','text'=>json_encode(['suggestions'=>[$mp('home','new:multi','page',(string)$secondPage['id']),$mp('set','new:multi@'.$secondPage['id'],'description','Translated maintenance description.')],'explanation'=>'Localized the linked page.'])]]]]]));
   });
-  $localRunner=new VHUG\SchemaManagerBundle\Ai\AnalysisRunner($db,$store,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content),new VHUG\SchemaManagerBundle\Ai\OpenAiProvider($localHttp,$keys),$engine,new VHUG\SchemaManagerBundle\Ai\PublicTextFetcher());
+  $localRunner=new VHUG\SchemaManagerBundle\Ai\AnalysisRunner($db,$store,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content),new VHUG\SchemaManagerBundle\Ai\OpenAiProvider($localHttp,$keys),$engine,new VHUG\SchemaManagerBundle\Ai\PublicTextFetcher(),new VHUG\SchemaManagerBundle\Ai\SchemaAudit($db,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content)));
   $localResponse=$localRunner->step($translationId,$user);$localized=$store->get($translationId,1);
   $check($localResponse['done'] && $localResponse['remaining']===0 && count($localized['proposals'])===5 && $localized['mapped']===[],'Localization batch completes and leaves all changes for review');
   $refineHttp=new Symfony\Component\HttpClient\MockHttpClient(function($method,$url,$options)use($check){
@@ -257,7 +257,7 @@ try {
    $check(in_array('explanation',$request['text']['format']['schema']['required'],true),'Explanation is required in structured response');
    return new Symfony\Component\HttpClient\Response\MockResponse(json_encode(['status'=>'completed','usage'=>['input_tokens'=>20,'output_tokens'=>10],'output'=>[['content'=>[['type'=>'output_text','text'=>json_encode(['suggestions'=>[],'explanation'=>'Keep broad services; software relationships need additional supported fields.'])]]]]]));
   });
-  $refiner=new VHUG\SchemaManagerBundle\Ai\AnalysisRunner($db,$store,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content),new VHUG\SchemaManagerBundle\Ai\OpenAiProvider($refineHttp,$keys),$engine,new VHUG\SchemaManagerBundle\Ai\PublicTextFetcher());
+  $refiner=new VHUG\SchemaManagerBundle\Ai\AnalysisRunner($db,$store,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content),new VHUG\SchemaManagerBundle\Ai\OpenAiProvider($refineHttp,$keys),$engine,new VHUG\SchemaManagerBundle\Ai\PublicTextFetcher(),new VHUG\SchemaManagerBundle\Ai\SchemaAudit($db,new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content)));
   $revisedId=$refiner->refine($newRun,$user,'Keep broad services. Explain missing relationships.');$revised=$store->get($revisedId,1);
   $check($store->get($newRun,1)===$before,'Refinement preserves original run');
   $check($revisedId!==$newRun && $revised['status']==='complete' && $revised['refinementOf']===$newRun && $revised['usage']['input_tokens']===20 && str_contains($revised['explanation'],'broad services'),'Feedback creates a separate completed review with usage and explanation');

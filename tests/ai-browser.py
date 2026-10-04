@@ -49,5 +49,14 @@ with sync_playwright() as playwright:
         page.wait_for_function('!window.schemaAiLoaded')
         assert len(calls)==(0 if scenario=='stop_busy' else 2), f'Expected two batches, got {len(calls)} (restored={restored})'
         page.close()
+    page=browser.new_page()
+    page.set_content('<main data-schema-ai><form data-sai-review><input type="checkbox" name="selected[]" value="0" data-bulk="1"><input type="checkbox" name="selected[]" value="1" data-bulk="0"><button type="button" data-sai-all>Select all</button></form></main>')
+    page.add_script_tag(content=script)
+    page.locator('[data-sai-all]').click()
+    assert page.locator('input[value="0"]').is_checked()
+    assert not page.locator('input[value="1"]').is_checked(), 'Populated-field replacement was bulk selected'
+    page.locator('input[value="1"]').check()
+    assert page.locator('input[value="1"]').is_checked(), 'Individual review must remain available'
+    page.close()
     browser.close()
 print('PASS: fresh/restored/replaced views, busy batch polling, lost response recovery, and stop while busy.')
