@@ -30,8 +30,7 @@ final class EntityGraph
     {
         if (!$entity = $this->record($id)) { return null; }
         if (isset($emitted[$entity['entityId']])) { return $emitted[$entity['entityId']]; }
-        // Reserve before following relationships, including defensive cycle handling.
-        $emitted[$entity['entityId']] = ['@id' => $entity['entityId']];
+        
         $translation = $this->connection->fetchAssociative(
             'SELECT * FROM tl_schema_translation WHERE pid = ? AND language = ? AND published = ? ORDER BY id',
             [$id, $language, '1']
@@ -48,11 +47,16 @@ final class EntityGraph
                 $url = $this->urls->generate($home, [], UrlGeneratorInterface::ABSOLUTE_URL);
             } else { $translation = null; }
         }
+        // Preserve localized legacy identities even when resolving a relationship cycle.
+        $publicId=ImportedSchema::identity($translation['schemaImportedData']??null)??$entity['entityId'];
+        $emitted[$entity['entityId']]=['@id'=>$publicId];
         $isOrganization = in_array($entity['entityType'], ['Organization', 'LocalBusiness'], true);
         if ($isOrganization && !$url && !empty($entity['externalUrl'])) { $url = $entity['externalUrl']; }
         $page = $this->requests->getMainRequest()?->attributes->get('pageModel');
         $full = !$isOrganization || !($page instanceof PageModel) || ($translation && (int) $translation['page'] === (int) $page->id);
         $organization = $this->record((int) $entity['organization']);
+        $organizationRecord=$organization;
+        if($organization){$legacy=$this->connection->fetchOne('SELECT schemaImportedData FROM tl_schema_translation WHERE pid=? AND language=? AND published=? ORDER BY id',[$organization['id'],$language,'1']);$organization['entityId']=ImportedSchema::identity($legacy?:null)??$organization['entityId'];}
         $node = $this->mapper->map($entity, $translation, $url, $organization);
         $this->tags->tagWithModelClass(\VHUG\SchemaManagerBundle\Model\ContactModel::class);
         if ($entity['entityType'] === 'Service' || ($isOrganization && $full)) {
@@ -121,7 +125,8 @@ final class EntityGraph
             $image = rtrim($entity['identityBase'], '/').'/'.ltrim($file->path, '/');
             $node[in_array($entity['entityType'], ['Organization','LocalBusiness'], true) ? 'logo' : 'image'] = $image;
         }
-        if ($url && !empty($translation['isMainEntity'])) { $node['mainEntityOfPage'] = ['@id' => $url.'#webpage']; }
+        if ($url && !empty($translation['isMainEntity'])) { $homeData=!empty($home->schemaImportedActive)?json_decode($home->schemaImportedData??'',true):[];$node['mainEntityOfPage'] = ['@id' => $homeData['@id']??($url.'#webpage')]; }
+        $node=ImportedSchema::merge($node,$translation['schemaImportedData']??null);
         // A company keeps its full description on its localized home. Supporting
         // references stay identifiable without repeating all legal/contact facts.
         // Decide before publishing the node, so later graph listeners can enrich it.
@@ -134,9 +139,9 @@ final class EntityGraph
             $node = array_intersect_key($node, array_flip($keep));
         }
         $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)
-            ->set($manager->createSchemaOrgTypeFromArray($node), $entity['entityId']);
+            ->set($manager->createSchemaOrgTypeFromArray($node), $node['@id']);
         $emitted[$entity['entityId']] = $node;
-        if ($organization) { $this->emit((int) $organization['id'], $language, $manager, $emitted); }
+        if ($organizationRecord) { $this->emit((int) $organizationRecord['id'], $language, $manager, $emitted); }
         return $node;
     }
 }
