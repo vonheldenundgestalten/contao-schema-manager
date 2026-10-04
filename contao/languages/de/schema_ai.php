@@ -29,7 +29,7 @@ $GLOBALS['TL_LANG']['schema_ai']['sources'] = 'Quellen';
 $GLOBALS['TL_LANG']['schema_ai']['remaining'] = 'Verbleibend';
 $GLOBALS['TL_LANG']['schema_ai']['continue'] = 'Verbleibende Quellen analysieren';
 $GLOBALS['TL_LANG']['schema_ai']['stop'] = 'Nach aktuellem Schritt stoppen';
-$GLOBALS['TL_LANG']['schema_ai']['progress'] = 'Ein kleines Quellenpaket wird analysiert…';
+$GLOBALS['TL_LANG']['schema_ai']['progress'] = 'Quellen werden analysiert …';
 $GLOBALS['TL_LANG']['schema_ai']['review'] = 'Vorschläge prüfen';
 $GLOBALS['TL_LANG']['schema_ai']['selectAll'] = 'Alle Vorschläge auswählen';
 $GLOBALS['TL_LANG']['schema_ai']['clear'] = 'Auswahl aufheben';
@@ -133,3 +133,5 @@ $GLOBALS['TL_LANG']['schema_ai']['multilingual'] = 'Weitere Sprachen dieser Webs
 $GLOBALS['TL_LANG']['schema_ai']['multilingualHelp'] = 'Analysiert veröffentlichte Sprachwurzeln derselben Domain und übersetzt neue Einträge anhand verknüpfter Seiten. Bestehende Übersetzungen bleiben unverändert. Mehrsprachige Analysen beziehen alle Quellen ein, auch bei Auswahl von „nur geändert“.';
 
 $GLOBALS['TL_LANG']['schema_ai']['localizing'] = 'Fehlende Spracheinträge werden übersetzt …';
+
+$GLOBALS['TL_LANG']['schema_ai']['waitingBatch'] = 'Warten auf den laufenden Verarbeitungsschritt …';

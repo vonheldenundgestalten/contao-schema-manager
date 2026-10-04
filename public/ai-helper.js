@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const scriptVersion='2026-10-04-multilingual-1';
+const scriptVersion='2026-10-04-batch-recovery-2';
 if(window.schemaAiLoaded===scriptVersion)return;
 // Turbo can load a new asset into a window still running the old handlers.
 // Refresh once so old and new versions cannot coexist. GET never starts analysis.
@@ -8,34 +8,59 @@ if(window.schemaAiLoaded){location.reload();return;}
 window.schemaAiLoaded=scriptVersion;
 // Keep the job outside a particular DOM node: Turbo may replace that node mid-request.
 let activeRun=null;
+const runLocation=value=>{const url=new URL(value,location.href);return JSON.stringify([url.origin,url.pathname,...['do','key','run'].map(key=>url.searchParams.get(key))]);};
+const stillHere=run=>!run.leave&&runLocation(location.href)===runLocation(run.url);
 const syncRunView=()=>{
- const run=activeRun;if(!run||location.href!==run.url)return;
+ const run=activeRun;if(!run||!stillHere(run))return;
  const form=document.querySelector('[data-sai-run]');if(!form)return;
  const start=form.querySelector('[data-sai-start]'),cancel=form.querySelector('[data-sai-stop]'),progress=form.querySelector('[data-sai-progress]');
  start.disabled=true;cancel.hidden=false;cancel.disabled=run.stop;
  form.dataset.remaining=String(run.remaining);
- progress.textContent=`${run.phase==='localize'?form.dataset.translationLabel:progress.dataset.label} ${run.total-run.remaining}/${run.total} · ${Math.floor((Date.now()-run.begun)/1000)}s`;
+ progress.textContent=`${run.busy?form.dataset.waitingLabel:(run.phase==='localize'?form.dataset.translationLabel:progress.dataset.label)} ${run.total-run.remaining}/${run.total} · ${Math.floor((Date.now()-run.begun)/1000)}s`;
  document.querySelectorAll('[data-sai-review] button').forEach(el=>el.disabled=true);
 };
 const analyze=async form=>{
  if(activeRun)return;
- const run={url:location.href,body:new FormData(form),total:Number(form.dataset.total),remaining:Number(form.dataset.remaining),phase:form.dataset.phase,begun:Date.now(),stop:false,leave:false};
+ const run={url:location.href,body:new FormData(form),cursor:form.dataset.cursor,total:Number(form.dataset.total),remaining:Number(form.dataset.remaining),phase:form.dataset.phase,begun:Date.now(),stop:false,leave:false,busy:false};
  activeRun=run;syncRunView();const timer=setInterval(syncRunView,1000);
- try{do{
-  run.begun=Date.now();syncRunView();
-  const response=await fetch(run.url,{method:'POST',body:run.body,credentials:'same-origin',headers:{'X-Requested-With':'XMLHttpRequest'}});
+ const request=async action=>{
+  const body=new FormData();run.body.forEach((value,key)=>body.append(key,value));body.set('ai_action',action);body.set('cursor',run.cursor||'');
+  const response=await fetch(run.url,{method:'POST',body,credentials:'same-origin',headers:{'X-Requested-With':'XMLHttpRequest'}});
   if(!(response.headers.get('content-type')||'').includes('application/json'))throw new Error('The connection ended unexpectedly. Reload to check the saved run before retrying.');
-  const result=await response.json();
-  if(run.leave||location.href!==run.url)return;
-  if(!response.ok||result.paused)throw new Error(result.message||'Analysis paused. Reload to review.');
-  run.phase=result.phase||'analyze';
+  const result=await response.json();if(!response.ok)throw new Error(result.message||'Unable to read analysis progress.');return result;
+ };
+ const update=result=>{
+  run.cursor=result.cursor;run.busy=!!result.busy;run.phase=result.phase||'analyze';
   if(Number.isFinite(result.total))run.total=result.total;
   if(Number.isFinite(result.remaining))run.remaining=result.remaining;
   syncRunView();
-  if(result.done||run.stop){location.reload();return;}
- }while(!run.stop);
+ };
+ try{
+  // Read saved progress first. A previous request may still be running after navigation.
+  let result=await request('status');
+  // Clicking Continue explicitly permits retrying a previously paused batch.
+  let resumePaused=!!result.paused;
+  while(stillHere(run)){
+   update(result);
+   if(result.done||run.stop&&!result.busy){location.reload();return;}
+   if(result.paused&&!resumePaused)throw new Error(result.message||'Analysis paused. Reload to review.');
+   if(result.busy){
+    await new Promise(resolve=>setTimeout(resolve,2000));
+    if(!stillHere(run))return;
+    result=await request('status');continue;
+   }
+   resumePaused=false;run.begun=Date.now();
+   try{result=await request('step');}
+   catch(error){
+    // Recover an interrupted response using saved state, never a blind paid retry.
+    const cursor=run.cursor;
+    result=await request('status');
+    update(result);
+    if(!result.busy&&!result.done&&result.cursor===cursor)throw error;
+   }
+  }
  }catch(error){
-  if(!run.leave&&location.href===run.url){
+  if(stillHere(run)){
    const current=document.querySelector('[data-sai-run]');
    if(current){current.querySelector('[data-sai-progress]').textContent=error.message;current.querySelector('[data-sai-start]').disabled=false;current.querySelector('[data-sai-stop]').hidden=true;}
    document.querySelectorAll('[data-sai-review] button').forEach(el=>el.disabled=false);
@@ -44,7 +69,7 @@ const analyze=async form=>{
 };
 window.addEventListener('pagehide',()=>{if(activeRun)activeRun.leave=true;});
 document.addEventListener('turbo:before-visit',event=>{
- if(activeRun&&event.detail?.url&&new URL(event.detail.url,location.href).href!==activeRun.url)activeRun.leave=true;
+ if(activeRun&&event.detail?.url&&runLocation(event.detail.url)!==runLocation(activeRun.url))activeRun.leave=true;
 });
 // DOM attributes survive Turbo snapshots; event listeners do not. Track live nodes only.
 const initialized=new WeakSet();

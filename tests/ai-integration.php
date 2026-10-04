@@ -134,8 +134,18 @@ try {
   $started=$store->get($newRun,1);$check($started['status']==='ready' && count($started['queue'])>0,'Full analysis run prepares without provider use');
   // Blank URLs ensure this mock test makes no public fetches either.
   foreach($started['inventory']['sources'] as &$src){$src['url']='';}unset($src);$store->save($newRun,1,$started);
+  $cursor=$runner::cursor($started);
+  $working=$started;$working['status']='working';$working['workingAt']=time();$store->save($newRun,1,$working);
+  $busy=$runner->step($newRun,$user,$cursor);
+  $check($busy['busy'] && !$busy['paused'] && $store->get($newRun,1)['usage']['input_tokens']===0,'Concurrent request waits without provider usage');
+  $check($runner->status($newRun,$user)===$busy,'Status reads the same saved progress without changing the run');
+  $working['workingAt']=time()-181;$store->save($newRun,1,$working);
+  $check($runner->status($newRun,$user)['paused'],'Expired worker requires an explicit retry');
+  $store->save($newRun,1,$started);
   $response=$runner->step($newRun,$user);$after=$store->get($newRun,1);
   $check($after['usage']['input_tokens']===10 && count($after['queue'])<count($started['queue']),'Resumable batch advances and records usage');
+  $duplicate=$runner->step($newRun,$user,$cursor);
+  $check($duplicate['cursor']!==$cursor && $store->get($newRun,1)['usage']['input_tokens']===10,'Late duplicate cannot start the next paid batch');
   $after['status']='complete';$after['queue']=[];$store->save($newRun,1,$after);
   $before=$store->get($newRun,1);
   $translationPending+=['status'=>'ready','queue'=>[],'processed'=>[],'usage'=>['input_tokens'=>0,'output_tokens'=>0],'localizationPrepared'=>true,'localizationQueue'=>$tasks,'localizationTotal'=>1];

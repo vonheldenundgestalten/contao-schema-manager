@@ -39,12 +39,15 @@ final class AiHelperModule
                     if ($request->hasSession()) { $request->getSession()->save(); }
                     $newId=$this->runner->refine($id,$user,$request->request->getString('feedback'));
                     throw new \Contao\CoreBundle\Exception\ResponseException(new JsonResponse(['url'=>$container->get('router')->generate('contao_backend',['do'=>'schema_manager','key'=>'ai','run'=>$newId])]));
+                } elseif ($action==='status') {
+                    throw new \Contao\CoreBundle\Exception\ResponseException(new JsonResponse($this->runner->status($id,$user)));
                 } elseif ($action==='step') {
                     if (!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
                     // Release the backend session lock while the provider works. Other tabs
                     // and status/review requests must remain responsive.
                     if ($request->hasSession()) { $request->getSession()->save(); }
-                    $result=$this->runner->step($id,$user);
+                    $cursor=$request->request->getString('cursor');
+                    $result=$this->runner->step($id,$user,$cursor!==''?$cursor:null);
                     if (!$request->isXmlHttpRequest()) { Controller::redirect($container->get('router')->generate('contao_backend',['do'=>'schema_manager','key'=>'ai','run'=>$id])); }
                     throw new \Contao\CoreBundle\Exception\ResponseException(new JsonResponse($result));
                 } elseif (in_array($action,['apply','reject'],true)) {
@@ -70,7 +73,7 @@ final class AiHelperModule
             catch (\Throwable $e) {
                 // Never render exception diagnostics from secret parsing/network configuration.
                 $error=$action==='key'?$l['keyError']:($e instanceof \RuntimeException || $e instanceof \InvalidArgumentException ? $e->getMessage():$l['error']);
-                if (in_array($action,['step','refine'],true)) { throw new \Contao\CoreBundle\Exception\ResponseException(new JsonResponse(['done'=>false,'paused'=>true,'message'=>$error],400)); }
+                if (in_array($action,['step','refine','status'],true)) { throw new \Contao\CoreBundle\Exception\ResponseException(new JsonResponse(['done'=>false,'paused'=>true,'message'=>$error],400)); }
             }
         }
         try { $hasKey=$this->keys->get()!==''; } catch (\Throwable) { $hasKey=false;$error=$l['keyError']; }

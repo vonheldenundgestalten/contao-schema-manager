@@ -43,14 +43,16 @@ final class AnalysisRunner
         $this->step($newId,$user);
         return $newId;
     }
-    public function step(int $id,BackendUser $user): array
+    public function step(int $id,BackendUser $user,?string $expectedCursor=null): array
     {
         $owner=(int)$user->id;
         $this->db->beginTransaction();
         try {
             $run=$this->store->get($id,$owner,true);
-            if ($run['status']==='complete') { $this->db->commit();return ['done'=>true]; }
-            if ($run['status']==='working' && time()-($run['workingAt'] ?? time())<180) { throw new \RuntimeException('This batch is already being processed.'); }
+            if ($run['status']==='complete') { $this->db->commit();return self::progress($run); }
+            if ($run['status']==='working' && time()-($run['workingAt'] ?? time())<180) { $this->db->commit();return self::progress($run); }
+            // A late duplicate must not start the next batch after the first completes.
+            if ($expectedCursor!==null && !hash_equals(self::cursor($run),$expectedCursor)) { $this->db->commit();return self::progress($run); }
             if (!in_array($run['status'],['ready','paused','working'],true)) { throw new \RuntimeException('This run cannot continue.'); }
             $run['status']='working';$run['workingAt']=time();$claim=bin2hex(random_bytes(8));$run['claim']=$claim;$this->store->save($id,$owner,$run);$this->db->commit();
         } catch (\Throwable $e) { $this->db->rollBack();throw $e; }
@@ -99,6 +101,27 @@ final class AnalysisRunner
             if (($latest['claim'] ?? null)!==$claim) { throw new \RuntimeException('Run state changed; reload.'); }
             $this->store->save($id,$owner,$run);$this->db->commit();
         } catch (\Throwable $e) { $this->db->rollBack();throw $e; }
-        return ['phase'=>!$run['queue']&&!empty($run['localizationQueue'])?'localize':'analyze','done'=>$run['status']==='complete','paused'=>$run['status']==='paused','remaining'=>count($run['queue'])+count($run['localizationQueue'] ?? []),'total'=>count($run['inventory']['sources'])+($run['localizationTotal'] ?? 0),'suggestions'=>count($run['proposals']),'message'=>end($run['warnings']) ?: ''];
+        return self::progress($run);
+    }
+    public function status(int $id,BackendUser $user): array
+    {
+        return self::progress($this->store->get($id,(int)$user->id));
+    }
+    public static function cursor(array $run): string
+    {
+        return hash('sha256',json_encode([$run['queue'],$run['localizationQueue'] ?? [],$run['processed'] ?? []],JSON_THROW_ON_ERROR));
+    }
+    private static function progress(array $run): array
+    {
+        $expired=$run['status']==='working' && time()-($run['workingAt'] ?? time())>=180;
+        return [
+            'cursor'=>self::cursor($run),'busy'=>$run['status']==='working'&&!$expired,
+            'phase'=>!$run['queue']&&!empty($run['localizationQueue'])?'localize':'analyze',
+            'done'=>$run['status']==='complete','paused'=>$run['status']==='paused'||$expired,
+            'remaining'=>count($run['queue'])+count($run['localizationQueue'] ?? []),
+            'total'=>count($run['inventory']['sources'])+($run['localizationTotal'] ?? 0),
+            'suggestions'=>count($run['proposals']),
+            'message'=>$expired?'The previous batch did not finish. Continuing retries it and may incur additional API usage.':($run['status']==='paused'?(end($run['warnings']) ?: 'Analysis paused.'):''),
+        ];
     }
 }

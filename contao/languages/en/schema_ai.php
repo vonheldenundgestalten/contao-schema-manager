@@ -29,7 +29,7 @@ $GLOBALS['TL_LANG']['schema_ai']['sources'] = 'Sources';
 $GLOBALS['TL_LANG']['schema_ai']['remaining'] = 'Remaining';
 $GLOBALS['TL_LANG']['schema_ai']['continue'] = 'Analyze remaining sources';
 $GLOBALS['TL_LANG']['schema_ai']['stop'] = 'Stop after current batch';
-$GLOBALS['TL_LANG']['schema_ai']['progress'] = 'Analyzing a small batch…';
+$GLOBALS['TL_LANG']['schema_ai']['progress'] = 'Analyzing sources…';
 $GLOBALS['TL_LANG']['schema_ai']['review'] = 'Review suggestions';
 $GLOBALS['TL_LANG']['schema_ai']['selectAll'] = 'Select all suggestions';
 $GLOBALS['TL_LANG']['schema_ai']['clear'] = 'Clear selection';
@@ -133,3 +133,5 @@ $GLOBALS['TL_LANG']['schema_ai']['multilingual'] = 'Include the other languages 
 $GLOBALS['TL_LANG']['schema_ai']['multilingualHelp'] = 'Scans published language roots on the same domain and translates new entries using linked pages. Existing translations stay unchanged. Multilingual scans include all sources, even when “only changed” is selected.';
 
 $GLOBALS['TL_LANG']['schema_ai']['localizing'] = 'Translating missing language entries…';
+
+$GLOBALS['TL_LANG']['schema_ai']['waitingBatch'] = 'Waiting for the running batch…';
