@@ -59,7 +59,7 @@ final class SiteInventory
             $reader=$pages[$post['_reader']] ?? null;
             if (!$reader || !isset($archives[$post['pid']]) || !empty($archives[$post['pid']]['protected']) || !$this->visible($post) || !in_array($post['source'] ?? '',['','default'],true)) { continue; }
             $key='news:'.$post['id'];$sources[$key]=$this->source($key,$post['headline'],$reader['language'],$post['url'],$post['headline'].' '.($post['teaser'] ?? '').' '.$this->elements('tl_news',(int)$post['id']),(int)$reader['id']);
-            if (in_array($post['_mode'],['Article','NewsArticle','BlogPosting'],true)) { $records[$key]=$post; }
+            if (in_array($post['_mode'],['','Article','NewsArticle','BlogPosting'],true)) { $post['_mode']=$post['_mode'] ?: 'NewsArticle';$records[$key]=$post; }
         }
         foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_entity ORDER BY id') as $row) { if($this->visible($row))$records['entity:'.$row['id']]=$row; }
         foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_translation ORDER BY id') as $row) {

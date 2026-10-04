@@ -143,6 +143,13 @@ try {
    $db->update('tl_news',array_intersect_key($original,$change),['id'=>$newsId]);
   }
   $archive=$db->fetchAssociative('SELECT * FROM tl_news_archive WHERE id=?',[$original['pid']]);
+  $db->update('tl_news_archive',['schemaType'=>''],['id'=>$original['pid']]);
+  $defaultInventory=$siteInventory->collect((int)$page->rootId,$user);
+  $check(isset($defaultInventory['records'][$key])&&$defaultInventory['records'][$key]['headline']===$original['headline']&&$defaultInventory['records'][$key]['_mode']==='NewsArticle','Default archive news is a named editable target');
+  $db->update('tl_news_archive',['schemaType'=>'suppress'],['id'=>$original['pid']]);
+  $check(!isset($siteInventory->collect((int)$page->rootId,$user)['records'][$key]),'Suppressed news is not an editable schema target');
+  $db->update('tl_news_archive',['schemaType'=>$archive['schemaType']],['id'=>$original['pid']]);
+
   $db->update('tl_news_archive',['protected'=>'1'],['id'=>$original['pid']]);
   $check(!isset($siteInventory->collect((int)$page->rootId,$user)['sources'][$key]),'Protected archive news excluded');
   $db->update('tl_news_archive',['protected'=>$archive['protected']],['id'=>$original['pid']]);break;

@@ -424,8 +424,8 @@ Preserve generated IDs when migrating or importing records. Removing and recreat
 ### Troubleshooting
 
 - **No localized output:** check parent publication, child publication, page publication/access and the page's derived language.
-- **News fields are missing:** enable a supported enrichment type on the archive and save it first.
-- **News keeps the old output:** confirm archive publisher and generated article IDs; save the archive to fill missing IDs.
+- **News fields are missing:** the default Contao mode and Article/NewsArticle/BlogPosting archives support author, about and mentions fields. Suppressed archives do not offer article enrichment; JobPosting uses its own fields.
+- **News keeps the old output:** default Contao mode preserves the core type and identity while enriching configured relationships. For explicit article types, confirm archive publisher and generated article IDs; save the archive to fill missing IDs.
 - **Preview seems stale:** save first, then reopen the preview. Manual values are the source in this release.
 - **Duplicate schema or social tags:** check old HTML elements, theme templates and other extensions. The manager does not automatically remove handcrafted scripts or FAQ microdata.
 - **Fields/module missing after an update:** review database updates, rebuild the application cache and check backend permissions.

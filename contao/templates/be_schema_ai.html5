@@ -7,7 +7,7 @@ $name=static function($key)use($run){
     $r=$run['inventory']['records'][$key] ?? [];
     if(str_starts_with($key,'translation:')){$parent=$run['inventory']['records']['entity:'.$r['pid']] ?? [];$r['name']=$parent['name'] ?? $key;}
     foreach($run['proposals'] ?? [] as $p){if($p['action']==='create' && $p['target']===$key){return $p['value'].$suffix;}}
-    return ($r['name'] ?? $r['headline'] ?? $r['title'] ?? $key).$suffix;
+    return ($r['name'] ?? $r['headline'] ?? $r['title'] ?? $run['inventory']['sources'][$key]['title'] ?? $key).$suffix;
 };
 $fieldLabel=static function($p)use($l){
     if($p['action']==='create')return $p['field'];

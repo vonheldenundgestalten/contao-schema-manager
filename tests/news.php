@@ -86,7 +86,14 @@ try {
     [$nodes,$subjects]=$render('suppress');
     $check(count($nodes)===1 && $nodes[0]['@id']==='https://example.org/#unrelated' && !$subjects,'Suppress only exact source node');
     [$nodes,$subjects]=$render('');
-    $check(count($nodes)===2 && !$subjects,'Default mode preserves core output');
+    $article=array_values(array_filter($nodes,fn($n)=>($n['@id']??'')==='#/schema/news/'.$id))[0];
+    $check($article['@type']==='NewsArticle' && $article['genre']==='Preserved value' && in_array(['@id'=>$serviceIdentity],$article['about'],true),'Default mode enriches relationships while preserving core type, identity and properties');
+    $check($subjects===[['@id'=>'#/schema/news/'.$id]],'Default news becomes the reader subject without changing identity');
+    $db->update('tl_news',['schemaAbout'=>null,'schemaMentions'=>null,'schemaAuthor'=>0,'schemaDateModified'=>''],['id'=>$id]);
+    $db->update('tl_news_archive',['schemaPublisher'=>0],['id'=>$archive]);
+    [$nodes,$subjects]=$render('');
+    $check(count($nodes)===2 && !$subjects,'Unconfigured default archive leaves core output untouched');
+    $db->update('tl_news_archive',['schemaPublisher'=>$org],['id'=>$archive]);
     $db->update('tl_news_archive',['schemaJobCity'=>'Stuttgart','schemaJobCountry'=>'DE','schemaJobEmployment'=>serialize(['FULL_TIME'])],['id'=>$archive]);
     $db->update('tl_news',['teaser'=>'Public job description','schemaJobValidThrough'=>time()+3600],['id'=>$id]);
     [$nodes,$subjects]=$render('JobPosting');

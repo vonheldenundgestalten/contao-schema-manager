@@ -68,6 +68,7 @@ final class ContentRelationshipMap
         foreach ($news as $post) {
             $key='news-'.$post['id']; $mode=$post['_mode'];
             $managed=in_array($mode,['BlogPosting','Article','NewsArticle','JobPosting'],true);
+            $enriched=$managed || ($mode==='' && (!empty($post['schemaAuthor']) || !empty($post['schemaAbout']) || !empty($post['schemaMentions']) || !empty($post['schemaDateModified']) || !empty($post['_publisher'])));
             $type=$managed?$mode:'NewsArticle'; $suppressed=$mode==='suppress';
             $warnings=$suppressed?['suppressed']:[];
             if ($managed && empty($post['schemaIdentity'])) { $warnings[]='missingIdentity'; }
@@ -78,9 +79,9 @@ final class ContentRelationshipMap
             if ($mode==='JobPosting') {
                 $link($key,'entity-'.(($post['schemaJobEmployer'] ?? 0) ?: $post['_publisher']),'hiringOrganization');
             } else {
-                if ($managed) { $link($key,'entity-'.$post['_publisher'],'publisher'); }
+                if ($enriched) { $link($key,'entity-'.$post['_publisher'],'publisher'); }
                 $author='entity-'.$post['_author'];
-                if ($managed && !empty($nodes[$author]) && !empty($nodes[$author]['data']['published']) && empty($nodes[$author]['data']['missing'])) {
+                if ($enriched && !empty($nodes[$author]) && !empty($nodes[$author]['data']['published']) && empty($nodes[$author]['data']['missing'])) {
                     $link($key,$author,'author');
                 } elseif (!empty($post['mapAuthorName'])) {
                     // Core embeds an unnamed-identity Person. Keep it distinct from managed people.
@@ -88,14 +89,14 @@ final class ContentRelationshipMap
                     if (!isset($nodes[$author])) { $add($author,'Person',$post['mapAuthorName'],0,'coreAuthor',['warnings'=>['unmappedAuthor']]); }
                     $link($key,$author,'author');
                 }
-                if ($managed) {
+                if ($enriched) {
                     foreach (['schemaAbout'=>'about','schemaMentions'=>'mentions'] as $field=>$property) {
                         foreach ($post[$field] ?? [] as $related) { $link($key,'entity-'.$related,$property); }
                     }
                 }
             }
             $reader=$byPage[$post['_reader']] ?? null;
-            if ($managed && $reader && !empty($post['url']) && in_array($post['source'] ?? 'default',['','default'],true)) {
+            if ($enriched && $reader && !empty($post['url']) && in_array($post['source'] ?? 'default',['','default'],true)) {
                 // Each detail URL is a separate WebPage, not the bare reader page shared by all posts.
                 $readerKey='reader-'.$post['id'];
                 $add($readerKey,($reader['schemaPageType'] ?? '') ?: 'WebPage',$post['headline'],(int)$reader['id'],'page',[

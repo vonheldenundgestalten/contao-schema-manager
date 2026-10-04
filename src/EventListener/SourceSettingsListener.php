@@ -23,7 +23,7 @@ final class SourceSettingsListener
         $archive = $this->connection->fetchAssociative(
             'SELECT a.* FROM tl_news_archive a JOIN tl_news n ON n.pid=a.id WHERE n.id=?', [$dc->id]
         );
-        if (!$archive || !in_array($archive['schemaType'], ['Article','NewsArticle','BlogPosting','JobPosting'], true)) { return; }
+        if (!$archive || !in_array($archive['schemaType'], ['','Article','NewsArticle','BlogPosting','JobPosting'], true)) { return; }
         foreach (array_keys($GLOBALS['TL_DCA']['tl_news']['palettes']) as $palette) {
             if ($palette === '__selector__' || str_contains($GLOBALS['TL_DCA']['tl_news']['palettes'][$palette], 'schemaIdentity')) { continue; }
             PaletteManipulator::create()->addLegend('schema_legend','title_legend',PaletteManipulator::POSITION_AFTER)
