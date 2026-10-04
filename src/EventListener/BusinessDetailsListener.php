@@ -60,6 +60,19 @@ final class BusinessDetailsListener
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.locations.save')]
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.workLocation.save')]
     public function locations(mixed $value, DataContainer $dc): mixed { return $this->relationships($value, $dc, ['LocalBusiness']); }
+    public function knowledgeTopicOptions(DataContainer $dc): array
+    {
+        $options = [];
+        foreach ($this->connection->fetchAllAssociative('SELECT id,name,entityType FROM tl_schema_entity WHERE id<>? ORDER BY name', [(int) $dc->id]) as $row) {
+            $options[$row['id']] = $row['name'].' ['.$row['entityType'].']';
+        }
+        return $options;
+    }
+    #[AsCallback(table: 'tl_schema_entity', target: 'fields.knowledgeTopics.save')]
+    public function knowledgeTopics(mixed $value, DataContainer $dc): mixed
+    {
+        return $this->relationships($value, $dc, ['Organization','LocalBusiness','Person','Service','Product','Event']);
+    }
     private function relationships(mixed $value, DataContainer $dc, array $types): mixed
     {
         foreach (StringUtil::deserialize($value, true) as $id) {

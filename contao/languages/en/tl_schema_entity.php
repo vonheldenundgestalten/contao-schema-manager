@@ -92,3 +92,5 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OnlineEventAttendanc
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['MixedEventAttendanceMode'] = 'Mixed: in person and online';
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['relationships'] = ['Entity relationships', 'Explore the connections between your managed entities. Select an entity to see its relationships and localized homes.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['knowledgeTopics'] = ['Linked knowledge topics', 'Select subjects this person or organization knows about, such as services or products. These links are shared across languages and complement the free-text topics in translations. They do not imply service provision or responsibility.'];

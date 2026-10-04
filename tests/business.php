@@ -43,9 +43,10 @@ try {
     $external=$make('Organization','network',['externalUrl'=>'https://external.example/']);
     $person=$make('Person','person',['organization'=>$company,'workLocation'=>serialize([$office])]);
     $service=$make('Service','service',['organization'=>$company]);
+    $db->update('tl_schema_entity',['knowledgeTopics'=>serialize([$service,$service,$office])],['id'=>$person]);
     $db->update('tl_schema_entity',['memberOf'=>serialize([$external]),'subservices'=>serialize([$service])],['id'=>$company]);
     foreach ([$company,$office,$person,$service] as $id) {
-        foreach ($pages as $locale=>$page) {$add('tl_schema_translation',['pid'=>$id,'page'=>(int)$page->id,'language'=>$locale,'catalogName'=>'Services '.$locale,'slogan'=>'Slogan '.$locale,'credentials'=>'Qualification '.$locale,'published'=>'1']);}
+        foreach ($pages as $locale=>$page) {$add('tl_schema_translation',['pid'=>$id,'page'=>(int)$page->id,'language'=>$locale,'catalogName'=>'Services '.$locale,'slogan'=>'Slogan '.$locale,'knowsAbout'=>'Knowledge '.$locale,'credentials'=>'Qualification '.$locale,'published'=>'1']);}
     }
     $render=static function(int $id,$page,string $lang)use($entities,$c):array {
         $request=Symfony\Component\HttpFoundation\Request::create(getenv('SCHEMA_TEST_ORIGIN')?:'https://example.test/');
@@ -65,6 +66,9 @@ try {
     $check($nodes[$ids[$office]]['parentOrganization']===['@id'=>$ids[$company]] && $nodes[$ids[$office]]['geo']['latitude']===48.7,'Office links back without recursive duplication');
     $personNodes=$render($person,$pages['en'],'en');
     $check($personNodes[$ids[$person]]['workLocation']===[['@id'=>$ids[$office]]] && $personNodes[$ids[$person]]['hasCredential'][0]['name']==='Qualification en','Workplace and localized credential');
+    $check($personNodes[$ids[$person]]['knowsAbout']===['Knowledge en',['@id'=>$ids[$service]],['@id'=>$ids[$office]]], 'Localized text and deduplicated subject links coexist');
+    $dePerson=$render($person,$pages['de'],'de');
+    $check($dePerson[$ids[$person]]['knowsAbout'][0]==='Knowledge de', 'Knowledge text localizes while linked identities remain stable');
     $other=clone $pages['en'];$other->id=2147483000;
     $compact=$render($office,$other,'en');
     $check(!isset($compact[$ids[$office]]['address']) && count($compact)===2,'Unrelated page contains compact office/company only, not catalogue/network');
@@ -72,6 +76,8 @@ try {
     $check($overview[$ids[$office]]['address']['addressLocality']==='Stuttgart' && $overview[$ids[$office]]['telephone']==='+49 123','Location overview keeps NAP');
     $db->update('tl_schema_entity',['published'=>''],['id'=>$office]);
     $check(!isset($render($company,$pages['de'],'de')[$ids[$company]]['location']),'Unpublished office excluded');
+    $personWithoutOffice=$render($person,$pages['en'],'en');
+    $check($personWithoutOffice[$ids[$person]]['knowsAbout']===['Knowledge en',['@id'=>$ids[$service]]], 'Unpublished knowledge topic omitted');
     $identity=new VHUG\SchemaManagerBundle\Schema\EntityIdentity($db);
     $replacement='https://example.org/#established-'.$token;
     $identity->adopt($service,$ids[$service],$replacement);

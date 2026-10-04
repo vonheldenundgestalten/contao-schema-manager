@@ -86,3 +86,12 @@ $palettes['Person'] = str_replace('organization,telephone,email', 'organization,
 $palettes['Event'] = str_replace('locationName,organization', 'organization;{location_legend},eventAttendanceMode,locationName,streetAddress,postalCode,addressLocality,addressRegion,addressCountry,eventUrl', $palettes['Event']);
 
 $GLOBALS['TL_DCA']['tl_schema_entity']['list']['global_operations'] = ['relationships'=>['href'=>'key=relationships','primary'=>true,'icon'=>'root.svg','attributes'=>'data-turbo="false"'], 'all'];
+
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['knowledgeTopics'] = [
+    'inputType' => 'select',
+    'options_callback' => [VHUG\SchemaManagerBundle\EventListener\BusinessDetailsListener::class, 'knowledgeTopicOptions'],
+    'eval' => ['multiple' => true, 'chosen' => true, 'tl_class' => 'clr'], 'sql' => 'blob NULL',
+];
+foreach (['Person', 'Organization', 'LocalBusiness'] as $type) {
+    $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace(';{links_legend}', ',knowledgeTopics;{links_legend}', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
+}
