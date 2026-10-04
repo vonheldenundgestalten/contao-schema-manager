@@ -33,7 +33,9 @@ try {
  $discover=$run;$discover['mode']='discover';$discover['proposals']=[];$cleanup->propose($discover);$check(!$discover['proposals'],'New-entity runs never remove links');
  $list=array_values(array_filter($run['proposals'],fn($p)=>$p['field']==='subservices'))[0];$scalar=array_values(array_filter($run['proposals'],fn($p)=>$p['field']==='organization'))[0];
  $extra=$add(['published'=>'1']);$db->update('tl_schema_entity',['subservices'=>serialize([$draft,$gone,$extra])],['id'=>$owner]);
- $cleanup->apply($list,$run,$user);$check(Contao\StringUtil::deserialize($db->fetchOne('SELECT subservices FROM tl_schema_entity WHERE id=?',[$owner]),true)===[$draft,$extra],'Only missing reference removed; draft and concurrent added links preserved');
+ $policy=new VHUG\SchemaManagerBundle\Ai\FieldPolicy(new VHUG\SchemaManagerBundle\EventListener\BusinessDetailsListener($db),new VHUG\SchemaManagerBundle\EventListener\DataContainerListener($db),new VHUG\SchemaManagerBundle\EventListener\EntityDetailsListener($db));
+ $engine=new VHUG\SchemaManagerBundle\Ai\ProposalEngine($db,$policy,$c->get('contao.cache.tag_manager'));
+ $listIndex=array_search($list,$run['proposals'],true);$check($engine->apply($run,[$listIndex],$user)===1&&$run['proposals'][$listIndex]['status']==='applied','Normal review applies cleanup proposal');$check(Contao\StringUtil::deserialize($db->fetchOne('SELECT subservices FROM tl_schema_entity WHERE id=?',[$owner]),true)===[$draft,$extra],'Only missing reference removed; draft and concurrent added links preserved');
  $db->insert('tl_schema_entity',['id'=>$gone,'name'=>'Restored target','entityType'=>'Organization','published'=>'']);
  try{$cleanup->apply($scalar,$run,$user);throw new LogicException('Restored target removed');}catch(RuntimeException $expected){}
  $check((int)$db->fetchOne('SELECT organization FROM tl_schema_entity WHERE id=?',[$owner])===$gone,'Restored draft relation retained');
