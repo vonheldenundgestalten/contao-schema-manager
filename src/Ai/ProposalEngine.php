@@ -27,7 +27,7 @@ final class ProposalEngine
             [$table,,$type]=$this->resolve($key,$run);
             foreach(array_keys(FieldPolicy::links($table,$type)) as $field){
                 if(!isset($record[$field]))continue;
-                if(in_array($field,['organization','schemaPerson'],true)){if(!isset($records['entity:'.$record[$field]]))$record[$field]=0;}
+                if(in_array($field,['organization','schemaPerson'],true)){if($field!=='schemaPerson'&&!isset($records['entity:'.$record[$field]]))$record[$field]=0;}
                 else{$record[$field]=array_values(array_filter(StringUtil::deserialize($record[$field],true),static fn($id)=>isset($records['entity:'.$id])));}
             }
         }unset($record);
