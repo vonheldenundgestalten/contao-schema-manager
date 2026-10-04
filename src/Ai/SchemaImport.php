@@ -168,7 +168,7 @@ final class SchemaImport
                 if($g['type']==='WebSite'){
                     $identity=$v['node']['@id']??'';if($row['schemaWebsiteId']&&$row['schemaWebsiteId']!==$identity)throw new \RuntimeException('Existing website identity differs; resolve it before importing.');
                     $changes+=['schemaWebsiteId'=>$identity,'schemaWebsiteHome'=>$v['page'],'schemaSiteName'=>$row['schemaSiteName']?:($v['node']['name']??'')];
-                    $publisher=$ids[$v['node']['publisher']['@id']??'']??0;if($publisher&&!$row['schemaPublisher'])$changes['schemaPublisher']=$publisher;
+                    $publisherRef=$v['node']['publisher']['@id']??'';$publisher=$ids[$publisherRef]??(int)$this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE entityId=? AND entityType IN ('Organization','LocalBusiness')",[$publisherRef]);if($publisher&&!$row['schemaPublisher'])$changes['schemaPublisher']=$publisher;
                 }else $changes['schemaPageType']=$row['schemaPageType']?:$g['type'];
                 if(!empty($row['schemaImportedData'])&&$row['schemaImportedData']!==$changes['schemaImportedData'])throw new \RuntimeException('Existing imported page data differs; nothing overwritten.');
                 // Page configuration is staged in the review; importing drafts has no public effect.

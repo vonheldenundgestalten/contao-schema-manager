@@ -59,5 +59,3 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['credentials'] = ['Professional qua
 $GLOBALS['TL_LANG']['tl_schema_translation']['schemaImportedData'] = ['Preserved imported properties', 'Original IDs and properties without a native editor field. Native fields take precedence.'];
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['import_legend'] = 'Imported structured data';
-
-

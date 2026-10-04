@@ -30,7 +30,7 @@ final class EntityGraph
     {
         if (!$entity = $this->record($id)) { return null; }
         if (isset($emitted[$entity['entityId']])) { return $emitted[$entity['entityId']]; }
-        
+
         $translation = $this->connection->fetchAssociative(
             'SELECT * FROM tl_schema_translation WHERE pid = ? AND language = ? AND published = ? ORDER BY id',
             [$id, $language, '1']
