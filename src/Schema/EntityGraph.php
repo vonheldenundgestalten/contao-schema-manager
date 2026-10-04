@@ -113,7 +113,7 @@ final class EntityGraph
             }
         }
         if ($isOrganization && $full) {
-            try { $identifiers = BusinessFacts::registrations(\Contao\StringUtil::deserialize($entity['registrationIdentifiers'] ?? null, true)); }
+            try { $identifiers = BusinessFacts::registrations(\Contao\StringUtil::deserialize($entity['registrationIdentifiers'] ?? null, true), \Contao\StringUtil::deserialize($translation['registrationNames'] ?? null, true)); }
             catch (\InvalidArgumentException) { $identifiers = []; }
             if ($identifiers) { $node['identifier'] = count($identifiers) === 1 ? $identifiers[0] : $identifiers; }
         }
@@ -122,8 +122,9 @@ final class EntityGraph
                 $node[$field] = $entity[$field];
             }
         }
-        if (!empty($entity['sameAs'])) {
-            $links = preg_split('/\R/', trim($entity['sameAs']));
+        $sameAs = $isOrganization ? ($translation['sameAs'] ?? $entity['sameAs']) : $entity['sameAs'];
+        if (!empty($sameAs)) {
+            $links = preg_split('/\R/', trim($sameAs));
             $node['sameAs'] = array_values(array_filter($links, static fn ($url) => preg_match('~^https?://~', $url)));
         }
         if ((!$isOrganization || empty($entity['externalUrl']) || $translation) && !empty($entity['image']) && ($file = FilesModel::findByUuid($entity['image']))) {

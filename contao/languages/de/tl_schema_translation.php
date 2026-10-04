@@ -59,3 +59,11 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['credentials'] = ['Berufliche Quali
 $GLOBALS['TL_LANG']['tl_schema_translation']['schemaImportedData'] = ['Erhaltene importierte Eigenschaften', 'Original-IDs und Eigenschaften ohne eigenes Eingabefeld. Native Felder haben Vorrang.'];
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['import_legend'] = 'Importierte strukturierte Daten';
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['sameAs'] = ["Identitätslinks (sameAs)", "Links für diese Sprache, eine URL pro Zeile. Universelle Profile in jeder Sprache eintragen. Bisherige gemeinsame Links gelten bis zum Speichern; leer speichern entfernt sie für diese Sprache."];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['registrationNames'] = ["Übersetzte Registernamen", "Links die bestehende Registernummer, rechts der übersetzte Name. Nummern werden am gemeinsamen Eintrag gepflegt. Ohne Übersetzung gilt der Standardname."];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['registerNumber'] = "Registernummer (fest)";
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['registerName'] = "Registername in dieser Sprache";

@@ -135,7 +135,7 @@ final class DataContainerListener
         );
         $fields = match ($type) {
             'Person' => 'description,jobTitle,knowsAbout,credentials,award',
-            'Organization', 'LocalBusiness' => 'description,slogan,knowsAbout,catalogName',
+            'Organization', 'LocalBusiness' => 'description,slogan,knowsAbout,catalogName,sameAs,registrationNames',
             'Service' => 'name,description,serviceType,audienceType,catalogName',
             'Product', 'Event' => 'name,description',
             default => 'description',
