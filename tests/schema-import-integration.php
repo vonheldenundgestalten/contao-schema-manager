@@ -70,6 +70,19 @@ try {
  $importer->apply($pageRun,[$pageKey],$user);$check($db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$first['page']])===$before,'Page import is staged without public changes');
  $importer->publish($pageRun,[$pageKey],$user);$check($db->fetchOne('SELECT schemaImportedActive FROM tl_page WHERE id=?',[$first['page']])==='1','Explicit publication activates page import');
  $db->update('tl_schema_translation',['description'=>'Editor changed this'],['id'=>$homes[0]['id']]);$again=$importer->plan($run);$check((bool)$again[$key]['conflicts'],'Existing edited fields block overwrite');
+ $siteHome=Contao\PageModel::findById($first['page']);$siteHome->loadDetails();$siteRoot=(int)$siteHome->rootId;
+ $configured='https://example.org/#generated-'.$suffix;$original='https://example.org/#original-'.$suffix;
+ $db->update('tl_page',['schemaWebsiteId'=>$configured,'schemaImportedData'=>null,'schemaImportedActive'=>''],['id'=>$siteRoot]);
+ $siteRun=['stage'=>'import','status'=>'complete','root'=>2,'origin'=>'https://example.org','inventory'=>$data,'importSources'=>[$first['id']=>['source'=>$first,'candidates'=>[['node'=>['@type'=>'WebSite','@id'=>$original,'name'=>'Original site','url'=>$first['url']],'element'=>0]],'elements'=>[]]]];
+ $siteRun['importPlan']=$importer->plan($siteRun);$siteKey=array_key_first($siteRun['importPlan']);
+ $check($siteRun['importPlan'][$siteKey]['websiteIdentityChanges'][$siteRoot]===['current'=>$configured,'original'=>$original],'Review shows configured and original website IDs');
+ $importer->apply($siteRun,[$siteKey],$user);
+ $check($db->fetchOne('SELECT schemaWebsiteId FROM tl_page WHERE id=?',[$siteRoot])===$configured,'Draft does not change website identity');
+ $db->update('tl_page',['schemaWebsiteId'=>'https://example.org/#editor-change'],['id'=>$siteRoot]);
+ try{$importer->publish($siteRun,[$siteKey],$user);throw new LogicException('Stale website identity overwritten');}catch(RuntimeException $expected){}
+ $db->update('tl_page',['schemaWebsiteId'=>$configured],['id'=>$siteRoot]);
+ $importer->publish($siteRun,[$siteKey],$user);
+ $check($db->fetchOne('SELECT schemaWebsiteId FROM tl_page WHERE id=?',[$siteRoot])===$original,'Publishing restores original website identity');
  $native=['@type'=>'Service','@id'=>'https://example.org/new','name'=>'Edited','sameAs'=>['https://example.org/new-link']];
  $merged=VHUG\SchemaManagerBundle\Schema\ImportedSchema::merge($native,json_encode(['@id'=>'https://example.org/old','termsOfService'=>'https://example.org/terms','sameAs'=>['old','obsolete']]));
  $check($merged['@id']==='https://example.org/old'&&$merged['sameAs']===['https://example.org/new-link']&&isset($merged['termsOfService']),'Native lists replace, identity and unsupported facts survive');
