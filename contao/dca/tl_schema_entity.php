@@ -79,7 +79,7 @@ $palettes = &$GLOBALS['TL_DCA']['tl_schema_entity']['palettes'];
 foreach (['Organization', 'LocalBusiness'] as $type) {
     $palettes[$type] = str_replace('telephone,email', 'telephone,email,faxNumber', $palettes[$type]);
     $palettes[$type] = str_replace('addressLocality,addressCountry', 'addressLocality,addressRegion,addressCountry,postOfficeBoxNumber', $palettes[$type]);
-    $palettes[$type] = str_replace(';{links_legend}', ';{business_legend},numberOfEmployees,areaServed;{relations_legend},locations,memberOf,subservices;{links_legend}', $palettes[$type]);
+    $palettes[$type] = str_replace(';{links_legend}', ';{business_legend},numberOfEmployees,areaServed,award;{relations_legend},locations,memberOf,subservices;{links_legend}', $palettes[$type]);
     $palettes[$type] = str_replace('sameAs,image', 'externalUrl,sameAs,image', $palettes[$type]);
 }
 $palettes['LocalBusiness'] = str_replace(';{business_legend}', ';{location_legend},latitude,longitude,hasMap,openingHours,priceRange;{business_legend}', $palettes['LocalBusiness']);
@@ -98,3 +98,14 @@ foreach (['Person', 'Organization', 'LocalBusiness'] as $type) {
 }
 
 $GLOBALS['TL_DCA']['tl_schema_entity']['list']['global_operations']['ai'] = ['href'=>'key=ai','primary'=>true,'icon'=>'search.svg','attributes'=>'data-turbo="false"'];
+
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['award'] = ['inputType'=>'textarea', 'eval'=>['tl_class'=>'clr'], 'sql'=>'text NULL'];
+
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['areaServedWorldwide'] = ['inputType'=>'checkbox', 'eval'=>['tl_class'=>'clr'], 'sql'=>"char(1) NOT NULL default ''"];
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['registrationIdentifiers'] = ['inputType'=>'keyValueWizard', 'eval'=>['allowEmptyKeys'=>true,'tl_class'=>'clr','keyLabel'=>&$GLOBALS['TL_LANG']['tl_schema_entity']['registerName'],'valueLabel'=>&$GLOBALS['TL_LANG']['tl_schema_entity']['registerNumber']], 'sql'=>'blob NULL'];
+foreach (['Organization','LocalBusiness','Service'] as $type) {
+    $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace('areaServed,', 'areaServedWorldwide,areaServed,', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
+}
+foreach (['Organization','LocalBusiness'] as $type) {
+    $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace('vatID,taxID,', 'vatID,taxID,registrationIdentifiers,', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
+}
