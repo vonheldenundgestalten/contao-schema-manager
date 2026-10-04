@@ -103,6 +103,8 @@ final class PageMetadataListener
         $publisher=$this->connection->fetchOne("SELECT entityId FROM tl_schema_entity WHERE id=? AND published='1'",[$site->schemaPublisher]);
         if($publisher){$node['publisher']=['@id'=>$publisher];}
         if($site->schemaImportedActive)$node=\VHUG\SchemaManagerBundle\Schema\ImportedSchema::merge($node,$site->schemaImportedData);
+        // The editable root identity is authoritative, including after legacy import.
+        $node['@id']=$site->schemaWebsiteId;
         $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->set($manager->createSchemaOrgTypeFromArray($node),$site->schemaWebsiteId);
         $web->setProperty('isPartOf',['@id'=>$site->schemaWebsiteId]);
     }

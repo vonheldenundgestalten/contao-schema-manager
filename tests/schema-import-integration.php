@@ -83,6 +83,19 @@ try {
  $db->update('tl_page',['schemaWebsiteId'=>$configured],['id'=>$siteRoot]);
  $importer->publish($siteRun,[$siteKey],$user);
  $check($db->fetchOne('SELECT schemaWebsiteId FROM tl_page WHERE id=?',[$siteRoot])===$original,'Publishing restores original website identity');
+ $settings=new VHUG\SchemaManagerBundle\EventListener\SourceSettingsListener($db);
+ $dc=new class($siteRoot) extends Contao\DataContainer { public function __construct(int $id){$this->intId=$id;} public function getPalette(){return '';} protected function save($value){} };
+ $check($settings->keepWebsiteIdentity('https://example.org/#website',$dc)==='https://example.org/#website','Original website ID can be entered in the backend');
+ foreach(['javascript:alert(1)','https://user:secret@example.org/#website',''] as $bad){try{$settings->keepWebsiteIdentity($bad,$dc);throw new LogicException('Invalid website ID accepted');}catch(InvalidArgumentException){}}
+ $secondHome=Contao\PageModel::findById($second['page']);$secondHome->loadDetails();$owner=(int)$secondHome->rootId;
+ $db->update('tl_page',['schemaWebsiteRoot'=>0,'schemaWebsiteId'=>$configured,'schemaImportedData'=>null,'schemaImportedActive'=>''],['id'=>$owner]);
+ $db->update('tl_page',['schemaWebsiteRoot'=>$owner],['id'=>$siteRoot]);
+ $sharedRun=$siteRun;$sharedRun['importPlan']=$importer->plan($sharedRun);$sharedKey=array_key_first($sharedRun['importPlan']);
+ $check(isset($sharedRun['importPlan'][$sharedKey]['websiteIdentityChanges'][$owner]),'Review resolves the actual shared website root');
+ $importer->apply($sharedRun,[$sharedKey],$user);
+ $check(isset($sharedRun['importPlan'][$sharedKey]['pageChanges'][$owner])&&!isset($sharedRun['importPlan'][$sharedKey]['pageChanges'][$siteRoot]),'Import stages the owning root rather than the language root');
+ $importer->publish($sharedRun,[$sharedKey],$user);
+ $check($db->fetchOne('SELECT schemaWebsiteId FROM tl_page WHERE id=?',[$owner])===$original,'Original identity reaches the root used for output');
  $native=['@type'=>'Service','@id'=>'https://example.org/new','name'=>'Edited','sameAs'=>['https://example.org/new-link']];
  $merged=VHUG\SchemaManagerBundle\Schema\ImportedSchema::merge($native,json_encode(['@id'=>'https://example.org/old','termsOfService'=>'https://example.org/terms','sameAs'=>['old','obsolete']]));
  $check($merged['@id']==='https://example.org/old'&&$merged['sameAs']===['https://example.org/new-link']&&isset($merged['termsOfService']),'Native lists replace, identity and unsupported facts survive');

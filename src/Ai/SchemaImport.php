@@ -92,14 +92,16 @@ final class SchemaImport
                 if(count($matches)>1)$g['conflicts'][]='Multiple existing entities match. Resolve the duplicate before importing.';
                 elseif($matches){$g['existing']=(int)$matches[0]['id'];if($g['ids']&&!in_array($matches[0]['entityId'],$g['ids'],true))$g['conflicts'][]='Existing entity has another ID. Keep it unchanged and resolve its identity before importing.';}
             }
-            $sharedValues=[];
+            $sharedValues=[];$websiteIds=[];
             foreach($g['variants'] as $language=>&$v){
                 [$v['fields'],$v['localized'],$v['retained']]=$this->fields($g['type'],$v['node']);
                 foreach($v['fields'] as $field=>$value){if(isset($sharedValues[$field])&&!$this->sameSharedField($field,$sharedValues[$field],$value))$g['conflicts'][]='Shared '.$field.' differs between languages.';$sharedValues[$field]=$value;}
                 if($g['type']==='WebSite' && $v['page']) {
                     $home=\Contao\PageModel::findById($v['page']);
-                    if($home){$home->loadDetails();$current=$this->db->fetchOne('SELECT schemaWebsiteId FROM tl_page WHERE id=?',[$home->rootId]);$original=$v['node']['@id']??'';
-                        if($current&&$original&&$current!==$original)$g['websiteIdentityChanges'][(int)$home->rootId]=['current'=>$current,'original'=>$original];
+                    if($home){$home->loadDetails();$websiteRoot=$this->websiteRoot((int)$home->rootId);$current=$this->db->fetchOne('SELECT schemaWebsiteId FROM tl_page WHERE id=?',[$websiteRoot]);$original=$v['node']['@id']??'';
+                        if(isset($websiteIds[$websiteRoot])&&$original&&$websiteIds[$websiteRoot]!==$original)$g['conflicts'][]='Different original website IDs share one website root. Separate the website roots or resolve their identity first.';
+                        if($original)$websiteIds[$websiteRoot]=$original;
+                        if($current&&$original&&$current!==$original)$g['websiteIdentityChanges'][$websiteRoot]=['current'=>$current,'original'=>$original];
                     }
                 }
                 if(in_array($g['type'],self::BUSINESS,true)&&!$v['page'])$g['conflicts'][]='No eligible '.$language.' home page matched the original URL; choose a home before importing.';
@@ -199,21 +201,26 @@ final class SchemaImport
                 if($parent&&$parent!==$id&&in_array($this->db->fetchOne('SELECT entityType FROM tl_schema_entity WHERE id=?',[$parent]),['Organization','LocalBusiness'],true)&&!$this->db->fetchOne('SELECT organization FROM tl_schema_entity WHERE id=?',[$id]))$this->version('tl_schema_entity',$id,$user,fn()=>$this->db->update('tl_schema_entity',['organization'=>$parent],['id'=>$id]));
                 continue;
             }
+            $websiteTargets=[];
             foreach($g['variants'] as $v){
-                $page=\Contao\PageModel::findById($v['page']);if(!$page)throw new \RuntimeException('Imported page disappeared.');$page->loadDetails();$target=$g['type']==='WebSite'?(int)$page->rootId:(int)$page->id;
+                $page=\Contao\PageModel::findById($v['page']);if(!$page)throw new \RuntimeException('Imported page disappeared.');$page->loadDetails();$target=$g['type']==='WebSite'?$this->websiteRoot((int)$page->rootId):(int)$page->id;
+                if($g['type']==='WebSite'){
+                    if(isset($websiteTargets[$target]))continue;$websiteTargets[$target]=true;
+                    foreach($g['variants'] as $candidate){$candidatePage=\Contao\PageModel::findById($candidate['page']);if($candidatePage){$candidatePage->loadDetails();if((int)$candidatePage->rootId===$target){$v=$candidate;break;}}}
+                }
                 $row=$this->db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$target]);$changes=['schemaImportedData'=>json_encode($v['node'],JSON_THROW_ON_ERROR|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)];
                 if($g['type']==='WebSite'){
                     // Explicitly importing legacy WebSite restores its original public identity.
                     // This is staged, shown in review, and applied only on publication.
                     $identity=$v['node']['@id']??$row['schemaWebsiteId'];
-                    $changes+=['schemaWebsiteId'=>$identity,'schemaWebsiteHome'=>$v['page'],'schemaSiteName'=>$row['schemaSiteName']?:($v['node']['name']??'')];
+                    $changes+=['schemaWebsiteId'=>$identity,'schemaWebsiteHome'=>$this->websiteHome($target,(int)$v['page']),'schemaSiteName'=>$row['schemaSiteName']?:($v['node']['name']??'')];
                     $publisherRef=$v['node']['publisher']['@id']??'';$publisher=$ids[$publisherRef]??(int)$this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE entityId=? AND entityType IN ('Organization','LocalBusiness')",[$publisherRef]);if($publisher&&!$row['schemaPublisher'])$changes['schemaPublisher']=$publisher;
                 }else $changes['schemaPageType']=$row['schemaPageType']?:$g['type'];
                 if(!empty($row['schemaImportedData'])&&$row['schemaImportedData']!==$changes['schemaImportedData'])throw new \RuntimeException('Existing imported page data differs; nothing overwritten.');
                 // Page configuration is staged in the review; importing drafts has no public effect.
                 $run['importPlan'][$key]['pageChanges'][$target]=['before'=>array_intersect_key($row,$changes),'changes'=>$changes];
             }
-            $run['importPlan'][$key]['status']='imported';$run['importPlan'][$key]['pages']=array_values(array_unique(array_map(function($v)use($g){$p=\Contao\PageModel::findById($v['page']);$p->loadDetails();return $g['type']==='WebSite'?(int)$p->rootId:(int)$p->id;},$g['variants'])));++$count;
+            $run['importPlan'][$key]['status']='imported';$run['importPlan'][$key]['pages']=array_values(array_unique(array_map(function($v)use($g){$p=\Contao\PageModel::findById($v['page']);$p->loadDetails();return $g['type']==='WebSite'?$this->websiteRoot((int)$p->rootId):(int)$p->id;},$g['variants'])));++$count;
         }
         if(!$count)throw new \RuntimeException('Select the legacy entities to import.');return $count;
     }
@@ -246,6 +253,19 @@ final class SchemaImport
             $run['importPlan'][$key]['status']='published';++$count;
         }
         if(!$count)throw new \RuntimeException('Select imported drafts to publish.');return $count;
+    }
+    private function websiteRoot(int $root): int
+    {
+        $shared=(int)$this->db->fetchOne('SELECT schemaWebsiteRoot FROM tl_page WHERE id=?',[$root]);
+        $target=$shared?:$root;
+        if($this->db->fetchOne('SELECT type FROM tl_page WHERE id=?',[$target])!=='root')throw new \RuntimeException('The shared website root no longer exists.');
+        return $target;
+    }
+    private function websiteHome(int $root,int $candidate): int
+    {
+        $page=\Contao\PageModel::findById($candidate);$page?->loadDetails();
+        if($page&&(int)$page->rootId===$root)return $candidate;
+        return (int)$this->db->fetchOne('SELECT schemaWebsiteHome FROM tl_page WHERE id=?',[$root]);
     }
     private function version(string $table,int $id,BackendUser $user,callable $change): void
     {

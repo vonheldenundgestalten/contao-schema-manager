@@ -3,7 +3,7 @@
 $GLOBALS['TL_LANG']['tl_page']['schema_legend'] = 'Strukturierte Daten';
 $GLOBALS['TL_LANG']['tl_page']['schemaPublisher'] = ['Website-Herausgeber', 'Gemeinsame Organisation für diesen Sprachstartpunkt.'];
 $GLOBALS['TL_LANG']['tl_page']['schemaSiteName'] = ['Website-Name', 'Öffentlicher Website-Name in dieser Sprache.'];
-$GLOBALS['TL_LANG']['tl_page']['schemaWebsiteId'] = ['Permanente Website-ID', 'Einmalig aus der Identitäts-Domain des Herausgebers erzeugt.'];
+$GLOBALS['TL_LANG']['tl_page']['schemaWebsiteId'] = ['Permanente Website-ID', "Zum Wiederherstellen einer bestehenden öffentlichen ID editierbar, z. B. https://example.org/#website. Danach stabil halten. Bei gemeinsamem Website-Root die ID dort ändern. Verweise in individuellem Markup beim Ändern prüfen."];
 $GLOBALS['TL_LANG']['tl_page']['schemaEntities'] = ['Zugehörige Entitäten', 'Entitäten auswählen, die zum sichtbaren Inhalt dieser Seite gehören.'];
 $GLOBALS['TL_LANG']['tl_page']['schemaSiteAlternateName'] = ['Alternativer Website-Name', 'Eine echte Abkürzung oder ein weiterer gebräuchlicher Website-Name.'];
 $GLOBALS['TL_LANG']['tl_page']['schemaWebsiteRoot'] = ['Website-Identität teilen mit', 'Primären Sprachstartpunkt derselben Website auswählen. Leer: eigenständige Website.'];

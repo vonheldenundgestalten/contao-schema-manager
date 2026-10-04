@@ -68,6 +68,17 @@ final class SourceSettingsListener
     #[AsCallback(table:'tl_page',target:'fields.schemaWebsiteId.save')]
     public function keepWebsiteIdentity(mixed $value, DataContainer $dc): string
     {
-        return (string) $this->connection->fetchOne('SELECT schemaWebsiteId FROM tl_page WHERE id=?',[$dc->id]);
+        $row=$this->connection->fetchAssociative('SELECT schemaWebsiteId,schemaWebsiteRoot FROM tl_page WHERE id=?',[$dc->id]);
+        $value=trim((string)$value);
+        if(!empty($row['schemaWebsiteRoot'])){
+            if($value!==($row['schemaWebsiteId']??''))throw new \InvalidArgumentException('Edit the website ID on the shared website root #'.$row['schemaWebsiteRoot'].'.');
+            return $value;
+        }
+        if($value===''){
+            if(!empty($row['schemaWebsiteId']))throw new \InvalidArgumentException('Enter the original website ID instead of clearing an existing identity.');
+            return '';
+        }
+        if(strlen($value)>255)throw new \InvalidArgumentException('Website IDs may contain at most 255 characters.');
+        return (new BusinessDetailsListener($this->connection))->url($value);
     }
 }
