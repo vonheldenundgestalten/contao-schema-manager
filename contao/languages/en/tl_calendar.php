@@ -13,3 +13,7 @@ $GLOBALS['TL_LANG']['tl_calendar']['schemaEventUrl'] = ['Online event URL', 'Cal
 $GLOBALS['TL_LANG']['tl_calendar']['schemaAbout'] = ['Topics / related services', 'Calendar values are defaults; event values take precedence. Empty event fields inherit the calendar setting.'];
 $GLOBALS['TL_LANG']['tl_calendar']['schemaPerformer'] = ['Speakers / performers', 'Calendar values are defaults; event values take precedence. Empty event fields inherit the calendar setting.'];
 $GLOBALS['TL_LANG']['tl_calendar']['schemaIdentity'] = ['Stable event identity', 'Calendar values are defaults; event values take precedence. Empty event fields inherit the calendar setting.'];
+
+$GLOBALS['TL_LANG']['tl_calendar']['schemaLatitude'] = ['Latitude', 'Manual decimal coordinates. Enter both values. Leave both empty to inherit the calendar pair; a partial event pair does not inherit.'];
+
+$GLOBALS['TL_LANG']['tl_calendar']['schemaLongitude'] = ['Longitude', 'Manual decimal coordinates. Enter both values. Leave both empty to inherit the calendar pair; a partial event pair does not inherit.'];

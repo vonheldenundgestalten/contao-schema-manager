@@ -27,6 +27,17 @@ try{
  $check($node['name']==='Core name'&&$node['description']==='Core description'&&$node['startDate']==='2026-11-10T10:00:00+01:00'&&$node['image']==='https://example.org/image.jpg','Core facts preserved');
  $check(!empty($node['organizer']['@id'])&&$subjects===[['@id'=>$record['schemaIdentity']]],'Calendar organizer inheritance and reader subject');
  $check(count(array_filter($nodes,fn($node)=>($node['@type']??'')==='Event'))===2,'Only exact core event replaced');
+
+ foreach(['tl_calendar','tl_calendar_events'] as $table){$check(!in_array('schemaLatitude',VHUG\SchemaManagerBundle\Ai\FieldPolicy::fields($table,''),true)&&!in_array('schemaLongitude',VHUG\SchemaManagerBundle\Ai\FieldPolicy::fields($table,''),true),'Coordinates excluded from AI policy');}
+ $db->update('tl_calendar',['schemaLatitude'=>'48.7758','schemaLongitude'=>'9.1829'],['id'=>$calendar]);
+ $db->update('tl_calendar_events',['schemaLatitude'=>'','schemaLongitude'=>''],['id'=>$id]);
+ $eventNode=function()use($render,$record){[$nodes]=$render();return array_values(array_filter($nodes,fn($n)=>($n['@id']??'')===$record['schemaIdentity']))[0];};
+ $check($eventNode()['location']['geo']['latitude']===48.7758,'Calendar coordinate pair inherited');
+ $db->update('tl_calendar_events',['schemaLatitude'=>'0','schemaLongitude'=>'0'],['id'=>$id]);
+ $check($eventNode()['location']['geo']['latitude']===0.0&&$eventNode()['location']['geo']['longitude']===0.0,'Zero coordinates override defaults');
+ $db->update('tl_calendar_events',['schemaLongitude'=>''],['id'=>$id]);
+ $check(!isset($eventNode()['location']['geo']),'Partial event coordinates never mix with calendar defaults');
+ $db->update('tl_calendar_events',['schemaLatitude'=>''],['id'=>$id]);
  [$nodes,$subjects]=$render(false);$check(count($nodes)===1&&!$subjects,'No event is fabricated on teaser lists');
  $db->update('tl_calendar',['schemaMode'=>'suppress'],['id'=>$calendar]);[$nodes,$subjects]=$render();$check(count($nodes)===1&&!$subjects,'Calendar suppression preserves unrelated events');
  $db->update('tl_calendar',['schemaMode'=>'enrich'],['id'=>$calendar]);

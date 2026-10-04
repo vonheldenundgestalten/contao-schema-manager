@@ -23,7 +23,10 @@ final class CalendarEventGraph
             if(($calendar['schemaMode']??'')==='suppress'){$graph->hide(Event::class,$key);continue;}
             if(empty($record['published'])||!empty($calendar['protected'])||(!empty($record['start'])&&$record['start']>time())||(!empty($record['stop'])&&$record['stop']<=time())){$graph->hide(Event::class,$key);continue;}
             $values=[];foreach(array_keys(CalendarEventFields::defaults()) as $field)$values[$field]=($record[$field]??'')?:($calendar[$field]??'');
-            if(($calendar['schemaMode']??'')!=='enrich'&&!array_filter($values)&&empty($record['schemaAbout'])&&empty($record['schemaPerformer']))continue;
+            $coordinates=trim((string)($record['schemaLatitude']??''))!==''||trim((string)($record['schemaLongitude']??''))!==''?$record:$calendar;
+            $latitude=trim((string)($coordinates['schemaLatitude']??''));$longitude=trim((string)($coordinates['schemaLongitude']??''));
+            if($latitude!==''&&$longitude!==''&&is_numeric($latitude)&&is_numeric($longitude)&&abs((float)$latitude)<=90&&abs((float)$longitude)<=180)$geo=['@type'=>'GeoCoordinates','latitude'=>(float)$latitude,'longitude'=>(float)$longitude];else $geo=null;
+            if(!$geo&&($calendar['schemaMode']??'')!=='enrich'&&!array_filter($values)&&empty($record['schemaAbout'])&&empty($record['schemaPerformer']))continue;
             $node=$graph->get(Event::class,$key)->toArray();unset($node['@context']);
             $model=\Contao\CalendarEventsModel::findById($record['id']);if(!$model)continue;
             $url=$this->urls->generate($model,[],UrlGeneratorInterface::ABSOLUTE_URL);
@@ -37,6 +40,7 @@ final class CalendarEventGraph
             $address=$place['address']??['@type'=>'PostalAddress'];if(!is_array($address))$address=['@type'=>'PostalAddress','description'=>$address];
             foreach(['schemaStreetAddress'=>'streetAddress','schemaPostalCode'=>'postalCode','schemaAddressLocality'=>'addressLocality','schemaAddressCountry'=>'addressCountry'] as $field=>$property)if($values[$field])$address[$property]=$values[$field];
             if(count($address)>1)$place['address']=$address;
+            if($geo)$place['geo']=$geo;
             $locations=[];if($mode!=='OnlineEventAttendanceMode'&&count($place)>1)$locations[]=$place;
             if(in_array($mode,['OnlineEventAttendanceMode','MixedEventAttendanceMode'],true)&&$values['schemaEventUrl'])$locations[]=['@type'=>'VirtualLocation','url'=>$values['schemaEventUrl']];
             if($locations)$node['location']=count($locations)===1?$locations[0]:$locations;elseif($mode==='OnlineEventAttendanceMode')unset($node['location']);

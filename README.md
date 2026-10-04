@@ -491,3 +491,5 @@ The integration checks target the pilot fixtures: published DE/EN pages, a confi
 See [development notes](docs/development.md) for the pilot's setup and verification history. Screenshot files in [docs/images](docs/images) were captured from the actual backend on 2026-10-03; credentials, browser sessions and capture helpers are not included.
 
 People and organizations can select **Linked knowledge topics** on the entity record (for example, an existing SEO service). These shared `knowsAbout` references appear in the relationship graph and complement the localized **Expertise** text in each translation. Only published targets are emitted in frontend JSON-LD. Knowledge links do not imply that the person provides or manages the service.
+
+Event venue latitude/longitude are optional manual fields, excluded from AI suggestions. Supply both decimal coordinates; an empty event pair inherits the calendar pair. A partial event pair never mixes with calendar coordinates. Online-only events do not output physical coordinates.

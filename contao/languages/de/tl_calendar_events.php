@@ -13,3 +13,7 @@ $GLOBALS['TL_LANG']['tl_calendar_events']['schemaEventUrl'] = ['Online-Veranstal
 $GLOBALS['TL_LANG']['tl_calendar_events']['schemaAbout'] = ['Themen / zugehörige Leistungen', 'Kalenderwerte dienen als Vorgabe. Leere Termin-Felder übernehmen diese, eigene Angaben haben Vorrang.'];
 $GLOBALS['TL_LANG']['tl_calendar_events']['schemaPerformer'] = ['Vortragende / Mitwirkende', 'Kalenderwerte dienen als Vorgabe. Leere Termin-Felder übernehmen diese, eigene Angaben haben Vorrang.'];
 $GLOBALS['TL_LANG']['tl_calendar_events']['schemaIdentity'] = ['Stabile Event-Identität', 'Kalenderwerte dienen als Vorgabe. Leere Termin-Felder übernehmen diese, eigene Angaben haben Vorrang.'];
+
+$GLOBALS['TL_LANG']['tl_calendar_events']['schemaLatitude'] = ['Breitengrad', 'Dezimalkoordinaten manuell eingeben. Beide Werte angeben. Beide leer: Koordinatenpaar des Kalenders übernehmen. Ein einzelner Terminwert erbt nicht.'];
+
+$GLOBALS['TL_LANG']['tl_calendar_events']['schemaLongitude'] = ['Längengrad', 'Dezimalkoordinaten manuell eingeben. Beide Werte angeben. Beide leer: Koordinatenpaar des Kalenders übernehmen. Ein einzelner Terminwert erbt nicht.'];
