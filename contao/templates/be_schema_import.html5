@@ -20,9 +20,10 @@ $token='<input type="hidden" name="REQUEST_TOKEN" value="'.$e($this->token).'">'
 <?php if(!$run['queue']): ?>
 <?php foreach($run['importSources'] as $source): ?><?php foreach($source['warnings'] as $warning): ?><p class="tl_info"><?= $e($warning) ?></p><?php endforeach ?><?php endforeach ?>
 <?php if(!$run['importPlan']): ?><p><?= $e($l['importEmpty']) ?></p><?php endif ?>
+<?php if($run['importPlan']): ?>
 <form method="post" data-turbo="false"><?= $token ?>
 <?php foreach($run['importPlan'] as $key=>$g): ?>
-<details class="sai-entity"><summary><strong><?= $e($g['type'].' — '.$g['name']) ?></strong> · <?= $e($l['import_'.$g['status']]) ?></summary>
+<details class="sai-entity"><summary><strong><?= $e($g['type'].' — '.$g['name']) ?></strong> · <?= $e($g['conflicts']?$l['import_conflict']:$l['import_'.$g['status']]) ?></summary>
 <?php if(!$g['conflicts']&&$g['status']!=='published'): ?><label><input type="checkbox" name="import_selected[]" value="<?= $e($key) ?>"> <?= $e($l['importSelect']) ?></label><?php endif ?>
 <?php if($g['existing']): ?><p><?= $e($l['importMerge']) ?> #<?= (int)$g['existing'] ?></p><?php endif ?>
 <?php foreach($g['conflicts'] as $conflict): ?><p class="tl_error"><?= $e($conflict) ?></p><?php endforeach ?>
@@ -44,5 +45,6 @@ $token='<input type="hidden" name="REQUEST_TOKEN" value="'.$e($this->token).'">'
 <?php foreach($result['errors'] as $error): ?><p class="tl_error"><?= $e($error) ?></p><?php endforeach ?>
 <?php if(!$result['elements']): ?><p><?= $e($result['title'].': '.$l['importUnknownOrigin']) ?></p><?php endif ?>
 <?php endforeach ?><button class="tl_submit"><?= $e($l['auditRetire']) ?></button></form><?php endif ?></section>
+<?php endif ?>
 <p><a class="tl_submit" href="?do=schema_manager&amp;key=ai&amp;stage=foundation&amp;root=<?= (int)$this->selectedRoot ?>"><?= $e($l['importNext']) ?></a></p>
 <?php endif ?><?php endif ?></div>

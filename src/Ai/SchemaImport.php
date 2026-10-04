@@ -15,6 +15,13 @@ final class SchemaImport
         catch(\Throwable){$out['warnings'][]='Could not read public JSON-LD on '.$source['url'].'. Keep the original markup enabled and retry.';return $out;}
         $known=$this->db->fetchFirstColumn("SELECT entityId FROM tl_schema_entity WHERE entityId<>''");
         $known=array_merge($known,$this->db->fetchFirstColumn("SELECT schemaWebsiteId FROM tl_page WHERE schemaWebsiteId<>''"));
+        // Reader output belongs to its native record, not a new standalone entity.
+        foreach(['tl_news','tl_calendar_events'] as $nativeTable){
+            $schema=$this->db->createSchemaManager();if(!$schema->tablesExist([$nativeTable]))continue;
+            if($schema->introspectTable($nativeTable)->hasColumn('schemaIdentity'))$known=array_merge($known,$this->db->fetchFirstColumn("SELECT schemaIdentity FROM ".$nativeTable." WHERE schemaIdentity<>''"));
+        }
+        if(str_starts_with($source['id'],'event:'))$known[]=$source['url'].'#event';
+
         foreach($this->db->fetchFirstColumn('SELECT schemaImportedData FROM tl_schema_translation WHERE schemaImportedData IS NOT NULL') as $json){if($id=\VHUG\SchemaManagerBundle\Schema\ImportedSchema::identity($json))$known[]=$id;}
         $local=[];$fingerprints=[];$table=str_starts_with($source['id'],'news:')?'tl_news':(str_starts_with($source['id'],'event:')?'tl_calendar_events':'tl_article');
         $parents=$table==='tl_article'?$this->db->fetchFirstColumn('SELECT id FROM tl_article WHERE pid=?',[$source['page']]):[(int)substr(strstr($source['id'],':'),1)];

@@ -254,3 +254,5 @@ $GLOBALS['TL_LANG']['schema_ai']['importVerify'] = 'Importierte Ausgabe prüfen'
 $GLOBALS['TL_LANG']['schema_ai']['importUnknownOrigin'] = 'Keine lokale HTML-Quelle gefunden; Template oder Erweiterung manuell prüfen.';
 
 $GLOBALS['TL_LANG']['schema_ai']['importNext'] = 'Weiter: Grundlage ergänzen';
+
+$GLOBALS['TL_LANG']['schema_ai']['import_conflict'] = 'Klärung erforderlich';
