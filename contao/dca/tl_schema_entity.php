@@ -78,7 +78,7 @@ $palettes = &$GLOBALS['TL_DCA']['tl_schema_entity']['palettes'];
 foreach (['Organization', 'LocalBusiness'] as $type) {
     $palettes[$type] = str_replace('telephone,email', 'telephone,email,faxNumber', $palettes[$type]);
     $palettes[$type] = str_replace('addressLocality,addressCountry', 'addressLocality,addressRegion,addressCountry,postOfficeBoxNumber', $palettes[$type]);
-    $palettes[$type] = str_replace(';{links_legend}', ';{business_legend},numberOfEmployees,areaServed;{relations_legend},locations,memberOf,subservices;{links_legend}', $palettes[$type]);
+    $palettes[$type] = str_replace(';{links_legend}', ';{business_legend},numberOfEmployees,areaServed,award;{relations_legend},locations,memberOf,subservices;{links_legend}', $palettes[$type]);
     $palettes[$type] = str_replace('sameAs,image', 'externalUrl,sameAs,image', $palettes[$type]);
 }
 $palettes['LocalBusiness'] = str_replace(';{business_legend}', ';{location_legend},latitude,longitude,hasMap,openingHours,priceRange;{business_legend}', $palettes['LocalBusiness']);
@@ -95,3 +95,5 @@ $GLOBALS['TL_DCA']['tl_schema_entity']['fields']['knowledgeTopics'] = [
 foreach (['Person', 'Organization', 'LocalBusiness'] as $type) {
     $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace(';{links_legend}', ',knowledgeTopics;{links_legend}', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
 }
+
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['award'] = ['inputType'=>'textarea', 'eval'=>['tl_class'=>'clr'], 'sql'=>'text NULL'];

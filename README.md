@@ -446,3 +446,7 @@ The integration checks target the pilot fixtures: published DE/EN pages, a confi
 See [development notes](docs/development.md) for the pilot's setup and verification history. Screenshot files in [docs/images](docs/images) were captured from the actual backend on 2026-10-03; credentials, browser sessions and capture helpers are not included.
 
 People and organizations can select **Linked knowledge topics** on the entity record (for example, an existing SEO service). These shared `knowsAbout` references appear in the relationship graph and complement the localized **Expertise** text in each translation. Only published targets are emitted in frontend JSON-LD. Knowledge links do not imply that the person provides or manages the service.
+
+### Shared company awards
+
+Awards for Organization and LocalBusiness are edited on the main entity and apply to every language. Use the official award name, one per line. After updating, run the Contao database migrations: existing company awards from all translations are combined, exact duplicates removed, and existing shared values preserved. Different translated wordings are retained for editorial review. Person awards remain on the localized record.

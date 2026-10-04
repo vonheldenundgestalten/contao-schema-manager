@@ -5,13 +5,20 @@ require __DIR__.'/../src/Schema/EntityIdentity.php';
 use VHUG\SchemaManagerBundle\Schema\EntityIdentity;
 $m=new VHUG\SchemaManagerBundle\Schema\EntityMapper();
 $check=static function(bool $ok,string $label):void{if(!$ok){throw new RuntimeException($label);}};
-$base=['entityType'=>'LocalBusiness','entityId'=>'https://example.org/#office','name'=>'Office','streetAddress'=>'Main Street 1','postalCode'=>'12345','addressLocality'=>'City','addressRegion'=>'Region','postOfficeBoxNumber'=>'42','addressCountry'=>'DE','latitude'=>'48.7','longitude'=>'9.1','openingHours'=>"Mo-Fr 09:00-17:00\nSa 10:00-12:00",'numberOfEmployees'=>'450','hasMap'=>'https://example.org/map','priceRange'=>'EUR 100-200','faxNumber'=>'+49 123'];
+$base=['entityType'=>'LocalBusiness','entityId'=>'https://example.org/#office','name'=>'Office','streetAddress'=>'Main Street 1','postalCode'=>'12345','addressLocality'=>'City','addressRegion'=>'Region','postOfficeBoxNumber'=>'42','addressCountry'=>'DE','latitude'=>'48.7','longitude'=>'9.1','openingHours'=>"Mo-Fr 09:00-17:00\nSa 10:00-12:00",'numberOfEmployees'=>'450','hasMap'=>'https://example.org/map','priceRange'=>'EUR 100-200','faxNumber'=>'+49 123','award'=>"Award 2026\nAward 2026"];
 $n=$m->map($base,['slogan'=>'Knowing you','knowsAbout'=>"Tax\nAudit",'award'=>"Award 2026"],null);
 $check($n['address']['addressRegion']==='Region' && $n['address']['postOfficeBoxNumber']==='42','Complete address');
 $check($n['geo']['latitude']===48.7 && $n['geo']['longitude']===9.1,'Numeric geo');
 $check(count($n['openingHours'])===2 && $n['hasMap']==='https://example.org/map','Opening hours and map');
 $check($n['numberOfEmployees']===['@type'=>'QuantitativeValue','value'=>450],'Employee quantitative value');
-$check($n['knowsAbout']===['Tax','Audit'] && $n['award']===['Award 2026'] && $n['slogan']==='Knowing you','Localized facts');
+$check($n['knowsAbout']===['Tax','Audit'] && $n['award']===['Award 2026'] && $n['slogan']==='Knowing you','Localized expertise and shared company awards');
+foreach (['Organization','LocalBusiness'] as $type) {
+    foreach ([null, ['award'=>'Outdated translated award'], ['award'=>'Andere Auszeichnung']] as $translation) {
+        $check($m->map(array_replace($base,['entityType'=>$type]),$translation,null)['award']===['Award 2026'],'Company awards are language-independent and deduplicated');
+    }
+    $check(!isset($m->map(array_replace($base,['entityType'=>$type,'award'=>'']),['award'=>'Old value'],null)['award']),'Cleared shared awards do not resurrect translation data');
+}
+$check($m->map(array_replace($base,['entityType'=>'Person']),['award'=>'Personal award'],null)['award']===['Personal award'],'Person awards unchanged');
 $check(!isset($m->map(array_replace($base,['latitude'=>'91']),null,null)['geo']),'Invalid imported coordinates omitted');
 $check(!isset($m->map(array_replace($base,['longitude'=>'']),null,null)['geo']),'Incomplete coordinate pair omitted');
 $person=$m->map(array_replace($base,['entityType'=>'Person']),['credentials'=>"Tax advisor\nTax advisor\nAuditor"],null);

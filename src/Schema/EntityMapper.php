@@ -29,9 +29,9 @@ final class EntityMapper
             if ($address) { $node['address'] = ['@type' => 'PostalAddress'] + $address; }
         }
         if (in_array($type, ['Organization', 'LocalBusiness', 'Person'], true)) {
-            foreach (['knowsAbout', 'award'] as $field) {
-                if ($values = self::lines($translation[$field] ?? '')) { $node[$field] = $values; }
-            }
+            if ($values = self::lines($translation['knowsAbout'] ?? '')) { $node['knowsAbout'] = $values; }
+            $awards = $type === 'Person' ? ($translation['award'] ?? '') : ($entity['award'] ?? '');
+            if ($values = self::lines($awards)) { $node['award'] = $values; }
         }
         if (in_array($type, ['Organization', 'LocalBusiness'], true)) {
             $node['slogan'] = $translation['slogan'] ?? null;
