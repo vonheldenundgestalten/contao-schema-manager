@@ -26,6 +26,7 @@
             "@php tests/manual-products.php",
             "@php tests/jobs.php",
             "@php tests/business-mapper.php",
+            "@php tests/business-facts.php",
             "@php tests/relationship-map.php",
             "@php tests/content-relationship-map.php"
         ]

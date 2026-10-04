@@ -57,7 +57,7 @@ final class EntityGraph
         $this->tags->tagWithModelClass(\VHUG\SchemaManagerBundle\Model\ContactModel::class);
         if ($entity['entityType'] === 'Service' || ($isOrganization && $full)) {
             $countries = \Contao\StringUtil::deserialize($entity['areaServed'] ?? null, true);
-            if ($countries) { $node['areaServed'] = array_values($countries); }
+            if ($area = BusinessFacts::areaServed($countries, !empty($entity['areaServedWorldwide']))) { $node['areaServed'] = $area; }
             $offers = [];
             foreach (array_unique(\Contao\StringUtil::deserialize($entity['subservices'] ?? null, true)) as $childId) {
                 $childRecord = $this->record((int) $childId);
@@ -107,6 +107,11 @@ final class EntityGraph
                 }
                 if ($refs) { $node[$property] = array_merge($node[$property] ?? [], $refs); }
             }
+        }
+        if ($isOrganization && $full) {
+            try { $identifiers = BusinessFacts::registrations(\Contao\StringUtil::deserialize($entity['registrationIdentifiers'] ?? null, true)); }
+            catch (\InvalidArgumentException) { $identifiers = []; }
+            if ($identifiers) { $node['identifier'] = count($identifiers) === 1 ? $identifiers[0] : $identifiers; }
         }
         foreach (['vatID', 'taxID'] as $field) {
             if (in_array($entity['entityType'], ['Organization','LocalBusiness'], true) && !empty($entity[$field])) {

@@ -97,3 +97,12 @@ foreach (['Person', 'Organization', 'LocalBusiness'] as $type) {
 }
 
 $GLOBALS['TL_DCA']['tl_schema_entity']['fields']['award'] = ['inputType'=>'textarea', 'eval'=>['tl_class'=>'clr'], 'sql'=>'text NULL'];
+
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['areaServedWorldwide'] = ['inputType'=>'checkbox', 'eval'=>['tl_class'=>'clr'], 'sql'=>"char(1) NOT NULL default ''"];
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['registrationIdentifiers'] = ['inputType'=>'keyValueWizard', 'eval'=>['allowEmptyKeys'=>true,'tl_class'=>'clr','keyLabel'=>&$GLOBALS['TL_LANG']['tl_schema_entity']['registerName'],'valueLabel'=>&$GLOBALS['TL_LANG']['tl_schema_entity']['registerNumber']], 'sql'=>'blob NULL'];
+foreach (['Organization','LocalBusiness','Service'] as $type) {
+    $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace('areaServed,', 'areaServedWorldwide,areaServed,', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
+}
+foreach (['Organization','LocalBusiness'] as $type) {
+    $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace('vatID,taxID,', 'vatID,taxID,registrationIdentifiers,', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
+}

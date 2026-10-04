@@ -96,3 +96,11 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['relationships'] = ['Entity relationship
 $GLOBALS['TL_LANG']['tl_schema_entity']['knowledgeTopics'] = ['Linked knowledge topics', 'Select subjects this person or organization knows about, such as services or products. These links are shared across languages and complement the free-text topics in translations. They do not imply service provision or responsibility.'];
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['award'] = ['Awards', 'One public award per line, including its year where useful. Shared across all languages; use the official award name.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['areaServedWorldwide'] = ["Worldwide coverage", "Outputs Worldwide instead of the selected countries. Applies to every language."];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['registrationIdentifiers'] = ["Registration identifiers", "Register name and registration number, one pair per row. These are not tax IDs."];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['registerName'] = "Register name";
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['registerNumber'] = "Registration number";
