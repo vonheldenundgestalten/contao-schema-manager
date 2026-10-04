@@ -27,3 +27,7 @@ $GLOBALS['TL_LANG']['tl_news']['schemaJobEmployer'] = ['Arbeitgeber', 'Leer: Org
 $GLOBALS['TL_LANG']['tl_news']['schemaJobValidThrough'] = ['Bewerbungsfrist', 'Nach Ablauf wird kein JobPosting ausgegeben. Die News bleibt veröffentlicht.'];
 
 $GLOBALS['TL_LANG']['tl_news']['schemaIdentity'] = ['Permanente Schema-ID', ''];
+
+$GLOBALS['TL_LANG']['tl_news']['schemaAbout'] = ['Hauptthemen (about)', 'Entitäten, von denen dieser Beitrag handelt, z. B. eine darin erläuterte Leistung. Nur durch den sichtbaren Inhalt belegte Themen auswählen.'];
+
+$GLOBALS['TL_LANG']['tl_news']['schemaMentions'] = ['Erwähnte Entitäten (mentions)', 'Entitäten, die im Beitrag erwähnt werden, ohne dessen Hauptthema zu sein.'];

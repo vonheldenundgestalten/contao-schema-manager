@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.0 — 2026-10-04
+
+- Interactive backend relationship map connecting managed entities, websites, pages and News articles, with locally bundled Cytoscape.js/fCoSE.
+- Language filtering, grouping by type, content-sized cards, relationship labels, search and diagnostics for unconnected entities and articles without service subjects.
+- Excludes noindex pages and bare require-item containers while retaining real article detail pages.
+- News Main subjects (`about`) and Mentioned entities (`mentions`) selectors enrich JSON-LD and the relationship map.
+- Linked knowledge topics (`knowsAbout`) for people and organizations complement localized expertise text.
+- Restored the native primary child-items action for translations.
+- Illustrated graph documentation and English/German backend labels.
+
+Upgrade from 1.0.0: run the Contao database update to add `tl_news.schemaAbout`, `tl_news.schemaMentions` (when News is installed), and `tl_schema_entity.knowledgeTopics`. Install bundle assets and rebuild the cache. Existing identities, content and selections are preserved; no data removal is required. PHP ^8.3 and Contao ^5.7 requirements are unchanged.
+
 ## 1.0.0 — 2026-10-03
 
 First semantic-versioned release. Requires Contao ^5.7 and PHP ^8.3; package versions no longer mirror Contao versions.

@@ -86,6 +86,7 @@ final class EntityGraph
         if ($full) {
             $relations = [];
             if ($isOrganization || $entity['entityType'] === 'Person') {
+                $relations['knowsAbout'] = [\Contao\StringUtil::deserialize($entity['knowledgeTopics'] ?? null, true), ['Organization','LocalBusiness','Person','Service','Product','Event']];
                 $relations['memberOf'] = [\Contao\StringUtil::deserialize($entity['memberOf'] ?? null, true), ['Organization', 'LocalBusiness']];
             }
             if ($entity['entityType'] === 'Person') {
@@ -104,7 +105,7 @@ final class EntityGraph
                     if (!$related || !in_array($related['entityType'], $types, true)) { continue; }
                     if ($ref = $this->emit((int) $relatedId, $language, $manager, $emitted)) { $refs[] = ['@id' => $ref['@id']]; }
                 }
-                if ($refs) { $node[$property] = $refs; }
+                if ($refs) { $node[$property] = array_merge($node[$property] ?? [], $refs); }
             }
         }
         foreach (['vatID', 'taxID'] as $field) {

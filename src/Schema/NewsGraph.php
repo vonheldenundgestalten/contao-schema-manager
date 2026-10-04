@@ -84,6 +84,18 @@ final class NewsGraph
             if ($author = $this->entities->emit($authorId, $language, $manager, $emitted)) {
                 $node['author'] = ['@id' => $author['@id']];
             }
+            foreach (['schemaAbout'=>'about', 'schemaMentions'=>'mentions'] as $field=>$property) {
+                $refs = [];
+                foreach (array_unique(\Contao\StringUtil::deserialize($record[$field] ?? null, true)) as $relatedId) {
+                    if ($related = $this->entities->emit((int)$relatedId, $language, $manager, $emitted)) { $refs[] = ['@id'=>$related['@id']]; }
+                }
+                if ($refs) {
+                    // Retain contributions made by core/templates/other listeners.
+                    $existing = $node[$property] ?? [];
+                    if (!is_array($existing) || !array_is_list($existing)) { $existing = $existing ? [$existing] : []; }
+                    $node[$property] = array_values(array_unique(array_merge($existing, $refs), SORT_REGULAR));
+                }
+            }
             // Modification dates are explicit: generic tstamp changes for administrative edits too.
             if (!empty($record['schemaDateModified'])) { $node['dateModified'] = date(DATE_ATOM, (int) $record['schemaDateModified']); }
             if (!empty($record['languageMain'])) {

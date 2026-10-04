@@ -5,3 +5,5 @@ services:
     VHUG\SchemaManagerBundle\:
         resource: ../src/
         exclude: ../src/{ContaoManager,Model,SchemaManagerBundle.php}
+    VHUG\SchemaManagerBundle\Backend\RelationshipMapModule:
+        public: true

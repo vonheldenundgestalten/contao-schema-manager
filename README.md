@@ -1,4 +1,4 @@
-# Contao Schema Manager 1.0
+# Contao Schema Manager 1.1
 
 **Describe your company, people, products and services once. Connect them to your Contao content in every language.**
 
@@ -10,9 +10,30 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. Product, contact, service-catalogue, job, office, qualification and event screenshots use unpublished documentation examples.*
 
-> **Release 1.0.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. This first release focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Release 1.1.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. The extension focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
-> **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.0.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
+> **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.1.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
+
+## Entity relationships
+
+Available since **1.1.0** under **Structured data → Entity relationships**.
+
+<table>
+<tr><th>By relationship</th><th>By type</th><th>Webhosting selected</th></tr>
+<tr>
+<td><a href="docs/images/relationships.png"><img src="docs/images/relationships.png" alt="Current graph arranged by relationship" width="280"></a></td>
+<td><a href="docs/images/relationships-grouped.png"><img src="docs/images/relationships-grouped.png" alt="Current graph grouped by entity type" width="280"></a></td>
+<td><a href="docs/images/relationships-webhosting.png"><img src="docs/images/relationships-webhosting.png" alt="Webhosting selected with its relationships and entity details" width="280"></a></td>
+</tr>
+</table>
+
+*Click a screenshot to view it at full size.*
+
+The map shows managed entities, websites, pages and News-generated posts together, including drafts and entities without connections. `noindex` pages are excluded. Choose one language (shared entities stay visible), or all languages, and switch between relationship layout and grouping by type. Author, publisher, page membership and article subject links are visible. **Posts without service links** highlights articles without a direct `about`/`mentions` connection to a Service. Select a node (or use the keyboard-accessible entity selector) to see incoming/outgoing relationships, localized home assignments and an edit link. Search by name, type or location; use **Unconnected entities** to highlight records worth reviewing. LocalBusiness labels include street and postal locality to distinguish branches with the same company name.
+
+News editors can select **Main subjects (about)** and **Mentioned entities (mentions)**; these also enrich the actual article JSON-LD. Apply the Contao database update for these optional fields and the linked knowledge topics field on entities.
+
+See [scope, library choice and development notes](docs/relationship-map.md). After updating a path installation, install bundle assets with `php vendor/bin/contao-console assets:install public` and rebuild the cache.
 
 ## In this guide
 
@@ -35,11 +56,11 @@ Run Composer commands from your **Contao application root**, not from this packa
 
 ### Option A: install directly from GitHub
 
-Register the repository and require the first release:
+Register the repository and require the current release:
 
 ```sh
 composer config repositories.schema-manager vcs https://github.com/vonheldenundgestalten/contao-schema-manager.git
-composer require vonheldenundgestalten/contao-schema-manager:^1.0
+composer require vonheldenundgestalten/contao-schema-manager:^1.1
 ```
 
 The Git tag supplies the package version; there is no separate Packagist publication assumed here. If the repository requires authentication, configure Composer's normal GitHub access separately.
@@ -423,3 +444,5 @@ php private-bundles/vonheldenundgestalten/contao-schema-manager/tests/page-metad
 The integration checks target the pilot fixtures: published DE/EN pages, a configured news archive/publisher/author and their website roots. Fixture database writes roll back. `SCHEMA_TEST_ORIGIN` sets the routing origin; `SCHEMA_TEST_DB_TCP=1` is an optional process-only workaround for jailed SSH without a local MySQL socket. Do not treat these as a universal fresh-install test suite.
 
 See [development notes](docs/development.md) for the pilot's setup and verification history. Screenshot files in [docs/images](docs/images) were captured from the actual backend on 2026-10-03; credentials, browser sessions and capture helpers are not included.
+
+People and organizations can select **Linked knowledge topics** on the entity record (for example, an existing SEO service). These shared `knowsAbout` references appear in the relationship graph and complement the localized **Expertise** text in each translation. Only published targets are emitted in frontend JSON-LD. Knowledge links do not imply that the person provides or manages the service.

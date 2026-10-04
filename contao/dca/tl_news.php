@@ -22,3 +22,10 @@ $GLOBALS['TL_DCA']['tl_news']['fields']['schemaJobEmployer'] = [
 $GLOBALS['TL_DCA']['tl_news']['fields']['schemaJobValidThrough'] = [
     'inputType' => 'text', 'eval' => ['rgxp' => 'datim', 'datepicker' => true, 'tl_class' => 'w50 wizard'], 'sql' => "varchar(10) NOT NULL default ''",
 ];
+
+foreach (['schemaAbout', 'schemaMentions'] as $field) {
+    $GLOBALS['TL_DCA']['tl_news']['fields'][$field] = [
+        'inputType'=>'select', 'options_callback'=>[VHUG\SchemaManagerBundle\EventListener\SourceSettingsListener::class,'entities'],
+        'eval'=>['multiple'=>true,'chosen'=>true,'tl_class'=>'clr'], 'sql'=>'blob NULL',
+    ];
+}

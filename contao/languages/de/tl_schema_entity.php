@@ -90,3 +90,7 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes'][''] = 'Nicht angegebe
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OfflineEventAttendanceMode'] = 'Vor Ort';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OnlineEventAttendanceMode'] = 'Online';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['MixedEventAttendanceMode'] = 'Hybrid: vor Ort und online';
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['relationships'] = ['Beziehungen der Entitäten', 'Entdecken Sie die Verbindungen zwischen Ihren Entitäten. Wählen Sie eine Entität für Beziehungen und sprachabhängige Hauptseiten.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['knowledgeTopics'] = ['Verknüpfte Wissensgebiete', 'Themen auswählen, mit denen sich diese Person oder Organisation auskennt, z. B. Leistungen oder Produkte. Die sprachübergreifenden Verknüpfungen ergänzen die Freitext-Themen in den Übersetzungen. Sie bedeuten keine Leistungserbringung oder Zuständigkeit.'];
