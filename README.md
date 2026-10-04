@@ -14,6 +14,16 @@ For example, a hosting business can describe its company once, connect its hosti
 
 > **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.0.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
 
+## Feature preview: entity relationships
+
+This branch (`codex/feature-relationship-graph`) adds **Structured data → Entity relationships**. It is experimental and is **not included in the 1.0.0 tag**.
+
+![Interactive relationship map of the pilot entities](docs/images/relationships.png)
+
+The map shows all managed entities, including drafts and entities without connections. Select a node (or use the keyboard-accessible entity selector) to see incoming/outgoing relationships, localized home assignments and an edit link. Search by name, type or location; use **Unconnected entities** to highlight records worth reviewing. LocalBusiness labels include street and postal locality to distinguish branches with the same company name.
+
+See [scope, library choice and development notes](docs/relationship-map.md). After updating a path installation, install bundle assets with `php vendor/bin/contao-console assets:install public` and rebuild the cache.
+
 ## In this guide
 
 - [Install](#install)

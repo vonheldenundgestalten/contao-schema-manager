@@ -84,3 +84,5 @@ foreach (['Organization', 'LocalBusiness'] as $type) {
 $palettes['LocalBusiness'] = str_replace(';{business_legend}', ';{location_legend},latitude,longitude,hasMap,openingHours,priceRange;{business_legend}', $palettes['LocalBusiness']);
 $palettes['Person'] = str_replace('organization,telephone,email', 'organization,telephone,email,workLocation,memberOf', $palettes['Person']);
 $palettes['Event'] = str_replace('locationName,organization', 'organization;{location_legend},eventAttendanceMode,locationName,streetAddress,postalCode,addressLocality,addressRegion,addressCountry,eventUrl', $palettes['Event']);
+
+$GLOBALS['TL_DCA']['tl_schema_entity']['list']['global_operations'] = ['relationships'=>['href'=>'key=relationships','primary'=>true,'icon'=>'root.svg','attributes'=>'data-turbo="false"'], 'all'];

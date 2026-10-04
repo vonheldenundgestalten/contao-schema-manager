@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+$GLOBALS['TL_LANG']['schema_graph'] = [
+    'title'=>'Entity relationships',
+    'intro'=>'Explore the connections between your managed entities. Select an entity to see its relationships and localized homes.',
+    'back'=>'Back to entities',
+    'search'=>'Find entities',
+    'searchHint'=>'Name, type or location',
+    'select'=>'Select an entity',
+    'fit'=>'Fit all',
+    'reset'=>'Reset view',
+    'isolated'=>'Unconnected entities',
+    'canvas'=>'Interactive entity graph. Use the entity selector for keyboard access to all entities and relationships.',
+    'help'=>'Drag entities to arrange them. Zoom and pan to explore. Selecting an entity labels its incoming and outgoing relationships.',
+    'note'=>'Editorial map of saved relationships, including drafts. Dashed borders: unpublished. Amber borders: no entity relationships. Red nodes: missing records. Arrows point from subject to related entity. Publication rules, language and page context can change the actual frontend JSON-LD. Page homes do not count as business relationships.',
+    'noJs'=>'Enable JavaScript to explore the relationship map. The entity list remains available.',
+    'entities'=>'entities',
+    'relations'=>'Relationships',
+    'groups'=>'connected groups',
+    'published'=>'Published',
+    'draft'=>'Unpublished',
+    'missing'=>'Referenced record is missing',
+    'unconnected'=>'No relationships to other managed entities. This may be intentional; review whether a company, provider or other connection is missing.',
+    'edit'=>'Edit entity',
+    'homes'=>'Localized homes',
+    'page'=>'Page',
+];

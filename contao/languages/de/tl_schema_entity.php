@@ -90,3 +90,5 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes'][''] = 'Nicht angegebe
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OfflineEventAttendanceMode'] = 'Vor Ort';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OnlineEventAttendanceMode'] = 'Online';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['MixedEventAttendanceMode'] = 'Hybrid: vor Ort und online';
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['relationships'] = ['Beziehungen der Entitäten', 'Entdecken Sie die Verbindungen zwischen Ihren Entitäten. Wählen Sie eine Entität für Beziehungen und sprachabhängige Hauptseiten.'];

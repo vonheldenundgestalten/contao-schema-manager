@@ -90,3 +90,5 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes'][''] = 'Not specified'
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OfflineEventAttendanceMode'] = 'In person';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OnlineEventAttendanceMode'] = 'Online';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['MixedEventAttendanceMode'] = 'Mixed: in person and online';
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['relationships'] = ['Entity relationships', 'Explore the connections between your managed entities. Select an entity to see its relationships and localized homes.'];

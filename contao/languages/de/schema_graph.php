@@ -1,0 +1,27 @@
+<?php
+declare(strict_types=1);
+$GLOBALS['TL_LANG']['schema_graph'] = [
+    'title'=>'Beziehungen der Entitäten',
+    'intro'=>'Entdecken Sie die Verbindungen zwischen Ihren Entitäten. Wählen Sie eine Entität für Beziehungen und sprachabhängige Hauptseiten.',
+    'back'=>'Zurück zu den Entitäten',
+    'search'=>'Entitäten finden',
+    'searchHint'=>'Name, Typ oder Standort',
+    'select'=>'Entität auswählen',
+    'fit'=>'Alles anzeigen',
+    'reset'=>'Ansicht zurücksetzen',
+    'isolated'=>'Unverbundene Entitäten',
+    'canvas'=>'Interaktiver Beziehungsgraph. Über die Entitätsauswahl sind alle Entitäten und Beziehungen per Tastatur erreichbar.',
+    'help'=>'Entitäten lassen sich verschieben. Zoomen und verschieben Sie die Ansicht. Eine Auswahl beschriftet die ein- und ausgehenden Beziehungen.',
+    'note'=>'Redaktionelle Ansicht gespeicherter Beziehungen, einschließlich Entwürfen. Gestrichelt: unveröffentlicht. Orange: keine Beziehungen zu Entitäten. Rot: fehlender Datensatz. Pfeile zeigen vom Subjekt zur verbundenen Entität. Veröffentlichungsregeln, Sprache und Seitenkontext beeinflussen die tatsächliche JSON-LD-Ausgabe. Hauptseiten zählen nicht als fachliche Beziehungen.',
+    'noJs'=>'Aktivieren Sie JavaScript für die Beziehungsansicht. Die Entitätsliste bleibt verfügbar.',
+    'entities'=>'Entitäten',
+    'relations'=>'Beziehungen',
+    'groups'=>'verbundene Gruppen',
+    'published'=>'Veröffentlicht',
+    'draft'=>'Unveröffentlicht',
+    'missing'=>'Referenzierter Datensatz fehlt',
+    'unconnected'=>'Keine Beziehungen zu anderen verwalteten Entitäten. Das kann beabsichtigt sein. Prüfen Sie, ob eine Firma, ein Anbieter oder eine andere Verbindung fehlt.',
+    'edit'=>'Entität bearbeiten',
+    'homes'=>'Sprachabhängige Hauptseiten',
+    'page'=>'Seite',
+];
