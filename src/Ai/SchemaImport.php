@@ -95,12 +95,12 @@ final class SchemaImport
             $sharedValues=[];
             foreach($g['variants'] as $language=>&$v){
                 [$v['fields'],$v['localized'],$v['retained']]=$this->fields($g['type'],$v['node']);
-                foreach($v['fields'] as $field=>$value){if(isset($sharedValues[$field])&&$sharedValues[$field]!==$value)$g['conflicts'][]='Shared '.$field.' differs between languages.';$sharedValues[$field]=$value;}
+                foreach($v['fields'] as $field=>$value){if(isset($sharedValues[$field])&&!$this->sameSharedField($field,$sharedValues[$field],$value))$g['conflicts'][]='Shared '.$field.' differs between languages.';$sharedValues[$field]=$value;}
                 if(in_array($g['type'],self::BUSINESS,true)&&!$v['page'])$g['conflicts'][]='No eligible '.$language.' home page matched the original URL; choose a home before importing.';
                 if($g['existing']){
                     $record=$this->db->fetchAssociative('SELECT * FROM tl_schema_entity WHERE id=?',[$g['existing']]);
                     $home=$this->db->fetchAssociative('SELECT * FROM tl_schema_translation WHERE pid=? AND language=?',[$g['existing'],$language]);
-                    foreach($v['fields'] as $f=>$value)if(($record[$f]??'')!==''&&(string)$record[$f]!==$value)$g['conflicts'][]='Existing '.$f.' differs; it will not be overwritten.';
+                    foreach($v['fields'] as $f=>$value)if(($record[$f]??'')!==''&&!$this->sameSharedField($f,(string)$record[$f],$value))$g['conflicts'][]='Existing '.$f.' differs; it will not be overwritten.';
                     if($home){if(!empty($home['schemaImportedData'])&&json_decode($home['schemaImportedData'],true)!==$v['retained'])$g['conflicts'][]='Existing retained data differs; it will not be overwritten.';if((int)$home['page']!==$v['page'])$g['conflicts'][]='Existing '.$language.' home differs.';foreach($v['localized'] as $f=>$value)if(($home[$f]??'')!==''&&(string)$home[$f]!==$value)$g['conflicts'][]='Existing '.$language.' '.$f.' differs.';}
                 }
             }unset($v);
@@ -108,10 +108,23 @@ final class SchemaImport
         }unset($g);
         return $groups;
     }
+    public function refreshPending(array &$run): void
+    {
+        if(($run['stage']??'')!=='import'||($run['status']??'')!=='complete')return;
+        foreach($this->plan($run) as $key=>$group)if(($run['importPlan'][$key]['status']??'pending')==='pending')$run['importPlan'][$key]=$group;
+    }
+    private function sameSharedField(string $field,string $a,string $b): bool
+    {
+        if($field!=='registrationIdentifiers')return $a===$b;
+        $ids=static function(string $value):array{$ids=array_map('strval',array_column(\Contao\StringUtil::deserialize($value,true),'value'));sort($ids);return $ids;};
+        return $ids($a)===$ids($b);
+    }
     /** Map supported fields; preserve everything else as reviewed structured data, not an AI inference. */
     public function fields(string $type,array $node): array
     {
         $shared=[];$localized=[];$retained=$node;unset($retained['@context']);
+        // Pages/websites have their own localized properties, never entity field rules.
+        if(!in_array($type,self::BUSINESS,true))return [$shared,$localized,$retained];
         foreach(['tl_schema_entity','tl_schema_translation'] as $table){
             foreach(FieldPolicy::fields($table,$type) as $field){
                 if($table==='tl_schema_entity'&&$field==='name'&&in_array($type,['Service','Product','Event'],true))continue;
@@ -137,7 +150,7 @@ final class SchemaImport
                     if(!is_array($identifier)||($identifier['@type']??'')!=='PropertyValue'||array_diff(array_keys($identifier),['@type','name','value'])||!is_string($identifier['name']??null)||!is_string($identifier['value']??null)){$supported=false;break;}
                     $rows[]=['key'=>$identifier['name'],'value'=>$identifier['value']];
                 }
-                if($supported){try{$json=$this->policy->validate('tl_schema_entity',$type,'registrationIdentifiers',json_encode($rows,JSON_THROW_ON_ERROR));$shared['registrationIdentifiers']=serialize(json_decode($json,true));unset($retained['identifier']);}catch(\InvalidArgumentException){}}
+                if($supported){try{$json=$this->policy->validate('tl_schema_entity',$type,'registrationIdentifiers',json_encode($rows,JSON_THROW_ON_ERROR));$registerRows=json_decode($json,true);$shared['registrationIdentifiers']=serialize($registerRows);$localized['registrationNames']=serialize(array_map(static fn($row)=>['key'=>$row['value'],'value'=>$row['key']],$registerRows));unset($retained['identifier']);}catch(\InvalidArgumentException){}}
             }
         }
         if(isset($retained['address'])&&array_keys($retained['address'])===['@type'])unset($retained['address']);
@@ -147,6 +160,7 @@ final class SchemaImport
     {
         if(!$user->isAdmin||($run['stage']??'')!=='import'||$run['status']!=='complete')throw new \RuntimeException('Complete the import scan first.');
         // Re-evaluate existing records immediately before mutation: no blind overwrites.
+        $this->refreshPending($run);
         $current=$this->inventory->collect((int)$run['root'],$user,!empty($run['inventory']['multilingual']));
         $fresh=$this->plan($run);$ids=[];$count=0;
         $selected=array_values(array_filter(array_unique($selected),fn($key)=>($run['importPlan'][$key]['status']??'')==='pending'));

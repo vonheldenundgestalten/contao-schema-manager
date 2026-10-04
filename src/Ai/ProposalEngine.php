@@ -19,7 +19,7 @@ final class ProposalEngine
                 continue;
             }
             $records[$key]=array_intersect_key($row,array_flip($keep));
-            if(isset($records[$key]['registrationIdentifiers']))$records[$key]['registrationIdentifiers']=StringUtil::deserialize($records[$key]['registrationIdentifiers'],true);
+            foreach(['registrationIdentifiers','registrationNames'] as $registrationField)if(isset($records[$key][$registrationField]))$records[$key][$registrationField]=StringUtil::deserialize($records[$key][$registrationField],true);
             foreach (array_keys(FieldPolicy::links($table,$type)) as $field) { if (isset($records[$key][$field]) && !in_array($field,['organization','schemaPerson'],true)) { $records[$key][$field]=StringUtil::deserialize($records[$key][$field],true); } }
         }
         // Omit inactive relation targets from the prompt, but retain original DB
@@ -223,7 +223,10 @@ final class ProposalEngine
                             $value=$related;
                         } else { $value=serialize(array_values(array_unique(array_merge(array_map('intval',StringUtil::deserialize($current[$field] ?? null,true)),[$related])))); }
                     }
-                    if($field==='registrationIdentifiers')$value=serialize(json_decode($value,true,64,JSON_THROW_ON_ERROR));
+                    if(in_array($field,['registrationIdentifiers','registrationNames'],true)){
+                        $value=serialize(json_decode($value,true,64,JSON_THROW_ON_ERROR));
+                        if($field==='registrationNames'){ $valid=array_map('strval',array_column(StringUtil::deserialize($this->db->fetchOne('SELECT registrationIdentifiers FROM tl_schema_entity WHERE id=?',[$current['pid']]),true),'value'));foreach(StringUtil::deserialize($value,true) as $label)if(!in_array((string)$label['key'],$valid,true))throw new \RuntimeException('Registration number is not defined on the shared entity.'); }
+                    }
                     $this->db->update($table,[$field=>$value,'tstamp'=>time()],['id'=>$id]);
                 }
             }
