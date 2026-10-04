@@ -256,3 +256,9 @@ $GLOBALS['TL_LANG']['schema_ai']['importUnknownOrigin'] = 'Keine lokale HTML-Que
 $GLOBALS['TL_LANG']['schema_ai']['importNext'] = 'Weiter: Grundlage ergänzen';
 
 $GLOBALS['TL_LANG']['schema_ai']['import_conflict'] = 'Klärung erforderlich';
+
+$GLOBALS['TL_LANG']['schema_ai']['importWebsiteIdentity'] = "Beim Veröffentlichen dieses Imports ersetzt die ursprüngliche ID aus dem handgeschriebenen Schema die konfigurierte Website-ID. Vom Schema Manager erzeugte Website-Verweise verwenden dann die ursprüngliche ID. Verweise in individuellem Code müssen separat geprüft werden. Der Entwurfsimport ändert noch keine öffentliche Ausgabe.";
+
+$GLOBALS['TL_LANG']['schema_ai']['importCurrentIdentity'] = "Aktuell konfigurierte Website-ID";
+
+$GLOBALS['TL_LANG']['schema_ai']['importOriginalIdentity'] = "Wiederherzustellende ursprüngliche ID";

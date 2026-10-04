@@ -96,6 +96,12 @@ final class SchemaImport
             foreach($g['variants'] as $language=>&$v){
                 [$v['fields'],$v['localized'],$v['retained']]=$this->fields($g['type'],$v['node']);
                 foreach($v['fields'] as $field=>$value){if(isset($sharedValues[$field])&&!$this->sameSharedField($field,$sharedValues[$field],$value))$g['conflicts'][]='Shared '.$field.' differs between languages.';$sharedValues[$field]=$value;}
+                if($g['type']==='WebSite' && $v['page']) {
+                    $home=\Contao\PageModel::findById($v['page']);
+                    if($home){$home->loadDetails();$current=$this->db->fetchOne('SELECT schemaWebsiteId FROM tl_page WHERE id=?',[$home->rootId]);$original=$v['node']['@id']??'';
+                        if($current&&$original&&$current!==$original)$g['websiteIdentityChanges'][(int)$home->rootId]=['current'=>$current,'original'=>$original];
+                    }
+                }
                 if(in_array($g['type'],self::BUSINESS,true)&&!$v['page'])$g['conflicts'][]='No eligible '.$language.' home page matched the original URL; choose a home before importing.';
                 if($g['existing']){
                     $record=$this->db->fetchAssociative('SELECT * FROM tl_schema_entity WHERE id=?',[$g['existing']]);
@@ -197,7 +203,9 @@ final class SchemaImport
                 $page=\Contao\PageModel::findById($v['page']);if(!$page)throw new \RuntimeException('Imported page disappeared.');$page->loadDetails();$target=$g['type']==='WebSite'?(int)$page->rootId:(int)$page->id;
                 $row=$this->db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$target]);$changes=['schemaImportedData'=>json_encode($v['node'],JSON_THROW_ON_ERROR|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)];
                 if($g['type']==='WebSite'){
-                    $identity=$v['node']['@id']??'';if($row['schemaWebsiteId']&&$row['schemaWebsiteId']!==$identity)throw new \RuntimeException('Existing website identity differs; resolve it before importing.');
+                    // Explicitly importing legacy WebSite restores its original public identity.
+                    // This is staged, shown in review, and applied only on publication.
+                    $identity=$v['node']['@id']??$row['schemaWebsiteId'];
                     $changes+=['schemaWebsiteId'=>$identity,'schemaWebsiteHome'=>$v['page'],'schemaSiteName'=>$row['schemaSiteName']?:($v['node']['name']??'')];
                     $publisherRef=$v['node']['publisher']['@id']??'';$publisher=$ids[$publisherRef]??(int)$this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE entityId=? AND entityType IN ('Organization','LocalBusiness')",[$publisherRef]);if($publisher&&!$row['schemaPublisher'])$changes['schemaPublisher']=$publisher;
                 }else $changes['schemaPageType']=$row['schemaPageType']?:$g['type'];
