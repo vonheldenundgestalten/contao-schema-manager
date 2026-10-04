@@ -18,7 +18,16 @@ For example, a hosting business can describe its company once, connect its hosti
 
 Available since **1.1.0** under **Structured data → Entity relationships**.
 
-![Interactive relationship map of the pilot entities](docs/images/relationships.png)
+<table>
+<tr><th>By relationship</th><th>By type</th><th>Webhosting selected</th></tr>
+<tr>
+<td><a href="docs/images/relationships.png"><img src="docs/images/relationships.png" alt="Current graph arranged by relationship" width="280"></a></td>
+<td><a href="docs/images/relationships-grouped.png"><img src="docs/images/relationships-grouped.png" alt="Current graph grouped by entity type" width="280"></a></td>
+<td><a href="docs/images/relationships-webhosting.png"><img src="docs/images/relationships-webhosting.png" alt="Webhosting selected with its relationships and entity details" width="280"></a></td>
+</tr>
+</table>
+
+*Click a screenshot to view it at full size.*
 
 The map shows managed entities, websites, pages and News-generated posts together, including drafts and entities without connections. `noindex` pages are excluded. Choose one language (shared entities stay visible), or all languages, and switch between relationship layout and grouping by type. Author, publisher, page membership and article subject links are visible. **Posts without service links** highlights articles without a direct `about`/`mentions` connection to a Service. Select a node (or use the keyboard-accessible entity selector) to see incoming/outgoing relationships, localized home assignments and an edit link. Search by name, type or location; use **Unconnected entities** to highlight records worth reviewing. LocalBusiness labels include street and postal locality to distinguish branches with the same company name.
 
