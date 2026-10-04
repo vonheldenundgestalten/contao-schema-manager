@@ -25,7 +25,8 @@ final class FieldPolicy
             'Service'=>['name','description','serviceType','audienceType','catalogName','offerDescription'],
             'Product'=>['name','description','offerDescription'],default=>['name','description'],
         }; }
-        if ($table==='tl_page') { return ['schemaPageType']; }
+        if ($table==='tl_page') { return $type==='WebSite'?['schemaPublisher','schemaSiteName']:['schemaPageType']; }
+        if ($table==='tl_news_archive') { return ['schemaType','schemaPublisher']; }
         return [];
     }
     public static function links(string $table,string $type): array
@@ -45,6 +46,14 @@ final class FieldPolicy
     {
         if (!in_array($field,self::fields($table,$type),true)) { throw new \InvalidArgumentException('Unsupported field.'); }
         $value=trim($value);
+        if($field==='schemaPublisher'){
+            if(!ctype_digit($value))throw new \InvalidArgumentException('Choose an organization.');
+            return $value;
+        }
+        if($field==='schemaType'){
+            if(!in_array($value,['','Article','NewsArticle','BlogPosting','JobPosting','suppress'],true))throw new \InvalidArgumentException('Choose a supported archive type.');
+            return $value;
+        }
         $long=in_array($field,['description','sameAs','knowsAbout','credentials','award','openingHours','offerDescription'],true);
         if ($value==='' || mb_strlen($value)>($long?6000:255) || preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/',$value) || strip_tags($value)!==$value) { throw new \InvalidArgumentException('Use non-empty plain text within the field limit.'); }
         if ($field==='email' && !filter_var($value,FILTER_VALIDATE_EMAIL)) { throw new \InvalidArgumentException('Invalid public email address.'); }

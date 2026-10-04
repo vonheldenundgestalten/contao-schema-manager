@@ -45,15 +45,19 @@ final class SourceSettingsListener
     }
     #[AsCallback(table:'tl_news_archive',target:'config.onsubmit')]
     public function archiveSaved(DataContainer $dc): void
+    { $this->ensureArchiveIdentities((int)$dc->id); }
+    public function ensureArchiveIdentities(int $id): void
     {
-        foreach ($this->connection->fetchFirstColumn('SELECT id FROM tl_news WHERE pid=?',[$dc->id]) as $id) { $this->ensureNewsIdentity((int) $id); }
+        foreach ($this->connection->fetchFirstColumn('SELECT id FROM tl_news WHERE pid=?',[$id]) as $id) { $this->ensureNewsIdentity((int) $id); }
     }
     #[AsCallback(table:'tl_page',target:'config.onsubmit')]
     public function websiteIdentity(DataContainer $dc): void
+    { $this->ensureWebsiteIdentity((int)$dc->id); }
+    public function ensureWebsiteIdentity(int $id): void
     {
-        $row = $this->connection->fetchAssociative('SELECT p.type,p.schemaWebsiteId,e.identityBase FROM tl_page p JOIN tl_schema_entity e ON e.id=p.schemaPublisher WHERE p.id=?',[$dc->id]);
+        $row = $this->connection->fetchAssociative('SELECT p.type,p.schemaWebsiteId,e.identityBase FROM tl_page p JOIN tl_schema_entity e ON e.id=p.schemaPublisher WHERE p.id=?',[$id]);
         if ($row && $row['type']==='root' && !$row['schemaWebsiteId']) {
-            $this->connection->update('tl_page',['schemaWebsiteId'=>$row['identityBase'].'/#website-'.bin2hex(random_bytes(16))],['id'=>$dc->id]);
+            $this->connection->update('tl_page',['schemaWebsiteId'=>$row['identityBase'].'/#website-'.bin2hex(random_bytes(16))],['id'=>$id]);
         }
     }
     #[AsCallback(table:'tl_news',target:'fields.schemaIdentity.save')]

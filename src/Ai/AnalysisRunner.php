@@ -6,18 +6,20 @@ use Doctrine\DBAL\Connection;
 final class AnalysisRunner
 {
     public function __construct(private readonly Connection $db,private readonly RunStore $store,private readonly SiteInventory $inventory,private readonly OpenAiProvider $provider,private readonly ProposalEngine $proposals,private readonly PublicTextFetcher $fetcher) {}
-    public function start(BackendUser $user,int $root,string $mode,string $origin,bool $changed,bool $multilingual=true): int
+    public function start(BackendUser $user,int $root,string $mode,string $origin,bool $changed,bool $multilingual=true,string $stage='content'): int
     {
+        if(!in_array($stage,['foundation','content'],true))throw new \InvalidArgumentException('Choose a setup stage.');
         if (!in_array($mode,['discover','improve'],true)) { throw new \InvalidArgumentException('Choose an analysis action.'); }
         $origin=rtrim(trim($origin),'/');
         if (!preg_match('~^https://[a-z0-9.-]+(?::[0-9]+)?$~iD',$origin) || strlen($origin)>180) { throw new \InvalidArgumentException('Enter the public HTTPS identity origin, without a path.'); }
         $inventory=$this->inventory->collect($root,$user,$multilingual);$previous=$this->store->previous((int)$user->id,$root);
+        if($stage==='foundation'){$inventory['sources']=array_filter($inventory['sources'],static fn($s)=>str_starts_with($s['id'],'page:'));$changed=false;}
         $queue=[];
         // Root grouping is part of the scan scope; a new multilingual scan must not
         // skip all the primary-language context because a single-language run exists.
         if($multilingual && count($inventory['roots'])>1)$changed=false;
-        foreach ($inventory['sources'] as $key=>$source) { if (!$changed || ($previous['hashes'][$mode.':'.$key] ?? '')!==$source['hash']) { $queue[]=$key; } }
-        return $this->store->create((int)$user->id,$root,['root'=>$root,'mode'=>$mode,'origin'=>$origin,'inventory'=>$inventory,'queue'=>$queue,'processed'=>[],
+        foreach ($inventory['sources'] as $key=>$source) { if (!$changed || ($previous['hashes'][($stage==='foundation'?'foundation:':'').$mode.':'.$key] ?? '')!==$source['hash']) { $queue[]=$key; } }
+        return $this->store->create((int)$user->id,$root,['root'=>$root,'stage'=>$stage,'mode'=>$mode,'origin'=>$origin,'inventory'=>$inventory,'queue'=>$queue,'processed'=>[],
             'localizationQueue'=>[],'localizationPrepared'=>false,'editorLanguage'=>$GLOBALS['TL_LANGUAGE'] ?? 'en','proposals'=>[],'mapped'=>[],'decisions'=>$previous['decisions'],'status'=>$queue?'ready':'complete','usage'=>['input_tokens'=>0,'output_tokens'=>0],'warnings'=>[],'createdAt'=>time()]);
     }
     /** A refinement is a separate proposal set. Never overwrite the source review. */
@@ -26,6 +28,7 @@ final class AnalysisRunner
         $feedback=trim($feedback);
         if ($feedback==='' || mb_strlen($feedback)>4000) { throw new \InvalidArgumentException('Enter feedback between 1 and 4000 characters.'); }
         $original=$this->store->get($id,(int)$user->id);
+        if(!empty($original['configuration']))throw new \RuntimeException('Prepare a new parent review to change configuration.');
         if ($original['status']!=='complete') { throw new \RuntimeException('Finish this analysis before refining it.'); }
         foreach($original['proposals'] as $p){if($p['status']==='applied')throw new \RuntimeException('Some suggestions have been applied. Start a fresh analysis to refine the current schema.');}
         $run=$original;
@@ -58,7 +61,7 @@ final class AnalysisRunner
         } catch (\Throwable $e) { $this->db->rollBack();throw $e; }
         $localizing=empty($run['queue']) && !empty($run['localizationQueue']);
         $task=$localizing?$run['localizationQueue'][0]:null;
-        $batch=isset($run['refinementOf'])?$run['queue']:array_slice($run['queue'],0,3);
+        $batch=(isset($run['refinementOf'])||($run['stage']??'')==='foundation')?$run['queue']:array_slice($run['queue'],0,3);
         if($localizing){$sources=array_filter($run['inventory']['sources'],static fn($source)=>in_array($source['page'],$task['pages'],true));}
         else {
             // Include the remaining members of each page's language family in this batch.
@@ -71,6 +74,7 @@ final class AnalysisRunner
             // Re-read publication state and text: prepared snapshots and cached HTML
             // must never resurrect content that an editor has since disabled.
             $fresh=$this->inventory->collect((int)$run['root'],$user,!empty($run['inventory']['multilingual']));
+            if(($run['stage']??'')==='foundation')$fresh['sources']=array_filter($fresh['sources'],static fn($s)=>str_starts_with($s['id'],'page:'));
             $sources=array_intersect_key($fresh['sources'],$sources);
             $run['sourceTotal'] ??= count($run['inventory']['sources']);
             $run['inventory']=$fresh;
@@ -79,6 +83,11 @@ final class AnalysisRunner
             if(!$sources){$result=['suggestions'=>[],'usage'=>[],'warning'=>null,'explanation'=>''];}
             else {
                 $context=$this->proposals->context($run,$sources);
+                if(($run['stage']??'')==='foundation'&&!$localizing){
+                    $sources=array_filter($fresh['sources'],static fn($s)=>str_starts_with($s['id'],'page:'));
+                    foreach($sources as &$source)$source['text']=mb_substr($source['text'],0,2500);unset($source);
+                    $context=$this->proposals->context($run,$sources);
+                }
                 if($localizing){$context['localizationTask']=$task;$context['mode']='localize';}
                 $result=$this->provider->analyze($context);
             }
@@ -89,7 +98,7 @@ final class AnalysisRunner
             foreach (['input_tokens','output_tokens'] as $field) { $run['usage'][$field]+=(int)($result['usage'][$field] ?? 0); }
             if ($result['warning']) { $run['warnings'][]=$result['warning'];$run['status']='paused'; }
             else {
-                foreach($sources as $key=>$source){$run['processed'][$run['mode'].':'.$key]=$source['hash'];}
+                foreach($sources as $key=>$source){$run['processed'][(($run['stage']??'')==='foundation'?'foundation:':'').$run['mode'].':'.$key]=$source['hash'];}
                 if($localizing){
                     foreach($task['missingPages'] as $pageId){
                         $complete=false;foreach($run['proposals'] as $proposal){if($proposal['status']==='pending'&&$proposal['action']==='set'&&$proposal['target']===$task['target'].'@'.$pageId&&$proposal['field']==='description'){$complete=true;break;}}

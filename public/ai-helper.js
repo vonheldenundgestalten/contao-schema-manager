@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const scriptVersion='2026-10-04-batch-recovery-2';
+const scriptVersion='2026-10-04-stages-1';
 if(window.schemaAiLoaded===scriptVersion)return;
 // Turbo can load a new asset into a window still running the old handlers.
 // Refresh once so old and new versions cannot coexist. GET never starts analysis.
@@ -90,7 +90,7 @@ const boot=()=>document.querySelectorAll('[data-schema-ai]').forEach(root=>{
  }));
  root.querySelector('[data-sai-all]')?.addEventListener('click',()=>{checks().forEach(el=>{el.checked=true;requireParents(el);});updateSelection();});
  root.querySelector('[data-sai-clear]')?.addEventListener('click',()=>{checks().forEach(el=>el.checked=false);updateSelection();});
- root.querySelectorAll('[data-sai-edit]').forEach(el=>el.addEventListener('input',()=>{const value=root.querySelector(`[data-sai-value="${el.dataset.saiEdit}"]`);if(value)value.textContent=el.value;}));
+ root.querySelectorAll('[data-sai-edit]').forEach(el=>el.addEventListener('input',()=>{const value=root.querySelector(`[data-sai-value="${el.dataset.saiEdit}"]`);if(value)value.textContent=el.tagName==='SELECT'?el.selectedOptions[0]?.textContent:el.value;}));
  updateSelection();
  const feedback=root.querySelector('[data-sai-feedback]');
  if(feedback){let sending=false;feedback.addEventListener('submit',async event=>{

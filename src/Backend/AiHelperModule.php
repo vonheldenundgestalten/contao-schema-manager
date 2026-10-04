@@ -10,17 +10,17 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use VHUG\SchemaManagerBundle\Ai\{ApiKeyStore,RunStore,AnalysisRunner,SiteInventory,ProposalEngine,OpenAiProvider};
+use VHUG\SchemaManagerBundle\Ai\{ApiKeyStore,RunStore,AnalysisRunner,SiteInventory,ProposalEngine,OpenAiProvider,SetupPlanner};
 final class AiHelperModule
 {
-    public function __construct(private readonly Connection $db,private readonly RequestStack $requests,private readonly ApiKeyStore $keys,private readonly RunStore $runs,private readonly AnalysisRunner $runner,private readonly SiteInventory $inventory,private readonly ProposalEngine $proposals) {}
+    public function __construct(private readonly Connection $db,private readonly RequestStack $requests,private readonly ApiKeyStore $keys,private readonly RunStore $runs,private readonly AnalysisRunner $runner,private readonly SiteInventory $inventory,private readonly ProposalEngine $proposals,private readonly SetupPlanner $setup) {}
     public function generate(): string
     {
         $user=BackendUser::getInstance();
         // Initial release deliberately restricted to administrators, including all POST endpoints.
         if (!$user->isAdmin) { throw new AccessDeniedException('The optional AI helper currently requires an administrator.'); }
         $request=$this->requests->getCurrentRequest();$container=System::getContainer();
-        foreach (['schema_ai','tl_schema_entity','tl_schema_translation','tl_news','tl_page'] as $languageFile) { System::loadLanguageFile($languageFile); }$l=$GLOBALS['TL_LANG']['schema_ai'];$error='';$message='';
+        foreach (['schema_ai','tl_schema_entity','tl_schema_translation','tl_news','tl_news_archive','tl_page'] as $languageFile) { System::loadLanguageFile($languageFile); }$l=$GLOBALS['TL_LANG']['schema_ai'];$error='';$message='';
         $id=$request->query->getInt('run');
         $installed=$this->db->createSchemaManager()->tablesExist(['tl_schema_ai_run']);
         if ($request->isMethod('POST')) {
@@ -31,8 +31,12 @@ final class AiHelperModule
                 if ($action==='key') { $this->keys->save($request->request->getString('api_key'));$message=$l['keySaved']; }
                 elseif (!$installed) { throw new \RuntimeException($l['migrate']); }
                 elseif ($action==='start') {
+                    $stage=$request->request->getString('stage','content');
+                    if($stage==='configuration'){$id=$this->setup->prepare($user,$request->request->getInt('root'),$request->request->getBoolean('multilingual'));}
+                    else {
                     if (!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
-                    $id=$this->runner->start($user,$request->request->getInt('root'),$request->request->getString('mode'),$request->request->getString('origin'),$request->request->getBoolean('changed'),$request->request->getBoolean('multilingual'));
+                    $id=$this->runner->start($user,$request->request->getInt('root'),$request->request->getString('mode'),$request->request->getString('origin'),$request->request->getBoolean('changed'),$request->request->getBoolean('multilingual'),$stage);
+                    }
                     Controller::redirect($container->get('router')->generate('contao_backend',['do'=>'schema_manager','key'=>'ai','run'=>$id]));
                 } elseif ($action==='refine') {
                     if (!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
@@ -82,6 +86,14 @@ final class AiHelperModule
         $template->l=$l;$template->error=$error;$template->message=$message;$template->hasKey=$hasKey;$template->installed=$installed;
         $template->token=$container->get('contao.csrf.token_manager')->getDefaultTokenValue();$template->run=$run;$template->runId=$id;
         $template->roots=$this->inventory->roots();$template->recent=$installed?$this->runs->recent((int)$user->id):[];$template->model=OpenAiProvider::MODEL;
+        $template->selectedRoot=$run['root'] ?? $request->query->getInt('root',(int)array_key_first($template->roots));
+        $orgCount=(int)$this->db->fetchOne("SELECT COUNT(*) FROM tl_schema_entity WHERE entityType IN ('Organization','LocalBusiness')");
+        $configured=(int)$this->db->fetchOne('SELECT schemaPublisher FROM tl_page WHERE id=?',[$template->selectedRoot]);
+        $recommended=$orgCount?($configured?'content':'configuration'):'foundation';
+        $stage=$run['stage'] ?? $request->query->getString('stage',$recommended);
+        $template->stage=in_array($stage,['foundation','configuration','content'],true)?$stage:$recommended;
+        $template->hasOrganizations=$orgCount>0;
+        $template->hasPublishedOrganization=(bool)$this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE entityType IN ('Organization','LocalBusiness') AND published='1' LIMIT 1");
         $origins=$this->db->fetchFirstColumn("SELECT DISTINCT identityBase FROM tl_schema_entity WHERE identityBase<>''");$template->origin=count($origins)===1?$origins[0]:'';
         $GLOBALS['TL_CSS'][]='bundles/schemamanager/ai-helper.css?v='.filemtime(__DIR__.'/../../public/ai-helper.css');
         $GLOBALS['TL_JAVASCRIPT'][]='bundles/schemamanager/ai-helper.js?v='.filemtime(__DIR__.'/../../public/ai-helper.js');

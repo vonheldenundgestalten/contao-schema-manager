@@ -33,7 +33,7 @@ final class ProposalEngine
         }unset($record);
         $fields=[];
         foreach (FieldPolicy::TYPES as $type) { $fields[$type]=['entity'=>FieldPolicy::fields('tl_schema_entity',$type),'translation'=>FieldPolicy::fields('tl_schema_translation',$type),'links'=>FieldPolicy::links('tl_schema_entity',$type)]; }
-        return ['reservedIdentities'=>$run['inventory']['identities'] ?? [],'editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,
+        return ['stage'=>$run['stage'] ?? 'content','reservedIdentities'=>$run['inventory']['identities'] ?? [],'editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,
             'pending'=>array_map(static fn($p)=>array_intersect_key($p,array_flip(['action','target','field','value'])),array_values(array_filter($run['proposals'],static fn($p)=>$p['status']==='pending'))),
             'pageLinks'=>['schemaEntities'],'newsLinks'=>['schemaAbout','schemaMentions'],'pageFields'=>['schemaPageType']];
     }
@@ -44,7 +44,9 @@ final class ProposalEngine
         $pages=$run['inventory']['pages'];$anchors=[];$existing=[];$descriptions=[];
         foreach($run['inventory']['records'] as $key=>$row){
             if(!str_starts_with($key,'translation:'))continue;
-            $target='entity:'.$row['pid'];$existing[$target][$row['language']]=true;
+            $target='entity:'.$row['pid'];
+            if(($run['stage']??'')==='foundation'&&!in_array($run['inventory']['records'][$target]['entityType']??'',['Organization','LocalBusiness'],true))continue;
+            $existing[$target][$row['language']]=true;
             if(isset($pages[$row['page']]))$anchors[$target][]=(int)$row['page'];
         }
         foreach($run['proposals'] as $p){
@@ -83,6 +85,9 @@ final class ProposalEngine
             foreach ($run['proposals'] as $p) { if ($p['action']==='create' && $p['target']===$key && !in_array($p['status'],['invalid','rejected'],true)) { return ['tl_schema_entity',(int)($run['mapped'][$key] ?? 0),$p['field'],[]]; } }
             throw new \InvalidArgumentException('Select a valid candidate creation first.');
         }
+        if(!empty($run['configuration']) && preg_match('/^(root|archive):([1-9][0-9]*)$/D',$key,$m) && isset($run['inventory']['records'][$key])){
+            return [$m[1]==='root'?'tl_page':'tl_news_archive',(int)$m[2],$m[1]==='root'?'WebSite':'Archive',$run['inventory']['records'][$key]];
+        }
         if (!preg_match('/^(entity|translation|news|page):([1-9][0-9]*)$/D',$key,$m) || !isset($run['inventory']['records'][$key])) { throw new \InvalidArgumentException('Unknown target record.'); }
         $row=$run['inventory']['records'][$key];$type=$row['entityType'] ?? '';
         if ($m[1]==='translation') { $type=$run['inventory']['records']['entity:'.$row['pid']]['entityType'] ?? ''; }
@@ -105,6 +110,12 @@ final class ProposalEngine
                 $source=$sources[$p['source']] ?? null;
                 if (!$source || mb_strlen(trim($p['quote']))<8 || !str_contains($source['text'],trim($p['quote']))) { throw new \InvalidArgumentException('The quotation was not found in the supplied source.'); }
                 if (mb_strlen($p['reason'])>2000 || mb_strlen($p['value'])>6000 || mb_strlen($p['quote'])>2000) { throw new \InvalidArgumentException('Suggestion exceeds the field limits.'); }
+                if(($run['stage'] ?? '')==='foundation'){
+                    if($p['action']==='create'){$foundationType=$p['field'];}
+                    elseif($p['action']==='add'&&str_starts_with($p['target'],'page:')&&$p['field']==='schemaEntities'){[,,$foundationType]=$this->resolve($p['value'],$run);}
+                    else{[,,$foundationType]=$this->resolve($p['target'],$run);}
+                    if(!in_array($foundationType,['Organization','LocalBusiness'],true))throw new \InvalidArgumentException('Foundation analysis only handles organizations, their localized homes and page links.');
+                }
                 if (empty($run['_localizationTask']) && $run['mode']==='discover' && !str_starts_with($p['target'],'new:') && !($p['action']==='add' && preg_match('/^(news|page):[1-9][0-9]*$/D',$p['target']) && str_starts_with($p['value'],'new:'))) { throw new \InvalidArgumentException('New-subject analysis cannot edit existing records.'); }
                 if (empty($run['_localizationTask']) && $run['mode']==='improve' && str_starts_with($p['target'],'new:')) { throw new \InvalidArgumentException('Improvement analysis cannot create new entities.'); }
                 if(!empty($run['_localizationTask'])){
@@ -189,8 +200,11 @@ final class ProposalEngine
                         throw new \RuntimeException(sprintf('The field "%s" on %s #%d changed since analysis. Rescan instead of overwriting it.',$field,$table,$id));
                     }
                     $run['_checked'][$checkKey]=true;
-                    if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.($table==='tl_news'?'news':($table==='tl_page'?'page':'schema_manager')).'&table='.$table.'&act=edit&id='.$id);$v->initialize();$versions[$versionKey]=$v; }
-                    if ($p['action']==='set') { $value=$this->policy->validate($table,$type,$field,$value); }
+                    if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.(in_array($table,['tl_news','tl_news_archive'],true)?'news':($table==='tl_page'?'page':'schema_manager')).'&table='.$table.'&act=edit&id='.$id);$v->initialize();$versions[$versionKey]=$v; }
+                    if ($p['action']==='set') {
+                        $value=$this->policy->validate($table,$type,$field,$value);
+                        if($field==='schemaPublisher' && (int)$value && !$this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE id=? AND entityType IN ('Organization','LocalBusiness')",[(int)$value]))throw new \RuntimeException('The publisher no longer exists. Review parent setup again.');
+                    }
                     else {
                         [$targetTable,$related,$relatedType]=$this->resolve($value,$run);
                         if (!$related || !$this->db->fetchOne('SELECT id FROM tl_schema_entity WHERE id=? AND entityType=?',[$related,$relatedType]) || !in_array($relatedType,FieldPolicy::links($table,$type)[$field] ?? [],true)) { throw new \RuntimeException('Select the related entity creation first.'); }
@@ -205,8 +219,12 @@ final class ProposalEngine
                 }
             }
             $versionKey=$table.':'.$id;
-            if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.($table==='tl_news'?'news':($table==='tl_page'?'page':'schema_manager')).'&table='.$table.'&act=edit&id='.$id);$versions[$versionKey]=$v; }
+            if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.(in_array($table,['tl_news','tl_news_archive'],true)?'news':($table==='tl_page'?'page':'schema_manager')).'&table='.$table.'&act=edit&id='.$id);$versions[$versionKey]=$v; }
             $run['proposals'][$index]['status']='applied';$run['proposals'][$index]['appliedAt']=time();$run['proposals'][$index]['record']=$versionKey;$count++;
+        }
+        if(!empty($run['configuration'])){
+            $settings=new \VHUG\SchemaManagerBundle\EventListener\SourceSettingsListener($this->db);
+            foreach($indices as $index){$key=$run['proposals'][$index]['target'];$id=(int)substr(strstr($key,':'),1);if(str_starts_with($key,'root:'))$settings->ensureWebsiteIdentity($id);else $settings->ensureArchiveIdentities($id);}
         }
         foreach ($versions as $v) { $v->create(); }
         unset($run['_checked']);
@@ -229,6 +247,6 @@ final class ProposalEngine
     public function invalidate(): void
     {
         foreach ([\VHUG\SchemaManagerBundle\Model\EntityModel::class,\VHUG\SchemaManagerBundle\Model\TranslationModel::class,\Contao\PageModel::class] as $class) { $this->tags->invalidateTagsForModelClass($class); }
-        if (class_exists(\Contao\NewsModel::class)) { $this->tags->invalidateTagsForModelClass(\Contao\NewsModel::class); }
+        if (class_exists(\Contao\NewsModel::class)) { $this->tags->invalidateTagsForModelClass(\Contao\NewsModel::class);$this->tags->invalidateTagsForModelClass(\Contao\NewsArchiveModel::class); }
     }
 }

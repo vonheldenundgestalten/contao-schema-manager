@@ -187,6 +187,30 @@ try {
 
  $check((bool)json_encode($inventory,JSON_THROW_ON_ERROR),'Inventory is JSON-safe and excludes binary fields');
  foreach($inventory['records'] as $record){$check(!array_key_exists('image',$record),'Unrelated binary fields excluded');}
+
+ $planner=new VHUG\SchemaManagerBundle\Ai\SetupPlanner($db,$siteInventory,$store);
+ $setupId=$planner->prepare($user,(int)$page->rootId,true);$setup=$store->get($setupId,1);
+ $check($setup['configuration']&&$setup['queue']===[]&&$setup['usage']['input_tokens']===0,'Parent setup is a no-API review');
+ $check(count(array_filter(array_keys($setup['inventory']['records']),static fn($key)=>str_starts_with($key,'root:')))===count($setup['inventory']['roots']),'Parent review includes each language root');
+ $rootIndex=null;foreach($setup['proposals'] as $index=>$item){if($item['field']==='schemaSiteName'){$rootIndex=$index;break;}}
+ $check($rootIndex!==null,'Website name is reviewable');
+ $setup['proposals'][$rootIndex]['value']='Reviewed setup fixture';
+ $engine->apply($setup,[$rootIndex],$user);
+ $check($db->fetchOne('SELECT schemaSiteName FROM tl_page WHERE id=?',[(int)substr($setup['proposals'][$rootIndex]['target'],5)])==='Reviewed setup fixture','Selected parent field applies through versioned review');
+ $foundation=$run;$foundation['stage']='foundation';$foundation['proposals']=[];
+ $engine->ingest($foundation,[$proposal('create','new:outside-stage','Service','Outside foundation')],[$source['id']=>$source]);
+ $check($foundation['proposals'][0]['status']==='invalid','Foundation cannot propose services or child content');
+ $publisherIndex=null;foreach($setup['proposals'] as $index=>$item){if($item['field']==='schemaPublisher'){$publisherIndex=$index;break;}}
+ $check($publisherIndex!==null,'Parent publisher is reviewable');
+ $invalidPublisher=$setup;$invalidPublisher['proposals'][$publisherIndex]['value']=(string)$entity;
+ try{$engine->apply($invalidPublisher,[$publisherIndex],$user);throw new LogicException('Service accepted as publisher');}catch(RuntimeException $expected){$check(str_contains($expected->getMessage(),'publisher'),'Parent publisher must be an organization');}
+ $staleSetup=$planner->prepare($user,(int)$page->rootId,false);$staleParent=$store->get($staleSetup,1);
+ foreach($staleParent['proposals'] as $index=>$item){if($item['field']!=='schemaSiteName')continue;
+  $target=(int)substr($item['target'],5);$beforeName=$db->fetchOne('SELECT schemaSiteName FROM tl_page WHERE id=?',[$target]);$db->update('tl_page',['schemaSiteName'=>'Changed after review'],['id'=>$target]);
+  try{$engine->apply($staleParent,[$index],$user);throw new LogicException('Stale parent update accepted');}catch(RuntimeException $expected){$check(str_contains($expected->getMessage(),'changed since'),'Concurrent parent edits are protected');}
+  $db->update('tl_page',['schemaSiteName'=>$beforeName],['id'=>$target]);break;
+ }
+
  $keyPath=sys_get_temp_dir().'/schema-ai-runner-'.bin2hex(random_bytes(6));mkdir($keyPath,0700);mkdir($keyPath.'/var',0700);
  try {
   $keys=new VHUG\SchemaManagerBundle\Ai\ApiKeyStore($keyPath);$keys->save('sk-'.str_repeat('z',40));
