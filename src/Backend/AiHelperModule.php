@@ -96,6 +96,7 @@ final class AiHelperModule
         }
         try { $hasKey=$this->keys->get()!==''; } catch (\Throwable) { $hasKey=false;$error=$l['keyError']; }
         try { $run=$id && $installed?$this->runs->get($id,(int)$user->id):null; } catch (\RuntimeException) { throw new AccessDeniedException('Analysis is not available for this user.'); }
+        if(is_array($run))$this->importer->refreshPending($run);
         $template=new BackendTemplate('be_schema_ai');
         $template->l=$l;$template->error=$error;$template->message=$message;$template->hasKey=$hasKey;$template->installed=$installed;
         $template->token=$container->get('contao.csrf.token_manager')->getDefaultTokenValue();$template->run=$run;$template->runId=$id;

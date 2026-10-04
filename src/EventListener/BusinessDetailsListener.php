@@ -14,6 +14,38 @@ final class BusinessDetailsListener
         \VHUG\SchemaManagerBundle\Schema\BusinessFacts::registrations(StringUtil::deserialize($value, true));
         return $value;
     }
+    #[AsCallback(table: 'tl_schema_translation', target: 'fields.sameAs.load')]
+    public function localizedLinks(mixed $value, DataContainer $dc): mixed
+    {
+        if ($value !== null) { return $value; }
+        return $this->connection->fetchOne('SELECT e.sameAs FROM tl_schema_entity e JOIN tl_schema_translation t ON t.pid=e.id WHERE t.id=?', [$dc->id]) ?: '';
+    }
+    #[AsCallback(table: 'tl_schema_translation', target: 'fields.sameAs.save')]
+    public function saveLocalizedLinks(mixed $value): string
+    {
+        $value=trim((string)$value);
+        foreach (preg_split('/\R/u',$value) as $url) { if (trim($url)!=='') { $this->url(trim($url)); } }
+        return $value;
+    }
+    #[AsCallback(table: 'tl_schema_translation', target: 'fields.registrationNames.load')]
+    public function registrationNames(mixed $value, DataContainer $dc): mixed
+    {
+        if ($value !== null) { return $value; }
+        $rows=StringUtil::deserialize($this->connection->fetchOne('SELECT e.registrationIdentifiers FROM tl_schema_entity e JOIN tl_schema_translation t ON t.pid=e.id WHERE t.id=?', [$dc->id]),true);
+        return serialize(array_map(static fn($row)=>['key'=>$row['value'],'value'=>$row['key']],$rows));
+    }
+    #[AsCallback(table: 'tl_schema_translation', target: 'fields.registrationNames.save')]
+    public function saveRegistrationNames(mixed $value, DataContainer $dc): mixed
+    {
+        $rows=StringUtil::deserialize($value,true);
+        $valid=array_column(StringUtil::deserialize($this->connection->fetchOne('SELECT e.registrationIdentifiers FROM tl_schema_entity e JOIN tl_schema_translation t ON t.pid=e.id WHERE t.id=?', [$dc->id]),true),'value');
+        $seen=[];
+        foreach (\VHUG\SchemaManagerBundle\Schema\BusinessFacts::registrations($rows) as $row) {
+            if(!in_array($row['name'],array_map('strval',$valid),true)||isset($seen[$row['name']]))throw new \InvalidArgumentException('Use each existing registration number only once. Change registration numbers on the shared entity.');
+            $seen[$row['name']]=true;
+        }
+        return $value;
+    }
     public function organizations(): array { return $this->connection->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType IN ('Organization','LocalBusiness') ORDER BY name"); }
     public function offices(): array { return $this->connection->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType='LocalBusiness' ORDER BY name"); }
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.hasMap.save')]

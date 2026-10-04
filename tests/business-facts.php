@@ -12,3 +12,7 @@ $check(count($nodes)===2&&$nodes[0]===['@type'=>'PropertyValue','name'=>'Commerc
 $check($nodes[1]['value']==='00123','Leading zeroes preserved');
 try {BusinessFacts::registrations([['key'=>'Register','value'=>'']]);throw new LogicException('Incomplete row accepted');}catch(InvalidArgumentException){}
 echo "PASS: worldwide coverage, named registration identifiers, leading zeroes and incomplete-row validation.\n";
+
+$translated=BusinessFacts::registrations($rows,[['key'=>'17334484','value'=>'Handelsregister Estland']]);
+$check($translated[0]['value']==='17334484' && $translated[0]['name']==='Handelsregister Estland','Translated label preserves fixed identifier');
+$check($translated[1]['name']==='Other register','Missing translation uses default register name');

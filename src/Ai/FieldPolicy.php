@@ -13,7 +13,7 @@ final class FieldPolicy
         if($table==='tl_calendar_events')return array_values(array_diff(array_keys(\VHUG\SchemaManagerBundle\Schema\CalendarEventFields::defaults()),['schemaOrganizer']));
         $org=in_array($type,['Organization','LocalBusiness'],true);
         if ($table==='tl_schema_entity') {
-            $fields=['name','sameAs'];
+            $fields=$org?['name']:['name','sameAs'];
             if ($org) { $fields=array_merge($fields,['award','registrationIdentifiers','legalName','alternateName','foundingDate','vatID','taxID','telephone','email','faxNumber','streetAddress','postalCode','addressLocality','addressRegion','addressCountry','postOfficeBoxNumber','numberOfEmployees','externalUrl']); }
             if ($org || $type==='Service') { $fields[]='areaServedWorldwide'; }
             if ($type==='Person') { $fields=array_merge($fields,['telephone','email']); }
@@ -24,7 +24,7 @@ final class FieldPolicy
         }
         if ($table==='tl_schema_translation') { return match($type) {
             'Person'=>['description','jobTitle','knowsAbout','credentials','award'],
-            'Organization','LocalBusiness'=>['description','slogan','knowsAbout','catalogName'],
+            'Organization','LocalBusiness'=>['description','slogan','knowsAbout','catalogName','sameAs','registrationNames'],
             'Service'=>['name','description','serviceType','audienceType','catalogName','offerDescription'],
             'Product'=>['name','description','offerDescription'],default=>['name','description'],
         }; }
@@ -61,7 +61,7 @@ final class FieldPolicy
             if(!in_array($value,['','0','1'],true))throw new \InvalidArgumentException('Use 1 for evidenced worldwide coverage, or 0 to disable.');
             return $value==='1'?'1':'';
         }
-        if($field==='registrationIdentifiers') {
+        if(in_array($field,['registrationIdentifiers','registrationNames'],true)) {
             $rows=json_decode($value,true);
             if(strlen($value)>12000||!is_array($rows)||!array_is_list($rows)||count($rows)>20)throw new \InvalidArgumentException('Use a JSON list of register key/value pairs.');
             $nodes=\VHUG\SchemaManagerBundle\Schema\BusinessFacts::registrations($rows);

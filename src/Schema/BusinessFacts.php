@@ -7,7 +7,7 @@ final class BusinessFacts
     {
         return $worldwide ? ['@type'=>'AdministrativeArea','name'=>'Worldwide'] : array_values($countries);
     }
-    public static function registrations(array $rows): array
+    public static function registrations(array $rows, array $names = []): array
     {
         $result=[];
         foreach ($rows as $row) {
@@ -18,6 +18,9 @@ final class BusinessFacts
             if ($name==='' && $value==='') { continue; }
             if ($name==='' || $value==='' || mb_strlen($name)>255 || mb_strlen($value)>255 || strip_tags($name)!==$name || strip_tags($value)!==$value) {
                 throw new \InvalidArgumentException('Each identifier needs a register name and number, up to 255 plain-text characters each.');
+            }
+            foreach ($names as $label) {
+                if (is_array($label) && (string)($label['key']??'')===$value && is_string($label['value']??null) && trim($label['value'])!=='') { $name=trim($label['value']);break; }
             }
             $node=['@type'=>'PropertyValue','name'=>$name,'value'=>$value];
             if (!in_array($node,$result,true)) { $result[]=$node; }

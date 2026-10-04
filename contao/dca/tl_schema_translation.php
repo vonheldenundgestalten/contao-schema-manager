@@ -73,3 +73,6 @@ foreach (['slogan', 'knowsAbout', 'award', 'credentials'] as $field) {
 }
 
 $GLOBALS['TL_DCA']['tl_schema_translation']['fields']['schemaImportedData'] = ['inputType'=>'textarea','eval'=>['readonly'=>true,'tl_class'=>'clr','style'=>'min-height:12em'],'sql'=>'mediumtext NULL'];
+
+$GLOBALS['TL_DCA']['tl_schema_translation']['fields']['sameAs'] = ['inputType'=>'textarea','eval'=>['tl_class'=>'clr'],'sql'=>'text NULL'];
+$GLOBALS['TL_DCA']['tl_schema_translation']['fields']['registrationNames'] = ['inputType'=>'keyValueWizard','eval'=>['allowEmptyKeys'=>true,'tl_class'=>'clr','keyLabel'=>&$GLOBALS['TL_LANG']['tl_schema_translation']['registerNumber'],'valueLabel'=>&$GLOBALS['TL_LANG']['tl_schema_translation']['registerName']],'sql'=>'blob NULL'];
