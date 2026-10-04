@@ -1,0 +1,20 @@
+<?php
+declare(strict_types=1);
+require __DIR__.'/../src/Ai/SchemaMarkup.php';
+use VHUG\SchemaManagerBundle\Ai\SchemaMarkup;
+$check=static function(bool $ok,string $why):void{if(!$ok)throw new RuntimeException($why);};
+$legacy=['@context'=>'https://schema.org','@type'=>'Organization','name'=>'Example','address'=>['@type'=>'PostalAddress','addressLocality'=>'Berlin']];
+$html='<script type="application/ld+json">'.json_encode($legacy).'</script>';
+$check(count(SchemaMarkup::parse($html)['nodes'])===2,'Nested entities found');
+$check(SchemaMarkup::scriptOnly($html),'Schema-only source');
+$check(!SchemaMarkup::scriptOnly('<p>Visible copy</p>'.$html),'Visible content cannot be retired');
+$check(!SchemaMarkup::scriptOnly($html.'<script>alert(1)</script>'),'Other executable script cannot be retired');
+$check((bool)SchemaMarkup::parse('<script type="application/ld+json">broken</script>')['errors'],'Invalid JSON reported');
+$replacement=$legacy+['@id'=>'https://example.org/#entity'];
+$check(SchemaMarkup::sameThing($legacy,$replacement),'Same type/name candidate');
+$check(SchemaMarkup::missing($legacy,$replacement)===[],'Covered data');
+$replacement['address']['addressLocality']='Hamburg';
+$check(SchemaMarkup::missing($legacy,$replacement)===['address.addressLocality'],'Changed facts reported');
+unset($replacement['address']);$check(SchemaMarkup::missing($legacy,$replacement)===['address'],'Missing nested data reported');
+$check(!SchemaMarkup::sameThing($legacy,['@type'=>'Person','name'=>'Example']),'Different type is not a name duplicate');
+echo "PASS: nested JSON-LD, invalid blocks, safe HTML origins and conservative property comparison.\n";

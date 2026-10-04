@@ -35,7 +35,7 @@ final class ProposalEngine
         foreach (FieldPolicy::TYPES as $type) { $fields[$type]=['entity'=>FieldPolicy::fields('tl_schema_entity',$type),'translation'=>FieldPolicy::fields('tl_schema_translation',$type),'links'=>FieldPolicy::links('tl_schema_entity',$type)]; }
         return ['stage'=>$run['stage'] ?? 'content','reservedIdentities'=>$run['inventory']['identities'] ?? [],'editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,
             'pending'=>array_map(static fn($p)=>array_intersect_key($p,array_flip(['action','target','field','value'])),array_values(array_filter($run['proposals'],static fn($p)=>$p['status']==='pending'))),
-            'authorLinks'=>['schemaPerson'=>['Person']],'pageLinks'=>['schemaEntities'],'eventFields'=>FieldPolicy::fields('tl_calendar_events','Event'),'eventLinks'=>FieldPolicy::links('tl_calendar_events','Event'),'newsLinks'=>['schemaAbout','schemaMentions'],'pageFields'=>['schemaPageType']];
+            'preserveExistingValues'=>true,'authorLinks'=>['schemaPerson'=>['Person']],'pageLinks'=>['schemaEntities'],'eventFields'=>FieldPolicy::fields('tl_calendar_events','Event'),'eventLinks'=>FieldPolicy::links('tl_calendar_events','Event'),'newsLinks'=>['schemaAbout','schemaMentions'],'pageFields'=>['schemaPageType']];
     }
     /** Missing linked language homes only; existing editorial translations are preserved. */
     public function localizationTasks(array &$run): array
@@ -157,7 +157,7 @@ final class ProposalEngine
                     } else { throw new \InvalidArgumentException('Unsupported action.'); }
                 }
             } catch (\InvalidArgumentException $e) { $p['status']='invalid';$p['error']=$e->getMessage(); }
-            $p['bulk']=$p['status']==='pending' && (empty($p['old']) || ($p['action']==='add' && $p['field']!=='organization')) && !in_array($p['field'],['legalName','name'],true);
+            $p['bulk']=$p['status']==='pending' && (empty($p['old']) || ($p['action']==='add' && !in_array($p['field'],['organization','schemaPerson'],true))) && !in_array($p['field'],['legalName','name'],true);
             $run['proposals'][]=$p;
         }
     }

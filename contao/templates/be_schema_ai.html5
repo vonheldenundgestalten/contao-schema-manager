@@ -37,6 +37,8 @@ $renderKey=function()use($e,$l,$token):void { ?>
 <div class="sai" data-schema-ai>
 <header><h2><?= $e($l['title']) ?></h2><a href="?do=schema_manager"><?= $e($l['back']) ?></a></header>
 <p><?= $e($l['intro']) ?></p>
+<p><a class="tl_submit" href="?do=schema_manager&amp;key=ai&amp;stage=audit&amp;root=<?= (int)$this->selectedRoot ?>"><?= $e($l['auditTitle']) ?></a> <?= $e($l['auditEntry']) ?></p>
+<?php foreach($this->draftHomes as $home): ?><p class="tl_info"><?= $e(sprintf($l['draftHome'],$home['name'],$home['language'])) ?> <a href="?do=schema_manager&amp;table=tl_schema_translation&amp;act=edit&amp;id=<?= (int)$home['id'] ?>"><?= $e($l['auditEdit']) ?></a></p><?php endforeach ?>
 <?php if($stage==='content'&&!$this->hasPublishedOrganization): ?><p class="tl_info"><?= $e($l['foundationDraftWarning']) ?></p><?php endif ?>
 <nav class="sai-stages" aria-label="<?= $e($l['stages']) ?>"><?php foreach(['foundation','configuration','content'] as $step): ?><a href="?do=schema_manager&amp;key=ai&amp;stage=<?= $step ?>&amp;root=<?= (int)$this->selectedRoot ?>" <?= $stage===$step?'aria-current="step"':'' ?>><strong><?= $e($l['stage_'.$step]) ?></strong><span><?= $e($l['stage_'.$step.'_help']) ?></span></a><?php endforeach ?></nav>
 
@@ -82,7 +84,7 @@ $pending=count(array_filter($run['proposals'],static fn($p)=>$p['status']==='pen
 <strong role="status" data-sai-count data-label="<?= $e($l['selectedCount']) ?>">0 <?= $e($l['selectedCount']) ?></strong>
 <div class="sai-actions"><button class="tl_submit sai-primary" name="ai_action" value="apply"><?= $e($l['apply']) ?></button><button class="tl_submit" name="ai_action" value="reject"><?= $e($l['reject']) ?></button></div>
 </div>
-<p class="sai-review-help"><?= $e($l[$configuration?'parentApplyHelp':'applyHelp']) ?></p>
+<p><?= $e($l['preserveHelp']) ?></p><p class="sai-review-help"><?= $e($l[$configuration?'parentApplyHelp':'applyHelp']) ?></p>
 <div class="sai-actions sai-selection"><button type="button" class="tl_submit" data-sai-all><?= $e($l['selectAll']) ?></button><button type="button" class="tl_submit" data-sai-clear><?= $e($l['clear']) ?></button></div>
 <?php foreach($groups as $groupKey=>$items):
 $groupPending=count(array_filter($items,static fn($p)=>$p['status']==='pending'));
@@ -114,7 +116,7 @@ $actionLabel=$configuration?$l['reviewSetting']:($p['action']==='create'?$l['cre
 ?>
 <article class="sai-proposal <?= $p['status']==='pending'?'':'sai-inactive' ?>">
 <div class="sai-proposal-heading">
-<?php if($p['status']==='pending'): ?><input id="sai-p-<?= (int)$i ?>" type="checkbox" name="selected[]" value="<?= (int)$i ?>" data-depends="<?= $e(json_encode($deps)) ?>" data-bulk="1" aria-label="<?= $e($name($p['target']).': '.$actionLabel.' '.$fieldLabel($p)) ?>"><?php endif ?>
+<?php if($p['status']==='pending'): ?><input id="sai-p-<?= (int)$i ?>" type="checkbox" name="selected[]" value="<?= (int)$i ?>" data-depends="<?= $e(json_encode($deps)) ?>" data-bulk="<?= !empty($p['bulk'])&&!(($p['action']==='set'||in_array($p['field'],['organization','schemaPerson'],true))&&$p['old']!==''&&$p['old']!==null&&$p['old']!==0)?'1':'0' ?>" aria-label="<?= $e($name($p['target']).': '.$actionLabel.' '.$fieldLabel($p)) ?>"><?php endif ?>
 <div><span class="sai-action-label"><?= $e($actionLabel) ?><?php $localePage=$p['action']==='home'?(int)$p['value']:(str_contains($p['target'],'@')?(int)substr(strrchr($p['target'],'@'),1):0);if($localePage): ?> · <?= $e(strtoupper($run['inventory']['pages'][$localePage]['language'] ?? '')) ?><?php endif ?></span><h4><?php if($p['status']==='pending'): ?><label for="sai-p-<?= (int)$i ?>"><?= $e($fieldLabel($p)) ?></label><?php else: ?><?= $e($fieldLabel($p)) ?> <small><?= $e($l[$p['status']==='applied'?'appliedState':($p['status']==='rejected'?'rejectedState':$p['status'])] ?? $p['status']) ?></small><?php endif ?></h4></div>
 </div>
 <div class="sai-proposal-body">

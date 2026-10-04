@@ -166,3 +166,49 @@ $GLOBALS['TL_LANG']['schema_ai']['calendarImpact'] = 'Kalendervorgaben gelten f�
 $GLOBALS['TL_LANG']['schema_ai']['coreEventType'] = 'Contao-Standard (Event)';
 
 $GLOBALS['TL_LANG']['schema_ai']['authorGroup'] = 'Autorenzuordnung';
+
+$GLOBALS['TL_LANG']['schema_ai']['authorGroup'] = 'Autorenzuordnung';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditTitle'] = 'Vorhandene strukturierte Daten';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditEntry'] = 'Vor der Einrichtung vorhandenes Markup prüfen oder die Migrationsprüfung wiederholen. Ohne API-Schlüssel oder KI-Kosten.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditHelp'] = 'Liest öffentliches JSON-LD und vergleicht es mit der veröffentlichten Schema-Manager-Ausgabe. Bestehende Entitäten werden nicht geändert. Nur reine Schema-HTML-Elemente mit geprüftem Ersatz können deaktiviert werden. Unbekannte Quellen und Unterschiede müssen manuell geprüft werden.';
+
+$GLOBALS['TL_LANG']['schema_ai']['draftHome'] = '„%s“ ist veröffentlicht, aber die Sprachversion/Startseite (%s) noch nicht. Ihre lokalisierten Angaben werden nicht ausgegeben.';
+
+$GLOBALS['TL_LANG']['schema_ai']['preserveHelp'] = 'Alle auswählen markiert nur Ergänzungen und Vorschläge für leere Felder. Änderungen bestehender Werte müssen nach dem Vergleich einzeln ausgewählt werden.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditPrepare'] = 'Prüfung vorbereiten';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditScan'] = 'Öffentliche Seiten prüfen';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditRunning'] = 'Seiten werden geprüft';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditNodes'] = 'Schema-Knoten';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditManaged'] = 'Schema-Manager-Identität';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditAdditional'] = 'Zusätzliches/Core-Markup – Herkunft prüfen';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditReplacement'] = 'Möglicher Ersatz; fehlende oder abweichende Eigenschaften:';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditCovered'] = 'Verglichene Eigenschaften bleiben erhalten.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditUnmapped'] = 'Kein exaktes HTML-Inhaltselement als Quelle gefunden. Mögliche Quelle: Contao, Template, Erweiterung oder dynamische Ausgabe.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditElement'] = 'HTML-Inhaltselement';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditEdit'] = 'Editor öffnen';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditDisabled'] = 'Durch diese Prüfung deaktiviert.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditSelect'] = 'Dieses geprüfte alte Schema-Element deaktivieren';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditRetireHelp'] = 'Nichts wird automatisch ausgewählt. Seite und Ersatz werden beim Übernehmen erneut geprüft. Inhalte werden deaktiviert, nicht gelöscht und können im Editor wieder aktiviert werden.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditRetire'] = 'Ausgewählte alte Elemente deaktivieren';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditRetired'] = '%d alte Elemente deaktiviert.';
+
+$GLOBALS['TL_LANG']['schema_ai']['auditData'] = 'Vorhandene Daten und Ersatz ansehen';
