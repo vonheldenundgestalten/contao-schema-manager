@@ -20,7 +20,7 @@ final class AiHelperModule
         // Initial release deliberately restricted to administrators, including all POST endpoints.
         if (!$user->isAdmin) { throw new AccessDeniedException('The optional AI helper currently requires an administrator.'); }
         $request=$this->requests->getCurrentRequest();$container=System::getContainer();
-        foreach (['schema_ai','tl_schema_entity','tl_schema_translation','tl_news','tl_news_archive','tl_calendar','tl_calendar_events','tl_page'] as $languageFile) { System::loadLanguageFile($languageFile); }$l=$GLOBALS['TL_LANG']['schema_ai'];$error='';$message='';
+        foreach (['schema_ai','tl_schema_entity','tl_schema_translation','tl_news','tl_user','tl_news_archive','tl_calendar','tl_calendar_events','tl_page'] as $languageFile) { System::loadLanguageFile($languageFile); }$l=$GLOBALS['TL_LANG']['schema_ai'];$error='';$message='';
         $id=$request->query->getInt('run');
         $installed=$this->db->createSchemaManager()->tablesExist(['tl_schema_ai_run']);
         if ($request->isMethod('POST')) {

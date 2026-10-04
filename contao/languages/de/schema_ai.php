@@ -164,3 +164,5 @@ $GLOBALS['TL_LANG']['schema_ai']['calendarGroup'] = 'Kalendereinstellungen';
 $GLOBALS['TL_LANG']['schema_ai']['enrichEvents'] = 'Event-Schema anreichern';
 $GLOBALS['TL_LANG']['schema_ai']['calendarImpact'] = 'Kalendervorgaben gelten für alle Termine. Eigene Termin-Angaben haben Vorrang. Datum und Inhalte stammen weiterhin aus Contao; es entsteht keine Kalender-Entität.';
 $GLOBALS['TL_LANG']['schema_ai']['coreEventType'] = 'Contao-Standard (Event)';
+
+$GLOBALS['TL_LANG']['schema_ai']['authorGroup'] = 'Autorenzuordnung';

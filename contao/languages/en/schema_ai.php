@@ -164,3 +164,5 @@ $GLOBALS['TL_LANG']['schema_ai']['calendarGroup'] = 'Calendar settings';
 $GLOBALS['TL_LANG']['schema_ai']['enrichEvents'] = 'Enrich Event schema';
 $GLOBALS['TL_LANG']['schema_ai']['calendarImpact'] = 'Calendar defaults affect all its events. Event fields override these defaults. Core dates and content remain authoritative; no calendar entity is created.';
 $GLOBALS['TL_LANG']['schema_ai']['coreEventType'] = 'Contao default (Event)';
+
+$GLOBALS['TL_LANG']['schema_ai']['authorGroup'] = 'Author mapping';

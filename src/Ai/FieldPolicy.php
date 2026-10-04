@@ -34,6 +34,7 @@ final class FieldPolicy
     public static function links(string $table,string $type): array
     {
         if($table==='tl_calendar_events')return ['schemaOrganizer'=>['Organization','LocalBusiness'],'schemaPerformer'=>['Person','Organization','LocalBusiness'],'schemaAbout'=>self::TYPES];
+        if($table==='tl_user')return ['schemaPerson'=>['Person']];
         if ($table==='tl_news') { return ['schemaAbout'=>self::TYPES,'schemaMentions'=>self::TYPES]; }
         if ($table==='tl_page') { return ['schemaEntities'=>self::TYPES]; }
         if ($table!=='tl_schema_entity') { return []; }

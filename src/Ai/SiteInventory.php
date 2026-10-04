@@ -58,7 +58,15 @@ final class SiteInventory
         foreach ($data['news'] as $post) {
             $reader=$pages[$post['_reader']] ?? null;
             if (!$reader || !isset($archives[$post['pid']]) || !empty($archives[$post['pid']]['protected']) || !$this->visible($post) || !in_array($post['source'] ?? '',['','default'],true)) { continue; }
-            $key='news:'.$post['id'];$sources[$key]=$this->source($key,$post['headline'],$reader['language'],$post['url'],$post['headline'].' '.($post['teaser'] ?? '').' '.$this->elements('tl_news',(int)$post['id']),(int)$reader['id']);
+            $authorText='';
+            // Only authors attached to eligible published news are candidates. Never include account contacts or login data.
+            if($user->isAdmin && in_array($post['_mode'],['','Article','NewsArticle','BlogPosting'],true) && (int)$post['author']>0 && trim((string)($post['mapAuthorName']??''))!==''){
+                $authorKey='author:'.$post['author'];
+                $records[$authorKey]=['id'=>(int)$post['author'],'name'=>$post['mapAuthorName'],'schemaPerson'=>(int)($post['mapAuthor']??0)];
+                $authorText=' Contao editorial author: '.$post['mapAuthorName'].'.';
+                $post['_authorTarget']=$authorKey;
+            }
+            $key='news:'.$post['id'];$sources[$key]=$this->source($key,$post['headline'],$reader['language'],$post['url'],$post['headline'].$authorText.' '.($post['teaser'] ?? '').' '.$this->elements('tl_news',(int)$post['id']),(int)$reader['id']);
             if (in_array($post['_mode'],['','Article','NewsArticle','BlogPosting'],true)) { $post['_mode']=$post['_mode'] ?: 'NewsArticle';$records[$key]=$post; }
         }
         foreach($data['events'] ?? [] as $event){
@@ -76,9 +84,9 @@ final class SiteInventory
         // Keep only schema-editable text/relations and routing metadata. Binary UUIDs,
         // backend configuration and unrelated custom fields must not enter prompts/history.
         foreach ($records as $key=>&$record) {
-            $kind=strstr($key,':',true);$table=match($kind){'entity'=>'tl_schema_entity','translation'=>'tl_schema_translation','news'=>'tl_news','event'=>'tl_calendar_events',default=>'tl_page'};
+            $kind=strstr($key,':',true);$table=match($kind){'entity'=>'tl_schema_entity','translation'=>'tl_schema_translation','news'=>'tl_news','event'=>'tl_calendar_events','author'=>'tl_user',default=>'tl_page'};
             $type=$record['entityType'] ?? ($kind==='translation'?($records['entity:'.$record['pid']]['entityType'] ?? ''):'');
-            $allowed=array_merge(FieldPolicy::fields($table,$type),array_keys(FieldPolicy::links($table,$type)),['id','pid','name','title','headline','entityType','entityId','identityBase','page','language','published','_mode','_organizer']);
+            $allowed=array_merge(FieldPolicy::fields($table,$type),array_keys(FieldPolicy::links($table,$type)),['id','pid','name','title','headline','entityType','entityId','identityBase','page','language','published','_mode','_organizer','_authorTarget','_author']);
             $record=array_intersect_key($record,array_flip($allowed));
         }
         unset($record);
