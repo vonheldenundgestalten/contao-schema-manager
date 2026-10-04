@@ -11,7 +11,7 @@ $GLOBALS['TL_DCA']['tl_schema_translation'] = [
     'list' => [
         'sorting' => ['mode' => DataContainer::MODE_PARENT, 'fields' => ['language'], 'headerFields' => ['name', 'entityType', 'entityId'], 'panelLayout' => 'limit'],
         'label' => ['fields' => ['language'], 'format' => '%s'],
-        'operations' => ['edit', 'delete', 'show'],
+        'operations' => ['!edit', '!toggle', 'delete', 'show'],
     ],
     'palettes' => [
         '__selector__' => ['offerMode'],
@@ -61,6 +61,7 @@ $GLOBALS['TL_DCA']['tl_schema_translation'] = [
             'sql' => "char(1) NOT NULL default ''",
         ],
         'published' => [
+            'toggle' => true, 'filter' => true,
             'inputType' => 'checkbox', 'eval' => ['doNotCopy' => true, 'tl_class' => 'clr'],
             'sql' => "char(1) NOT NULL default ''",
         ],
