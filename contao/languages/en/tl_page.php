@@ -3,7 +3,7 @@
 $GLOBALS['TL_LANG']['tl_page']['schema_legend'] = 'Structured data';
 $GLOBALS['TL_LANG']['tl_page']['schemaPublisher'] = ['Website publisher', 'Shared organization for this language root.'];
 $GLOBALS['TL_LANG']['tl_page']['schemaSiteName'] = ['Website name', 'Public website name in this language.'];
-$GLOBALS['TL_LANG']['tl_page']['schemaWebsiteId'] = ['Permanent website ID', 'Generated once from the publisher’s identity origin.'];
+$GLOBALS['TL_LANG']['tl_page']['schemaWebsiteId'] = ['Permanent website ID', "Editable for restoring an existing public ID, e.g. https://example.org/#website. Keep it stable afterwards. If this language uses a shared website root, edit the ID on that root. Review references in custom markup when changing it."];
 $GLOBALS['TL_LANG']['tl_page']['schemaEntities'] = ['Related entities', 'Reference entities relevant to the visible content on this page.'];
 $GLOBALS['TL_LANG']['tl_page']['schemaSiteAlternateName'] = ['Alternative website name', 'A real abbreviation or other commonly used website name.'];
 $GLOBALS['TL_LANG']['tl_page']['schemaWebsiteRoot'] = ['Share website identity with', 'Select the primary language root for the same website. Empty: independent website.'];
