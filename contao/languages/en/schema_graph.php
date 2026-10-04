@@ -45,3 +45,15 @@ $GLOBALS['TL_LANG']['schema_graph']['suppressed'] = 'Schema output is suppressed
 $GLOBALS['TL_LANG']['schema_graph']['expired'] = 'The job deadline has passed; JobPosting output is suppressed.';
 
 $GLOBALS['TL_LANG']['schema_graph']['unmappedAuthor'] = 'Core author without a shared Person identity. Link the backend author or select a Person in the News item to connect this author to managed people.';
+
+$GLOBALS['TL_LANG']['schema_graph']['language'] = 'Language';
+
+$GLOBALS['TL_LANG']['schema_graph']['allLanguages'] = 'All languages';
+
+$GLOBALS['TL_LANG']['schema_graph']['layout'] = 'Layout';
+
+$GLOBALS['TL_LANG']['schema_graph']['byRelationships'] = 'By relationships';
+
+$GLOBALS['TL_LANG']['schema_graph']['byType'] = 'Grouped by type';
+
+$GLOBALS['TL_LANG']['schema_graph']['scope'] = 'Noindex pages are excluded. Counts and relationships reflect the selected language.';

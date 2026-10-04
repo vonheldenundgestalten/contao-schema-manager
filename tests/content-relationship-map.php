@@ -17,7 +17,7 @@ $posts=[['id'=>31,'url'=>'https://example.org/de/post-a','schemaAbout'=>[3]]+$ba
  ['id'=>33,'_author'=>0,'url'=>'https://example.org/de/post-b']+$base,
  ['id'=>34,'_mode'=>'suppress']+$base,
  ['id'=>35,'_reader'=>999,'url'=>'https://example.org/restricted']+$base];
-$translations=[['pid'=>3,'language'=>'de','page'=>11,'published'=>'1','isMainEntity'=>'1']];
+$translations=[['pid'=>3,'language'=>'de','page'=>11,'published'=>'1','isMainEntity'=>'1','name'=>'Leistung'],['pid'=>3,'language'=>'en','page'=>21,'published'=>'1','isMainEntity'=>'1','name'=>'Service']];
 $map=(new ContentRelationshipMap())->extend((new RelationshipMap())->build($entities,$translations),$pages,$posts,$translations);
 $nodes=array_column(array_column($map['nodes'],'data'),null,'id');$edges=array_column($map['edges'],'data');
 $has=static fn($a,$b,$p)=>count(array_filter($edges,fn($e)=>$e['source']===$a&&$e['target']===$b&&$e['label']===$p))===1;
@@ -35,4 +35,12 @@ $check(!isset($nodes['reader-34'])&&in_array('suppressed',$nodes['news-34']['war
 $check(count(array_unique(array_column($edges,'id')))===count($edges),'Unique relationship identifiers');
 $empty=(new ContentRelationshipMap())->extend((new RelationshipMap())->build([],[]),[],[],[]);
 $check($empty===['nodes'=>[],'edges'=>[]],'Empty and core-only content source');
+$noindexPages=$pages;
+foreach ($noindexPages as &$p) { if ($p['id']===12) {$p['robots']='noindex,follow';} if ($p['id']===11) {$p['robots']='index,nofollow';} } unset($p);
+$filtered=(new ContentRelationshipMap())->extend((new RelationshipMap())->build($entities,$translations),$noindexPages,$posts,$translations);
+$filteredNodes=array_column(array_column($filtered['nodes'],'data'),null,'id');
+$check(!isset($filteredNodes['page-12'],$filteredNodes['news-31'],$filteredNodes['reader-31'],$filteredNodes['news-33']),'Noindex reader and its posts excluded');
+$check(isset($filteredNodes['page-11'],$filteredNodes['news-32'],$filteredNodes['entity-3']),'Nofollow and shared entities remain; no blanket language exclusion');
+$check($nodes['news-32']['language']==='en' && $nodes['page-11']['language']==='de' && $nodes['entity-3']['language']==='','Content has language, business entities remain shared');
+$check($nodes['site-10']['languages']===['de','en'],'Shared website spans both languages');
 echo "PASS: website/page/blog graph, translated roots, author fallback, topics, per-post reader identity and permission-filtered references.\n";

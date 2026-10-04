@@ -7,6 +7,15 @@ final class ContentRelationshipMap
 {
     public function extend(array $map, array $pages, array $news, array $translations): array
     {
+        $excluded = [];
+        foreach ($pages as $page) {
+            if ($page['type']==='regular' && preg_match('/(?:^|[,\s])noindex(?:$|[,\s])/i', $page['robots'] ?? '')) { $excluded[(int)$page['id']]=true; }
+        }
+        $pages=array_values(array_filter($pages,static fn($page)=>!isset($excluded[(int)$page['id']])));
+        $news=array_values(array_filter($news,static fn($post)=>!isset($excluded[(int)$post['_reader']])));
+        $translations=array_values(array_filter($translations,static fn($home)=>!isset($excluded[(int)$home['page']])));
+        foreach ($map['nodes'] as &$node) { $node['data']['homes']=array_values(array_filter($node['data']['homes'],static fn($home)=>!isset($excluded[(int)$home['page']]))); }
+        unset($node);
         $nodes = []; foreach ($map['nodes'] as $node) { $nodes[$node['data']['id']] = $node; }
         $edges = [];
         foreach ($map['edges'] as $edge) { $d=$edge['data']; $edges[$d['source'].'|'.$d['label'].'|'.$d['target']]=$edge; }
@@ -32,6 +41,7 @@ final class ContentRelationshipMap
             $site = $byPage[$siteId];
             $add('site-'.$siteId,'WebSite',($site['schemaSiteName'] ?? '') ?: $site['title'],$siteId,'page',[
                 'identity'=>$site['schemaWebsiteId'] ?? '', 'published'=>(bool)$site['published'], 'detail'=>$site['language'] ?? '',
+                'languages'=>array_values(array_unique(array_filter(array_map(static fn($page)=>($siteFor[$page['id']] ?? null)===$siteId ? ($page['language'] ?? '') : '',$pages)))),
                 'warnings'=>empty($site['schemaWebsiteId'])?['missingIdentity']:[]]);
             $link('site-'.$siteId,'entity-'.($site['schemaPublisher'] ?? 0),'publisher');
         }
@@ -105,6 +115,8 @@ final class ContentRelationshipMap
         // Topic diagnostics intentionally ignore structural website/publisher/author relationships.
         foreach ($nodes as &$node) {
             $d=&$node['data']; $d['kind'] ??= 'entity';
+            $d['language']=in_array($d['kind'],['page','news'],true) && $d['type']!=='WebSite' ? $d['detail'] : '';
+            $d['languages'] ??= [];
             if ($d['kind']==='news' && in_array($d['type'],['BlogPosting','Article','NewsArticle'],true) && !in_array('suppressed',$d['warnings'],true)) {
                 $d['needsService']=true;
                 foreach ($edges as $edge) {

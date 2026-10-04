@@ -45,3 +45,15 @@ $GLOBALS['TL_LANG']['schema_graph']['suppressed'] = 'Die Archiveinstellung unter
 $GLOBALS['TL_LANG']['schema_graph']['expired'] = 'Die Bewerbungsfrist ist abgelaufen; die JobPosting-Ausgabe ist unterdrückt.';
 
 $GLOBALS['TL_LANG']['schema_graph']['unmappedAuthor'] = 'Core-Autor ohne gemeinsame Person-Identität. Verknüpfen Sie den Backend-Autor oder wählen Sie eine Person in der Nachricht.';
+
+$GLOBALS['TL_LANG']['schema_graph']['language'] = 'Sprache';
+
+$GLOBALS['TL_LANG']['schema_graph']['allLanguages'] = 'Alle Sprachen';
+
+$GLOBALS['TL_LANG']['schema_graph']['layout'] = 'Anordnung';
+
+$GLOBALS['TL_LANG']['schema_graph']['byRelationships'] = 'Nach Beziehungen';
+
+$GLOBALS['TL_LANG']['schema_graph']['byType'] = 'Nach Typ gruppiert';
+
+$GLOBALS['TL_LANG']['schema_graph']['scope'] = 'Noindex-Seiten sind ausgeblendet. Zähler und Beziehungen beziehen sich auf die gewählte Sprache.';

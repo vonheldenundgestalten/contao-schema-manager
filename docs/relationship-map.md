@@ -40,6 +40,16 @@ Both are multi-select pickers for existing entities. They add stable @id referen
 
 The screenshots use an unpublished documentation example; the example is removed after verification.
 
+## Language, visibility and layout
+
+Pages configured with `noindex` in Contao's robots field are excluded from this visualization, along with their reader-page instances and posts routed through those noindex readers. Other pages are evaluated individually; an indexed child is not hidden merely because its parent is noindex. Shared business entities remain visible even if their representative page is excluded. This filter does not change publication, robots settings or frontend JSON-LD.
+
+The **Language** selector defaults to the backend language where available (otherwise the first available language), and remembers your selection for this browser session. **All languages** is also available. Pages/posts from other languages and their edges are removed from the current view; shared business entities and shared websites remain. Services, products and events use their published translated name where available. Counts, orphan checks, the entity selector and details reflect the current view. Records whose language cannot be resolved remain visible rather than being silently assigned a language.
+
+**By relationships** uses the force layout plus card separation; a strict library grid with `avoidOverlap` is the fallback if relaxation cannot resolve all collisions. **Grouped by type** places each type in its own spaced grid block. Both calculate spacing using card/label dimensions and rearrange after language changes. These are automatic positioning rules; editors can still drag cards manually.
+
+![English graph grouped by schema type](images/relationships-grouped.png)
+
 ## Backend use
 
 Open **Content → Structured data → Entity relationships**. Drag nodes, zoom and pan; select one to label its relationships and see details. Selecting a node zooms into its immediate relationships. Labels stay on selected edges; no all-label toggle was added. The entity selector and relationship buttons provide a keyboard alternative to the canvas. Search highlights matches without deleting other records. **Unconnected entities** highlights nodes with no entity edges. **Fit all** restores the full framing; **Reset view** clears selection and filters.
