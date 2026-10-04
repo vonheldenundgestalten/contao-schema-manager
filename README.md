@@ -1,4 +1,4 @@
-# Contao Schema Manager 1.0
+# Contao Schema Manager 1.1
 
 **Describe your company, people, products and services once. Connect them to your Contao content in every language.**
 
@@ -10,19 +10,19 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. Product, contact, service-catalogue, job, office, qualification and event screenshots use unpublished documentation examples.*
 
-> **Release 1.0.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. This first release focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Release 1.1.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. The extension focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
-> **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.0.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
+> **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.1.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
 
-## Feature preview: entity relationships
+## Entity relationships
 
-This branch (`codex/feature-relationship-graph`) adds **Structured data → Entity relationships**. It is experimental and is **not included in the 1.0.0 tag**.
+Available since **1.1.0** under **Structured data → Entity relationships**.
 
 ![Interactive relationship map of the pilot entities](docs/images/relationships.png)
 
 The map shows managed entities, websites, pages and News-generated posts together, including drafts and entities without connections. `noindex` pages are excluded. Choose one language (shared entities stay visible), or all languages, and switch between relationship layout and grouping by type. Author, publisher, page membership and article subject links are visible. **Posts without service links** highlights articles without a direct `about`/`mentions` connection to a Service. Select a node (or use the keyboard-accessible entity selector) to see incoming/outgoing relationships, localized home assignments and an edit link. Search by name, type or location; use **Unconnected entities** to highlight records worth reviewing. LocalBusiness labels include street and postal locality to distinguish branches with the same company name.
 
-News editors can select **Main subjects (about)** and **Mentioned entities (mentions)**; these also enrich the actual article JSON-LD. Apply the Contao database update for the two new optional fields.
+News editors can select **Main subjects (about)** and **Mentioned entities (mentions)**; these also enrich the actual article JSON-LD. Apply the Contao database update for these optional fields and the linked knowledge topics field on entities.
 
 See [scope, library choice and development notes](docs/relationship-map.md). After updating a path installation, install bundle assets with `php vendor/bin/contao-console assets:install public` and rebuild the cache.
 
@@ -47,11 +47,11 @@ Run Composer commands from your **Contao application root**, not from this packa
 
 ### Option A: install directly from GitHub
 
-Register the repository and require the first release:
+Register the repository and require the current release:
 
 ```sh
 composer config repositories.schema-manager vcs https://github.com/vonheldenundgestalten/contao-schema-manager.git
-composer require vonheldenundgestalten/contao-schema-manager:^1.0
+composer require vonheldenundgestalten/contao-schema-manager:^1.1
 ```
 
 The Git tag supplies the package version; there is no separate Packagist publication assumed here. If the repository requires authentication, configure Composer's normal GitHub access separately.

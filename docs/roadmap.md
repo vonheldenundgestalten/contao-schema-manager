@@ -9,6 +9,6 @@ These are experimental branches, not supported alternatives to the tagged releas
 
 The feature branches retain their historical baseline and have not been updated as part of 1.0.0. They will need reconciliation with main when work resumes.
 
-## Relationship map preview
+## Relationship map — released in 1.1.0
 
-`codex/feature-relationship-graph` adds a locally bundled Cytoscape.js/fCoSE view of business entities, websites, pages and News relationships, including drafts and unconnected records. News about/mentions pickers also enrich the frontend output; the map highlights articles without service links. See [scope and use](relationship-map.md). This branch starts from 1.0.0 plus the README screenshot correction; main and existing release tags remain unchanged.
+The relationship map is now part of main and the 1.1.0 release. It connects business entities, websites, pages and News records, with language filters, grouping and relationship diagnostics. News subjects/mentions and linked knowledge topics also enrich frontend output. See [scope and use](relationship-map.md). The separate image and product-hook branches remain unchanged.

@@ -1,6 +1,6 @@
 # Entity relationship map (feature branch)
 
-Branch: `codex/feature-relationship-graph`. No release tag. Adds two optional News fields (`schemaAbout`, `schemaMentions`). Apply the normal Contao database update on this branch. Existing content/output is unchanged until editors select subjects or mentions.
+Available since **1.1.0**. Apply the normal Contao database update for the optional News fields (`schemaAbout`, `schemaMentions`) and entity field (`knowledgeTopics`). Existing content/output is unchanged until editors select topics or mentions.
 
 ## Library choice
 

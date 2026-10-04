@@ -1,6 +1,6 @@
 # Release verification
 
-The 1.0.0 release is developed on main. Feature branches are used only for the explicitly deferred image and product-hook work; see [roadmap](roadmap.md).
+Released features are maintained on main. Feature branches are used when explicitly requested; the image and product-hook work remains deferred; see [roadmap](roadmap.md).
 
 Validation includes PHP lint, strict Composer validation, mapper/manual-offer tests, real Contao integration tests for localized entities/publication/compact organization output, news replacement/suppression, and page metadata. A clean core-only installation is checked independently of the pilot.
 
