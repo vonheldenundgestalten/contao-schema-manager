@@ -79,7 +79,9 @@ final class SiteInventory
         }unset($page);
         // Keep linked page translations adjacent, so discovery sees them together.
         uasort($sources,static fn($a,$b)=>($pages[$a['page']]['languageFamily'] ?? $a['page'])<=>($pages[$b['page']]['languageFamily'] ?? $b['page']));
-        return ['sources'=>$sources,'records'=>$records,'pages'=>$pages,'roots'=>$roots,'multilingual'=>$multilingual];
+        // Identity reservations are a duplicate-prevention list, never editable records or evidence.
+        $identities=$this->db->fetchAllAssociative('SELECT id,entityType,name,legalName FROM tl_schema_entity ORDER BY id');
+        return ['identities'=>$identities,'sources'=>$sources,'records'=>$records,'pages'=>$pages,'roots'=>$roots,'multilingual'=>$multilingual];
     }
     private function elements(string $table,int $id): string
     {

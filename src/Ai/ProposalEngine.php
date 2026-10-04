@@ -33,7 +33,7 @@ final class ProposalEngine
         }unset($record);
         $fields=[];
         foreach (FieldPolicy::TYPES as $type) { $fields[$type]=['entity'=>FieldPolicy::fields('tl_schema_entity',$type),'translation'=>FieldPolicy::fields('tl_schema_translation',$type),'links'=>FieldPolicy::links('tl_schema_entity',$type)]; }
-        return ['editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,
+        return ['reservedIdentities'=>$run['inventory']['identities'] ?? [],'editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,
             'pending'=>array_map(static fn($p)=>array_intersect_key($p,array_flip(['action','target','field','value'])),array_values(array_filter($run['proposals'],static fn($p)=>$p['status']==='pending'))),
             'pageLinks'=>['schemaEntities'],'newsLinks'=>['schemaAbout','schemaMentions'],'pageFields'=>['schemaPageType']];
     }
@@ -116,6 +116,7 @@ final class ProposalEngine
                 if ($p['action']==='create') {
                     if (!preg_match('/^new:[a-z0-9-]{1,64}$/D',$p['target']) || !in_array($p['field'],FieldPolicy::TYPES,true)) { throw new \InvalidArgumentException('Invalid new entity.'); }
                     $p['value']=$this->policy->validate('tl_schema_entity',$p['field'],'name',$p['value']);
+                    if(self::matchingIdentity($run['inventory']['identities'] ?? [],$p['field'],$p['value']))throw new \InvalidArgumentException('This entity already exists, possibly as an unpublished draft. Review the existing entry instead.');
                     foreach ($run['inventory']['records'] as $k=>$r) { if (str_starts_with($k,'entity:') && ($r['entityType'] ?? '')===$p['field'] && mb_strtolower(trim($r['name']))===mb_strtolower($p['value'])) { throw new \InvalidArgumentException('An entity with this name and type already exists; review it instead.'); } }
                     foreach ($run['proposals'] as $prior) { if ($prior['action']==='create' && $prior['target']===$p['target'] && $prior['status']!=='invalid') { throw new \InvalidArgumentException('Candidate already proposed.'); } }
                 } else {
@@ -146,6 +147,16 @@ final class ProposalEngine
             $run['proposals'][]=$p;
         }
     }
+    private static function matchingIdentity(array $identities,string $type,string $name): bool
+    {
+        $normalize=static fn(string $value):string=>mb_strtolower(trim(preg_replace('/\s+/u',' ',$value)));
+        $name=$normalize($name);
+        foreach($identities as $identity){
+            if(($identity['entityType'] ?? '')!==$type)continue;
+            foreach(['name','legalName'] as $field){if(!empty($identity[$field])&&$normalize($identity[$field])===$name)return true;}
+        }
+        return false;
+    }
     /** Caller holds the run row lock and a DB transaction. All selected changes are atomic. */
     public function apply(array &$run,array $selected,BackendUser $user): int
     {
@@ -156,7 +167,7 @@ final class ProposalEngine
             if (!$p || $p['status']!=='pending') { throw new \RuntimeException('A selection has already changed. Reload the review.'); }
             $field=$p['field'];$value=$p['value'];
             if ($p['action']==='create') {
-                if ($this->db->fetchOne('SELECT id FROM tl_schema_entity WHERE entityType=? AND LOWER(name)=LOWER(?)',[$field,$value])) { throw new \RuntimeException('A matching entity now exists. Rescan before creating a duplicate.'); }
+                if (self::matchingIdentity($this->db->fetchAllAssociative('SELECT id,entityType,name,legalName FROM tl_schema_entity'),$field,$value)) { throw new \RuntimeException('A matching entity now exists. Rescan before creating a duplicate.'); }
                 $this->db->insert('tl_schema_entity',['tstamp'=>time(),'name'=>$value,'entityType'=>$field,'identityBase'=>$run['origin'],'entityId'=>$run['origin'].'/#entity-'.bin2hex(random_bytes(16)),'published'=>'']);
                 $id=(int)$this->db->lastInsertId();$table='tl_schema_entity';$run['mapped'][$p['target']]=$id;
             } else {

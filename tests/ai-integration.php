@@ -103,6 +103,14 @@ try {
   $db->update('tl_page',array_intersect_key($original,$change),['id'=>$fixturePage]);
  }
  $check(!isset($inventory['records']['entity:'.$entity]),'Draft schema identity excluded from AI context');
+ $reserved=array_column($inventory['identities'],null,'id');
+ $check(isset($reserved[$entity])&&!isset($reserved[$entity]['description']),'Draft identity reserved without unpublished content');
+ $duplicateRun=['mode'=>'discover','inventory'=>$inventory,'proposals'=>[],'mapped'=>[],'decisions'=>[]];
+ $engine->ingest($duplicateRun,[$proposal('create','new:duplicate','Service','  MANUAL   EDIT  ')],[$source['id']=>$source]);
+ $check($duplicateRun['proposals'][0]['status']==='invalid','Duplicate draft rejected despite case/whitespace differences');
+ $context=$engine->context($duplicateRun,[$source]);
+ $check(!isset($context['records']['entity:'.$entity])&&count($context['reservedIdentities'])>0,'Draft reservation is separate from active editable context');
+
  $db->insert('tl_article',['pid'=>$fixturePage,'title'=>'Active article fixture','published'=>1,'inColumn'=>'main']);$articleId=(int)$db->lastInsertId();
  $sentinel='UNPUBLISHED_SENTINEL_'.bin2hex(random_bytes(6));
  $db->insert('tl_content',['pid'=>$articleId,'ptable'=>'tl_article','type'=>'text','text'=>$sentinel,'invisible'=>0]);$elementId=(int)$db->lastInsertId();
