@@ -14,12 +14,12 @@ final class ProposalEngine
         $records=[];
         foreach ($run['inventory']['records'] as $key=>$row) {
             [$table,,$type]=$this->resolve($key,$run);
-            $keep=array_merge(FieldPolicy::fields($table,$type),array_keys(FieldPolicy::links($table,$type)),['id','pid','entityType','entityId','name','headline','title','page','language','published']);
+            $keep=array_merge(FieldPolicy::fields($table,$type),array_keys(FieldPolicy::links($table,$type)),['id','pid','entityType','entityId','name','headline','title','page','language','published','_authorTarget','_author']);
             if (array_key_exists('published',$row) && empty($row['published'])) {
                 continue;
             }
             $records[$key]=array_intersect_key($row,array_flip($keep));
-            foreach (array_keys(FieldPolicy::links($table,$type)) as $field) { if (isset($records[$key][$field]) && $field!=='organization') { $records[$key][$field]=StringUtil::deserialize($records[$key][$field],true); } }
+            foreach (array_keys(FieldPolicy::links($table,$type)) as $field) { if (isset($records[$key][$field]) && !in_array($field,['organization','schemaPerson'],true)) { $records[$key][$field]=StringUtil::deserialize($records[$key][$field],true); } }
         }
         // Omit inactive relation targets from the prompt, but retain original DB
         // values in the inventory for optimistic concurrency checks when applying.
@@ -27,7 +27,7 @@ final class ProposalEngine
             [$table,,$type]=$this->resolve($key,$run);
             foreach(array_keys(FieldPolicy::links($table,$type)) as $field){
                 if(!isset($record[$field]))continue;
-                if($field==='organization'){if(!isset($records['entity:'.$record[$field]]))$record[$field]=0;}
+                if(in_array($field,['organization','schemaPerson'],true)){if(!isset($records['entity:'.$record[$field]]))$record[$field]=0;}
                 else{$record[$field]=array_values(array_filter(StringUtil::deserialize($record[$field],true),static fn($id)=>isset($records['entity:'.$id])));}
             }
         }unset($record);
@@ -35,7 +35,7 @@ final class ProposalEngine
         foreach (FieldPolicy::TYPES as $type) { $fields[$type]=['entity'=>FieldPolicy::fields('tl_schema_entity',$type),'translation'=>FieldPolicy::fields('tl_schema_translation',$type),'links'=>FieldPolicy::links('tl_schema_entity',$type)]; }
         return ['stage'=>$run['stage'] ?? 'content','reservedIdentities'=>$run['inventory']['identities'] ?? [],'editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,
             'pending'=>array_map(static fn($p)=>array_intersect_key($p,array_flip(['action','target','field','value'])),array_values(array_filter($run['proposals'],static fn($p)=>$p['status']==='pending'))),
-            'pageLinks'=>['schemaEntities'],'newsLinks'=>['schemaAbout','schemaMentions'],'pageFields'=>['schemaPageType']];
+            'authorLinks'=>['schemaPerson'=>['Person']],'pageLinks'=>['schemaEntities'],'newsLinks'=>['schemaAbout','schemaMentions'],'pageFields'=>['schemaPageType']];
     }
     /** Missing linked language homes only; existing editorial translations are preserved. */
     public function localizationTasks(array &$run): array
@@ -88,10 +88,10 @@ final class ProposalEngine
         if(!empty($run['configuration']) && preg_match('/^(root|archive):([1-9][0-9]*)$/D',$key,$m) && isset($run['inventory']['records'][$key])){
             return [$m[1]==='root'?'tl_page':'tl_news_archive',(int)$m[2],$m[1]==='root'?'WebSite':'Archive',$run['inventory']['records'][$key]];
         }
-        if (!preg_match('/^(entity|translation|news|page):([1-9][0-9]*)$/D',$key,$m) || !isset($run['inventory']['records'][$key])) { throw new \InvalidArgumentException('Unknown target record.'); }
+        if (!preg_match('/^(entity|translation|news|author|page):([1-9][0-9]*)$/D',$key,$m) || !isset($run['inventory']['records'][$key])) { throw new \InvalidArgumentException('Unknown target record.'); }
         $row=$run['inventory']['records'][$key];$type=$row['entityType'] ?? '';
         if ($m[1]==='translation') { $type=$run['inventory']['records']['entity:'.$row['pid']]['entityType'] ?? ''; }
-        return [match($m[1]){'entity'=>'tl_schema_entity','translation'=>'tl_schema_translation','news'=>'tl_news','page'=>'tl_page'},(int)$m[2],$type,$row];
+        return [match($m[1]){'entity'=>'tl_schema_entity','translation'=>'tl_schema_translation','news'=>'tl_news','author'=>'tl_user','page'=>'tl_page'},(int)$m[2],$type,$row];
     }
     public function ingest(array &$run,array $suggestions,array $sources): void
     {
@@ -116,7 +116,8 @@ final class ProposalEngine
                     else{[,,$foundationType]=$this->resolve($p['target'],$run);}
                     if(!in_array($foundationType,['Organization','LocalBusiness'],true))throw new \InvalidArgumentException('Foundation analysis only handles organizations, their localized homes and page links.');
                 }
-                if (empty($run['_localizationTask']) && $run['mode']==='discover' && !str_starts_with($p['target'],'new:') && !($p['action']==='add' && preg_match('/^(news|page):[1-9][0-9]*$/D',$p['target']) && str_starts_with($p['value'],'new:'))) { throw new \InvalidArgumentException('New-subject analysis cannot edit existing records.'); }
+                $authorMapping=$p['action']==='add'&&str_starts_with($p['target'],'author:')&&$p['field']==='schemaPerson';
+                if (empty($run['_localizationTask']) && $run['mode']==='discover' && !$authorMapping && !str_starts_with($p['target'],'new:') && !($p['action']==='add' && preg_match('/^(news|page):[1-9][0-9]*$/D',$p['target']) && str_starts_with($p['value'],'new:'))) { throw new \InvalidArgumentException('New-subject analysis cannot edit existing records.'); }
                 if (empty($run['_localizationTask']) && $run['mode']==='improve' && str_starts_with($p['target'],'new:')) { throw new \InvalidArgumentException('Improvement analysis cannot create new entities.'); }
                 if(!empty($run['_localizationTask'])){
                     $task=$run['_localizationTask'];
@@ -145,12 +146,13 @@ final class ProposalEngine
                         $p['old']=(string)($row[$p['field']] ?? '');
                         if ($p['old']===$p['value']) { continue; }
                     } elseif ($p['action']==='add') {
+                        if($table==='tl_user'&&(!empty($row['schemaPerson'])||($source['id']??'')===''||($run['inventory']['records'][$source['id']]['_authorTarget']??'')!==$p['target']))throw new \InvalidArgumentException('Only an unmapped author of the cited news can be connected.');
                         $types=FieldPolicy::links($table,$type)[$p['field']] ?? [];
                         [$targetTable,,$targetType]=$this->resolve($p['value'],$run);
                         if ($targetTable!=='tl_schema_entity' || !in_array($targetType,$types,true) || $p['target']===$p['value']) { throw new \InvalidArgumentException('Invalid relationship.'); }
                         $p['old']=$row[$p['field']] ?? null;
                         $related=(int)substr($p['value'],7);
-                        if (str_starts_with($p['value'],'entity:') && ($p['field']==='organization'?(int)$p['old']===$related:in_array($related,array_map('intval',StringUtil::deserialize($p['old'],true)),true))) { continue; }
+                        if (str_starts_with($p['value'],'entity:') && (in_array($p['field'],['organization','schemaPerson'],true)?(int)$p['old']===$related:in_array($related,array_map('intval',StringUtil::deserialize($p['old'],true)),true))) { continue; }
                     } else { throw new \InvalidArgumentException('Unsupported action.'); }
                 }
             } catch (\InvalidArgumentException $e) { $p['status']='invalid';$p['error']=$e->getMessage(); }
@@ -183,6 +185,11 @@ final class ProposalEngine
                 $id=(int)$this->db->lastInsertId();$table='tl_schema_entity';$run['mapped'][$p['target']]=$id;
             } else {
                 [$table,$id,$type]=$this->resolve($p['target'],$run);
+                if($table==='tl_user'){
+                    if(!$user->isAdmin)throw new \RuntimeException('Only administrators may map backend authors.');
+                    $sourceId=(int)substr($p['source'],5);
+                    if(!str_starts_with($p['source'],'news:')||(int)$this->db->fetchOne('SELECT author FROM tl_news WHERE id=?',[$sourceId])!==$id)throw new \RuntimeException('The news author changed. Rescan before mapping.');
+                }
                 if (!$id) { throw new \RuntimeException('Select the dependent entity/home creation, or apply it first.'); }
                 $current=$this->db->fetchAssociative('SELECT * FROM '.$table.' WHERE id=? FOR UPDATE',[$id]);
                 if (!$current) { throw new \RuntimeException('A target record was removed. Rescan.'); }
@@ -200,7 +207,7 @@ final class ProposalEngine
                         throw new \RuntimeException(sprintf('The field "%s" on %s #%d changed since analysis. Rescan instead of overwriting it.',$field,$table,$id));
                     }
                     $run['_checked'][$checkKey]=true;
-                    if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.(in_array($table,['tl_news','tl_news_archive'],true)?'news':($table==='tl_page'?'page':'schema_manager')).'&table='.$table.'&act=edit&id='.$id);$v->initialize();$versions[$versionKey]=$v; }
+                    if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.(in_array($table,['tl_news','tl_news_archive'],true)?'news':($table==='tl_user'?'user':($table==='tl_page'?'page':'schema_manager'))).'&table='.$table.'&act=edit&id='.$id);$v->initialize();$versions[$versionKey]=$v; }
                     if ($p['action']==='set') {
                         $value=$this->policy->validate($table,$type,$field,$value);
                         if($field==='schemaPublisher' && (int)$value && !$this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE id=? AND entityType IN ('Organization','LocalBusiness')",[(int)$value]))throw new \RuntimeException('The publisher no longer exists. Review parent setup again.');
@@ -209,8 +216,8 @@ final class ProposalEngine
                         [$targetTable,$related,$relatedType]=$this->resolve($value,$run);
                         if (!$related || !$this->db->fetchOne('SELECT id FROM tl_schema_entity WHERE id=? AND entityType=?',[$related,$relatedType]) || !in_array($relatedType,FieldPolicy::links($table,$type)[$field] ?? [],true)) { throw new \RuntimeException('Select the related entity creation first.'); }
                         if ($table==='tl_schema_entity' && $id===$related) { throw new \RuntimeException('Self relationships are not allowed.'); }
-                        if ($field==='organization') {
-                            $parent=$related;$seen=[$id=>true];
+                        if (in_array($field,['organization','schemaPerson'],true)) {
+                            $parent=$field==='organization'?$related:0;$seen=[$id=>true];
                             while($parent){if(isset($seen[$parent]))throw new \RuntimeException('Circular organization relationship.');$seen[$parent]=true;$parent=(int)$this->db->fetchOne('SELECT organization FROM tl_schema_entity WHERE id=?',[$parent]);}
                             $value=$related;
                         } else { $value=serialize(array_values(array_unique(array_merge(array_map('intval',StringUtil::deserialize($current[$field] ?? null,true)),[$related])))); }
@@ -219,7 +226,7 @@ final class ProposalEngine
                 }
             }
             $versionKey=$table.':'.$id;
-            if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.(in_array($table,['tl_news','tl_news_archive'],true)?'news':($table==='tl_page'?'page':'schema_manager')).'&table='.$table.'&act=edit&id='.$id);$versions[$versionKey]=$v; }
+            if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.(in_array($table,['tl_news','tl_news_archive'],true)?'news':($table==='tl_user'?'user':($table==='tl_page'?'page':'schema_manager'))).'&table='.$table.'&act=edit&id='.$id);$versions[$versionKey]=$v; }
             $run['proposals'][$index]['status']='applied';$run['proposals'][$index]['appliedAt']=time();$run['proposals'][$index]['record']=$versionKey;$count++;
         }
         if(!empty($run['configuration'])){
@@ -234,7 +241,7 @@ final class ProposalEngine
     private function sameFieldValue(string $table,string $type,string $field,mixed $current,mixed $snapshot): bool
     {
         if (array_key_exists($field,FieldPolicy::links($table,$type))) {
-            if ($field==='organization') { return (int)$current===(int)$snapshot; }
+            if (in_array($field,['organization','schemaPerson'],true)) { return (int)$current===(int)$snapshot; }
             $normalize=static function(mixed $value): array {
                 $ids=array_values(array_unique(array_map('intval',StringUtil::deserialize($value,true))));
                 sort($ids,SORT_NUMERIC);

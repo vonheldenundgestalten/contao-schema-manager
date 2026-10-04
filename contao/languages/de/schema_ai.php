@@ -160,3 +160,5 @@ $GLOBALS['TL_LANG']['schema_ai']['parentSummary'] = 'Konfigurationsprüfung · k
 $GLOBALS['TL_LANG']['schema_ai']['parentSelectionHelp'] = 'Website- und Archiveinstellungen prüfen. Gewünschte Felder ändern, auswählen und übernehmen. Bereits passende Einstellungen nicht auswählen.';
 $GLOBALS['TL_LANG']['schema_ai']['parentApplyHelp'] = 'Ausgewählte Einstellungen gelten für bestehende und zukünftige Inhalte. Herausgeber-Entwürfe bleiben unveröffentlicht. Archivtypen wählen Sie redaktionell aus, nicht die KI.';
 $GLOBALS['TL_LANG']['schema_ai']['foundationDraftWarning'] = 'Geprüfte Organisation und ihre Sprachversionen vor der Inhaltsanreicherung veröffentlichen. Bestehende Entwürfe sind gegen Duplikate reserviert, dienen aber nicht als aktive Inhalte.';
+
+$GLOBALS['TL_LANG']['schema_ai']['authorGroup'] = 'Autorenzuordnung';

@@ -12,7 +12,7 @@ $name=static function($key)use($run){
 $fieldLabel=static function($p)use($l){
     if($p['action']==='create')return $p['field'];
     if($p['action']==='home')return $l['home'];
-    $table=match(true){str_starts_with($p['target'],'archive:')=>'tl_news_archive',str_starts_with($p['target'],'root:')||str_starts_with($p['target'],'page:')=>'tl_page',str_contains($p['target'],'@')||str_starts_with($p['target'],'translation:')=>'tl_schema_translation',str_starts_with($p['target'],'news:')=>'tl_news',default=>'tl_schema_entity'};
+    $table=match(true){str_starts_with($p['target'],'author:')=>'tl_user',str_starts_with($p['target'],'archive:')=>'tl_news_archive',str_starts_with($p['target'],'root:')||str_starts_with($p['target'],'page:')=>'tl_page',str_contains($p['target'],'@')||str_starts_with($p['target'],'translation:')=>'tl_schema_translation',str_starts_with($p['target'],'news:')=>'tl_news',default=>'tl_schema_entity'};
     return $GLOBALS['TL_LANG'][$table][$p['field']][0] ?? $p['field'];
 };
 $display=static function($value,$p)use($name,$run,$l){
@@ -87,6 +87,7 @@ $pending=count(array_filter($run['proposals'],static fn($p)=>$p['status']==='pen
 $groupPending=count(array_filter($items,static fn($p)=>$p['status']==='pending'));
 $groupRecord=$run['inventory']['records'][$groupKey] ?? [];
 $groupType=match(strstr($groupKey,':',true)) {
+ 'author'=>$l['authorGroup'],
  'root'=>'WebSite',
  'archive'=>$l['archiveGroup'],
  'news'=>$groupRecord['_mode'] ?? 'Article',
