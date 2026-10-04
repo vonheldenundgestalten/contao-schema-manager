@@ -268,3 +268,6 @@ $GLOBALS['TL_LANG']['schema_ai']['importWebsiteIdentity'] = "Beim Veröffentlich
 $GLOBALS['TL_LANG']['schema_ai']['importCurrentIdentity'] = "Aktuell konfigurierte Website-ID";
 
 $GLOBALS['TL_LANG']['schema_ai']['importOriginalIdentity'] = "Wiederherzustellende ursprüngliche ID";
+
+$GLOBALS['TL_LANG']['schema_ai']['removeLinkAction'] = 'Defekten Verweis entfernen';
+$GLOBALS['TL_LANG']['schema_ai']['storedRelationship'] = 'Gespeicherte Beziehung';

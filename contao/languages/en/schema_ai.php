@@ -268,3 +268,6 @@ $GLOBALS['TL_LANG']['schema_ai']['importWebsiteIdentity'] = "Publishing this imp
 $GLOBALS['TL_LANG']['schema_ai']['importCurrentIdentity'] = "Currently configured website ID";
 
 $GLOBALS['TL_LANG']['schema_ai']['importOriginalIdentity'] = "Original ID to restore";
+
+$GLOBALS['TL_LANG']['schema_ai']['removeLinkAction'] = 'Remove broken link';
+$GLOBALS['TL_LANG']['schema_ai']['storedRelationship'] = 'Stored relationship';

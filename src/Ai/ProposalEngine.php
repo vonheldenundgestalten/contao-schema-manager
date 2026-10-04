@@ -176,10 +176,14 @@ final class ProposalEngine
     public function apply(array &$run,array $selected,BackendUser $user): int
     {
         $indices=array_values(array_unique(array_map('intval',$selected)));$versions=[];$count=0;
-        usort($indices,fn($a,$b)=>(['create'=>0,'home'=>1,'set'=>2,'add'=>3][$run['proposals'][$a]['action'] ?? 'set'])<=>(['create'=>0,'home'=>1,'set'=>2,'add'=>3][$run['proposals'][$b]['action'] ?? 'set']));
+        usort($indices,fn($a,$b)=>(['create'=>0,'home'=>1,'set'=>2,'add'=>3,'remove'=>4][$run['proposals'][$a]['action'] ?? 'set'])<=>(['create'=>0,'home'=>1,'set'=>2,'add'=>3,'remove'=>4][$run['proposals'][$b]['action'] ?? 'set']));
         foreach ($indices as $index) {
             $p=$run['proposals'][$index] ?? null;
             if (!$p || $p['status']!=='pending') { throw new \RuntimeException('A selection has already changed. Reload the review.'); }
+            if($p['action']==='remove'){
+                $record=(new MissingRelations($this->db))->apply($p,$run,$user);
+                $run['proposals'][$index]['status']='applied';$run['proposals'][$index]['appliedAt']=time();$run['proposals'][$index]['record']=$record;++$count;continue;
+            }
             $field=$p['field'];$value=$p['value'];
             if ($p['action']==='create') {
                 if (self::matchingIdentity($this->db->fetchAllAssociative('SELECT id,entityType,name,legalName FROM tl_schema_entity'),$field,$value)) { throw new \RuntimeException('A matching entity now exists. Rescan before creating a duplicate.'); }
@@ -262,6 +266,7 @@ final class ProposalEngine
     {
         foreach ([\VHUG\SchemaManagerBundle\Model\EntityModel::class,\VHUG\SchemaManagerBundle\Model\TranslationModel::class,\Contao\PageModel::class] as $class) { $this->tags->invalidateTagsForModelClass($class); }
         (new \VHUG\SchemaManagerBundle\EventListener\CalendarSettingsListener($this->db,$this->tags))->invalidate();
+        $this->tags->invalidateTagsForModelClass(\Contao\UserModel::class);
         if (class_exists(\Contao\NewsModel::class)) { $this->tags->invalidateTagsForModelClass(\Contao\NewsModel::class);$this->tags->invalidateTagsForModelClass(\Contao\NewsArchiveModel::class); }
     }
 }
