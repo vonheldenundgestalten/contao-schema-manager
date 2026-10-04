@@ -96,6 +96,16 @@ try {
  // Publication checks use raw DB state even if Contao models were loaded earlier.
  $siteInventory=new VHUG\SchemaManagerBundle\Ai\SiteInventory($db,$content);
  $fixturePage=(int)array_key_first($inventory['pages']);
+ $containerChildren=0;
+ foreach($db->fetchAllAssociative("SELECT child.id,parent.id AS parentId,parent.protected FROM tl_page child JOIN tl_page parent ON parent.id=child.pid WHERE child.published=1 AND child.type='regular' AND parent.type='regular' AND parent.published=0 AND parent.protected=0") as $child){
+  if(!isset($inventory['sources']['page:'.$child['id']]))continue;
+  ++$containerChildren;
+  $db->update('tl_page',['protected'=>1],['id'=>$child['parentId']]);
+  $check(!isset($siteInventory->collect((int)$page->rootId,$user)['sources']['page:'.$child['id']]),'Parent protection still excludes published children');
+  $db->update('tl_page',['protected'=>$child['protected']],['id'=>$child['parentId']]);
+ }
+ $check($containerChildren>0,'Published pages below unpublished navigation containers remain sources');
+
  foreach([['published'=>0],['start'=>(string)(time()+3600)],['stop'=>(string)(time()-3600)],['protected'=>'1']] as $change){
   $original=$db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$fixturePage]);$db->update('tl_page',$change,['id'=>$fixturePage]);
   $filtered=$siteInventory->collect((int)$page->rootId,$user);
@@ -143,7 +153,7 @@ try {
  foreach($multiInventory['pages'] as $a){foreach($multiInventory['pages'] as $b){if($a['language']!==$b['language'] && $a['languageFamily']===$b['languageFamily']){$pair=[$a,$b];break 2;}}}
  $check(count($pair)===2,'Pilot has linked published language pages');
  [$firstPage,$secondPage]=$pair;
- $multiSource=['id'=>'page:'.$firstPage['id'],'page'=>(int)$firstPage['id'],'title'=>'Translation fixture','text'=>$multiInventory['sources']['page:'.$firstPage['id']]['text'],'hash'=>'multi-fixture','language'=>$firstPage['language']];
+ $multiSource=['id'=>'page:'.$firstPage['id'],'page'=>(int)$firstPage['id'],'title'=>'Translation fixture','text'=>mb_substr($multiInventory['sources']['page:'.$firstPage['id']]['text'],0,200),'hash'=>'multi-fixture','language'=>$firstPage['language']];
  $multi=['mode'=>'discover','root'=>(int)$firstPage['_root'],'origin'=>'https://example.org','inventory'=>['records'=>[],'pages'=>[$firstPage['id']=>$firstPage,$secondPage['id']=>$secondPage],'roots'=>[(int)$firstPage['_root'],(int)$secondPage['_root']],'multilingual'=>true,'sources'=>[$multiSource['id']=>$multiSource]],'mapped'=>[],'proposals'=>[],'decisions'=>[],'warnings'=>[]];
  $mp=static fn($action,$target,$field,$value)=>['action'=>$action,'target'=>$target,'field'=>$field,'value'=>$value,'source'=>$multiSource['id'],'quote'=>$multiSource['text'],'reason'=>'Translation fixture'];
  $multiName='Shared multilingual fixture '.bin2hex(random_bytes(6));

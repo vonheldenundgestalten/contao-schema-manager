@@ -35,7 +35,14 @@ final class SiteInventory
         foreach ($data['pages'] as $p) {
             if (!in_array((int)$p['_root'],$roots,true) || $p['type']!=='regular' || !$this->visible($p) || preg_match('/(?:^|[,\s])noindex(?:$|[,\s])/i',$p['robots'] ?? '')) { continue; }
             $parent=(int)($p['pid'] ?? 0);$seen=[];$valid=true;
-            while ($parent && !isset($seen[$parent])) { $seen[$parent]=true; $ancestor=$this->db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$parent]); if (!$ancestor || !$this->visible($ancestor)) { $valid=false;break; } $parent=(int)$ancestor['pid']; }
+            // Contao's PublishedFilter checks the page and root, not intermediate
+            // navigation containers. Protection, unlike publication, is inherited.
+            while ($parent && !isset($seen[$parent])) {
+                $seen[$parent]=true;$ancestor=$this->db->fetchAssociative('SELECT * FROM tl_page WHERE id=?',[$parent]);
+                if(!$ancestor || !empty($ancestor['protected'])){$valid=false;break;}
+                if($ancestor['type']==='root'){$valid=$this->visible($ancestor);$parent=0;break;}
+                $parent=(int)$ancestor['pid'];
+            }
             if (!$valid || $parent) { continue; }
             $pages[$p['id']]=$p;
             if (!empty($p['requireItem'])) { continue; }
