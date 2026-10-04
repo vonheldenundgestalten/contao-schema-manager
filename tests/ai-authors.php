@@ -38,7 +38,7 @@ try {
  $engine->ingest($run,[$p],[$newsKey=>$source]);$check($run['proposals'][0]['status']==='pending','Existing Person mapping allowed in discovery');
  $engine->apply($run,[0],$user);$check((int)$db->fetchOne('SELECT schemaPerson FROM tl_user WHERE id=?',[$authorId])===$person,'Scalar Person mapping applied');
  $data=$inventory->collect(2,$user,true);$run['inventory']=$data;$run['proposals']=[];$engine->ingest($run,[$p],[$newsKey=>$source]);$check($run['proposals'][0]['status']==='invalid','Existing mappings cannot be replaced');
- foreach($data['records'] as $key=>$row){if(str_starts_with($key,'news:')&&($row['_authorTarget']??'')===$authorKey)$db->update('tl_news',['published'=>''],['id'=>$row['id']]);}
+ foreach($data['records'] as $key=>$row){if(str_starts_with($key,'news:')&&($row['_authorTarget']??'')===$authorKey)$db->update('tl_news',['published'=>0],['id'=>$row['id']]);}
  $check(!isset($inventory->collect(2,$user,true)['records'][$authorKey]),'Authors with no eligible published news excluded');
  echo "PASS: author evidence, minimal fields, inactive login, reuse, scalar apply, overwrite guard, unpublished exclusions.\n";
 }finally{$db->rollBack();echo "Author fixtures rolled back.\n";}

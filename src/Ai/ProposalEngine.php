@@ -27,7 +27,7 @@ final class ProposalEngine
             [$table,,$type]=$this->resolve($key,$run);
             foreach(array_keys(FieldPolicy::links($table,$type)) as $field){
                 if(!isset($record[$field]))continue;
-                if(in_array($field,['organization','schemaOrganizer','schemaPerson'],true)){if(!isset($records['entity:'.$record[$field]]))$record[$field]=0;}
+                if(in_array($field,['organization','schemaOrganizer','schemaPerson'],true)){if($field!=='schemaPerson'&&!isset($records['entity:'.$record[$field]]))$record[$field]=0;}
                 else{$record[$field]=array_values(array_filter(StringUtil::deserialize($record[$field],true),static fn($id)=>isset($records['entity:'.$id])));}
             }
         }unset($record);
@@ -152,7 +152,7 @@ final class ProposalEngine
                         if ($targetTable!=='tl_schema_entity' || !in_array($targetType,$types,true) || $p['target']===$p['value']) { throw new \InvalidArgumentException('Invalid relationship.'); }
                         $p['old']=$row[$p['field']] ?? null;
                         $related=(int)substr($p['value'],7);
-                        if($p['field']==='schemaOrganizer'&&str_starts_with($p['value'],'entity:')&&(int)($row['_organizer','_authorTarget','_author']??0)===$related)continue;
+                        if($p['field']==='schemaOrganizer'&&str_starts_with($p['value'],'entity:')&&(int)($row['_organizer']??0)===$related)continue;
                         if (str_starts_with($p['value'],'entity:') && (in_array($p['field'],['organization','schemaOrganizer','schemaPerson'],true)?(int)$p['old']===$related:in_array($related,array_map('intval',StringUtil::deserialize($p['old'],true)),true))) { continue; }
                     } else { throw new \InvalidArgumentException('Unsupported action.'); }
                 }
