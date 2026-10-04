@@ -511,3 +511,13 @@ For example, an existing `https://example.org/#organization` remains that same I
 This first importer handles Organization, LocalBusiness, Person, Service, Product and standalone Event entities, together with legacy WebSite and supported WebPage types found in their markup. An entity needs a matching eligible local home. Relative IDs, ambiguous homes and other schema types need manual review. Retained properties are preserved data, not fully editable native relationships; inspect complex catalogues before retiring their source.
 
 If restarting an AI trial, back up first and reset only the trial Schema Manager records you intend to replace. Leave the hand-written source intact. Existing imports and unrelated Contao content are never automatically deleted.
+
+### Shared company awards
+
+Awards for Organization and LocalBusiness are edited on the main entity and apply to every language. Use the official award name, one per line. After updating, run the Contao database migrations: existing company awards from all translations are combined, exact duplicates removed, and existing shared values preserved. Different translated wordings are retained for editorial review. Person awards remain on the localized record.
+
+### Worldwide coverage and registration numbers
+
+Select **Worldwide coverage** on an Organization, LocalBusiness or Service to output `areaServed: {"@type":"AdministrativeArea","name":"Worldwide"}` instead of its country list. Countries remain saved if you turn it off.
+
+On a company or location, **Registration identifiers** provides repeatable register-name/number rows. For example, `Commercial Register Estonia` / `17334484` outputs `identifier: {"@type":"PropertyValue","name":"Commercial Register Estonia","value":"17334484"}`. Multiple rows output an array. Keep VAT and tax numbers in their dedicated fields. After updating, run Contao's database update. Existing tax IDs are not reclassified automatically: move any incorrectly entered registration number to the new field and clear that tax ID.

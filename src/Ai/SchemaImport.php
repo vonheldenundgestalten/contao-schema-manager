@@ -123,6 +123,23 @@ final class SchemaImport
                 unset($retained[$field]);if(isset($retained['address'][$field]))unset($retained['address'][$field]);
             }
         }
+        if(in_array($type,['Organization','LocalBusiness','Service'],true)&&($node['areaServed']['@type']??null)==='AdministrativeArea'&&($node['areaServed']['name']??null)==='Worldwide'&&count($node['areaServed'])===2){
+            $shared['areaServedWorldwide']='1';unset($retained['areaServed']);
+        }
+        if(in_array($type,['Organization','LocalBusiness'],true)){
+            if(isset($node['award'])&&is_array($node['award'])&&array_is_list($node['award'])&&count(array_filter($node['award'],'is_string'))===count($node['award'])){
+                try{$shared['award']=$this->policy->validate('tl_schema_entity',$type,'award',implode("\n",$node['award']));unset($retained['award']);}catch(\InvalidArgumentException){}
+            }
+            $identifiers=$node['identifier']??null;
+            if(is_array($identifiers)){
+                $nodes=array_is_list($identifiers)?$identifiers:[$identifiers];$rows=[];$supported=(bool)$nodes;
+                foreach($nodes as $identifier){
+                    if(!is_array($identifier)||($identifier['@type']??'')!=='PropertyValue'||array_diff(array_keys($identifier),['@type','name','value'])||!is_string($identifier['name']??null)||!is_string($identifier['value']??null)){$supported=false;break;}
+                    $rows[]=['key'=>$identifier['name'],'value'=>$identifier['value']];
+                }
+                if($supported){try{$json=$this->policy->validate('tl_schema_entity',$type,'registrationIdentifiers',json_encode($rows,JSON_THROW_ON_ERROR));$shared['registrationIdentifiers']=serialize(json_decode($json,true));unset($retained['identifier']);}catch(\InvalidArgumentException){}}
+            }
+        }
         if(isset($retained['address'])&&array_keys($retained['address'])===['@type'])unset($retained['address']);
         return [$shared,$localized,$retained];
     }

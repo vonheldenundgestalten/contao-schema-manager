@@ -8,6 +8,12 @@ use Doctrine\DBAL\Connection;
 final class BusinessDetailsListener
 {
     public function __construct(private readonly Connection $connection) {}
+    #[AsCallback(table: 'tl_schema_entity', target: 'fields.registrationIdentifiers.save')]
+    public function registrations(mixed $value): mixed
+    {
+        \VHUG\SchemaManagerBundle\Schema\BusinessFacts::registrations(StringUtil::deserialize($value, true));
+        return $value;
+    }
     public function organizations(): array { return $this->connection->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType IN ('Organization','LocalBusiness') ORDER BY name"); }
     public function offices(): array { return $this->connection->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType='LocalBusiness' ORDER BY name"); }
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.hasMap.save')]
