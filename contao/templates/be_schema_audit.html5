@@ -19,13 +19,13 @@ $token='<input type="hidden" name="REQUEST_TOKEN" value="'.$e($this->token).'">'
 <?php foreach($run['warnings'] as $warning): ?><p class="tl_info"><?= $e($warning) ?></p><?php endforeach ?></section>
 <form method="post" data-turbo="false"><?= $token ?><input type="hidden" name="ai_action" value="retire">
 <?php foreach($run['auditResults'] as $key=>$result): ?>
-<details class="sai-entity"><summary><strong><?= $e($result['title']) ?></strong> · <?= count($result['nodes']) ?> <?= $e($l['auditNodes']) ?></summary>
+<details class="sai-entity"><summary><strong><?= $e($result['title']) ?></strong> <small><?= $e($result['language']??'') ?></small> · <?= count($result['nodes']) ?> <?= $e($l['auditNodes']) ?></summary>
 <p><a href="<?= $e($result['url']) ?>" target="_blank" rel="noopener"><?= $e($result['url']) ?></a></p>
 <?php foreach($result['errors'] as $error): ?><p class="tl_error"><?= $e($error) ?></p><?php endforeach ?>
 <?php foreach($result['nodes'] as $node): ?><div class="sai-proposal"><strong><?= $e($node['label']) ?></strong><p><?= $e($node['managed']?$l['auditManaged']:$l['auditAdditional']) ?></p><code><?= $e($node['id']) ?></code><details><summary><?= $e($l['auditData']) ?></summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere"><?= $e(json_encode($node['data'],JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)) ?></pre><?php if(!$node['managed']&&$node['replacementData']): ?><pre style="white-space:pre-wrap;overflow-wrap:anywhere"><?= $e(json_encode($node['replacementData'],JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)) ?></pre><?php endif ?></details>
 <?php if(!$node['managed']&&$node['replacement']): ?><p><?= $e($l['auditReplacement']) ?> <code><?= $e($node['replacement']) ?></code></p><p><?= $e($node['differences']?implode(', ',$node['differences']):$l['auditCovered']) ?></p><?php endif ?></div><?php endforeach ?>
 <?php if(!$result['elements']): ?><p><?= $e($l['auditUnmapped']) ?></p><?php endif ?>
-<?php foreach($result['elements'] as $item): ?><div class="sai-proposal"><strong><?= $e($l['auditElement']) ?> #<?= (int)$item['id'] ?></strong> <a href="?do=article&amp;table=tl_content&amp;act=edit&amp;id=<?= (int)$item['id'] ?>"><?= $e($l['auditEdit']) ?></a>
+<?php foreach($result['elements'] as $item): ?><div class="sai-proposal"><strong><?= $e($l['auditElement']) ?> #<?= (int)$item['id'] ?></strong> <a href="?do=<?= $e($item['module']??'article') ?>&amp;table=tl_content&amp;act=edit&amp;id=<?= (int)$item['id'] ?>"><?= $e($l['auditEdit']) ?></a>
 <?php foreach($item['reasons'] as $reason): ?><p><?= $e($reason) ?></p><?php endforeach ?>
 <?php if($item['status']==='disabled'): ?><p><?= $e($l['auditDisabled']) ?></p><?php elseif($item['ready']&&$run['status']==='complete'): ?><label><input type="checkbox" name="retire[]" value="<?= $e($key.'|'.$item['id']) ?>"> <?= $e($l['auditSelect']) ?></label><?php endif ?></div><?php endforeach ?>
 </details><?php endforeach ?>
