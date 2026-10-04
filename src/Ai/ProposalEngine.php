@@ -19,6 +19,7 @@ final class ProposalEngine
                 continue;
             }
             $records[$key]=array_intersect_key($row,array_flip($keep));
+            if(isset($records[$key]['registrationIdentifiers']))$records[$key]['registrationIdentifiers']=StringUtil::deserialize($records[$key]['registrationIdentifiers'],true);
             foreach (array_keys(FieldPolicy::links($table,$type)) as $field) { if (isset($records[$key][$field]) && !in_array($field,['organization','schemaPerson'],true)) { $records[$key][$field]=StringUtil::deserialize($records[$key][$field],true); } }
         }
         // Omit inactive relation targets from the prompt, but retain original DB
@@ -222,6 +223,7 @@ final class ProposalEngine
                             $value=$related;
                         } else { $value=serialize(array_values(array_unique(array_merge(array_map('intval',StringUtil::deserialize($current[$field] ?? null,true)),[$related])))); }
                     }
+                    if($field==='registrationIdentifiers')$value=serialize(json_decode($value,true,64,JSON_THROW_ON_ERROR));
                     $this->db->update($table,[$field=>$value,'tstamp'=>time()],['id'=>$id]);
                 }
             }

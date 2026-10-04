@@ -43,6 +43,13 @@ try {
  $source=['id'=>'page:'.$page->id,'title'=>'AI test','text'=>'Test company provides reliable technical support.','hash'=>'fixture','language'=>$page->language];
  $run=['mode'=>'discover','root'=>(int)$page->rootId,'origin'=>'https://example.org','inventory'=>['records'=>[],'pages'=>[$page->id=>$row]],'mapped'=>[],'proposals'=>[],'decisions'=>[]];
  $proposal=static fn($action,$target,$field,$value)=>['action'=>$action,'target'=>$target,'field'=>$field,'value'=>$value,'source'=>$source['id'],'quote'=>$source['text'],'reason'=>'Test evidence'];
+ $factsRun=$run;
+ $registers='[{"key":"Commercial Register Estonia","value":"17334484"}]';
+ $engine->ingest($factsRun,[$proposal('create','new:facts','Organization','Company facts '.bin2hex(random_bytes(6))),$proposal('set','new:facts','registrationIdentifiers',$registers),$proposal('set','new:facts','areaServedWorldwide','1'),$proposal('set','new:facts','award','Award 2026')],[$source['id']=>$source]);
+ $check(array_column($factsRun['proposals'],'status')===['pending','pending','pending','pending'],'Company fact proposals accepted');
+ $engine->apply($factsRun,[0,1,2,3],$user);$factsId=$factsRun['mapped']['new:facts'];
+ $factsRow=$db->fetchAssociative('SELECT * FROM tl_schema_entity WHERE id=?',[$factsId]);
+ $check(Contao\StringUtil::deserialize($factsRow['registrationIdentifiers'],true)===json_decode($registers,true)&&$factsRow['areaServedWorldwide']==='1'&&$factsRow['award']==='Award 2026'&&$factsRow['taxID']==='','Company facts saved in correct native fields');
  $name='AI fixture '.bin2hex(random_bytes(6));
  $engine->ingest($run,[$proposal('create','new:test','Service',$name),$proposal('home','new:test','page','page:'.$page->id),$proposal('set','new:test@page:'.$page->id,'description','Reliable technical support.')],[$source['id']=>$source]);
  $check(count($run['proposals'])===3 && array_column($run['proposals'],'status')===['pending','pending','pending'],'Evidence and dependent fields validate');

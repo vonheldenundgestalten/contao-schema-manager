@@ -32,6 +32,9 @@ try {
  $audit=new class($db,$inventory) extends VHUG\SchemaManagerBundle\Ai\SchemaAudit {public string $html='';public function fetch(string $url):string{return $this->html;}};
  $policy=new VHUG\SchemaManagerBundle\Ai\FieldPolicy(new VHUG\SchemaManagerBundle\EventListener\BusinessDetailsListener($db),new VHUG\SchemaManagerBundle\EventListener\DataContainerListener($db),new VHUG\SchemaManagerBundle\EventListener\EntityDetailsListener($db));
  $importer=new VHUG\SchemaManagerBundle\Ai\SchemaImport($db,$audit,$policy,$inventory);
+ [$shared,$localized,$retained]=$importer->fields('Organization',['@type'=>'Organization','name'=>'Register fixture','areaServed'=>['@type'=>'AdministrativeArea','name'=>'Worldwide'],'identifier'=>['@type'=>'PropertyValue','name'=>'Commercial Register Estonia','value'=>'17334484'],'award'=>['Award 2026']]);
+ $check($shared['areaServedWorldwide']==='1'&&$shared['award']==='Award 2026'&&!isset($shared['taxID'],$localized['award'],$retained['identifier'],$retained['areaServed']),'Legacy company facts map into their proper shared fields');
+ $check(Contao\StringUtil::deserialize($shared['registrationIdentifiers'],true)===[['key'=>'Commercial Register Estonia','value'=>'17334484']],'Registration becomes editable register pair');
  $run=['stage'=>'import','status'=>'complete','root'=>2,'origin'=>'https://example.org','inventory'=>$data,'importSources'=>[]];
  $suffix=bin2hex(random_bytes(6));$markup=fn($n)=>'<script type="application/ld+json">'.json_encode($n).'</script>';
  foreach([$first,$second] as $source){

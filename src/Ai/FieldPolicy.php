@@ -12,7 +12,8 @@ final class FieldPolicy
         $org=in_array($type,['Organization','LocalBusiness'],true);
         if ($table==='tl_schema_entity') {
             $fields=['name','sameAs'];
-            if ($org) { $fields=array_merge($fields,['legalName','alternateName','foundingDate','vatID','taxID','telephone','email','faxNumber','streetAddress','postalCode','addressLocality','addressRegion','addressCountry','postOfficeBoxNumber','numberOfEmployees','externalUrl']); }
+            if ($org) { $fields=array_merge($fields,['award','registrationIdentifiers','legalName','alternateName','foundingDate','vatID','taxID','telephone','email','faxNumber','streetAddress','postalCode','addressLocality','addressRegion','addressCountry','postOfficeBoxNumber','numberOfEmployees','externalUrl']); }
+            if ($org || $type==='Service') { $fields[]='areaServedWorldwide'; }
             if ($type==='Person') { $fields=array_merge($fields,['telephone','email']); }
             if ($type==='LocalBusiness') { $fields=array_merge($fields,['latitude','longitude','hasMap','openingHours','priceRange']); }
             if ($type==='Product') { $fields=array_merge($fields,['sku','mpn','brand']); }
@@ -21,7 +22,7 @@ final class FieldPolicy
         }
         if ($table==='tl_schema_translation') { return match($type) {
             'Person'=>['description','jobTitle','knowsAbout','credentials','award'],
-            'Organization','LocalBusiness'=>['description','slogan','knowsAbout','award','catalogName'],
+            'Organization','LocalBusiness'=>['description','slogan','knowsAbout','catalogName'],
             'Service'=>['name','description','serviceType','audienceType','catalogName','offerDescription'],
             'Product'=>['name','description','offerDescription'],default=>['name','description'],
         }; }
@@ -47,6 +48,16 @@ final class FieldPolicy
     {
         if (!in_array($field,self::fields($table,$type),true)) { throw new \InvalidArgumentException('Unsupported field.'); }
         $value=trim($value);
+        if($field==='areaServedWorldwide') {
+            if(!in_array($value,['','0','1'],true))throw new \InvalidArgumentException('Use 1 for evidenced worldwide coverage, or 0 to disable.');
+            return $value==='1'?'1':'';
+        }
+        if($field==='registrationIdentifiers') {
+            $rows=json_decode($value,true);
+            if(strlen($value)>12000||!is_array($rows)||!array_is_list($rows)||count($rows)>20)throw new \InvalidArgumentException('Use a JSON list of register key/value pairs.');
+            $nodes=\VHUG\SchemaManagerBundle\Schema\BusinessFacts::registrations($rows);
+            return json_encode(array_map(static fn($node)=>['key'=>$node['name'],'value'=>$node['value']],$nodes),JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+        }
         if($field==='schemaPublisher'){
             if(!ctype_digit($value))throw new \InvalidArgumentException('Choose an organization.');
             return $value;
