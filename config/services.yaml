@@ -7,3 +7,5 @@ services:
         exclude: ../src/{ContaoManager,Model,SchemaManagerBundle.php}
     VHUG\SchemaManagerBundle\Backend\RelationshipMapModule:
         public: true
+    VHUG\SchemaManagerBundle\Backend\AiHelperModule:
+        public: true

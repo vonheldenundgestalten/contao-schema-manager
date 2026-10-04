@@ -65,6 +65,22 @@ composer require vonheldenundgestalten/contao-schema-manager:^1.1
 
 The Git tag supplies the package version; there is no separate Packagist publication assumed here. If the repository requires authentication, configure Composer's normal GitHub access separately.
 
+### Development preview: optional AI helper
+
+The `codex/feature-schema-ai` branch includes the optional AI helper currently being tested. After registering the GitHub repository above, install this branch with:
+
+```sh
+composer require "vonheldenundgestalten/contao-schema-manager:dev-codex/feature-schema-ai"
+```
+
+Complete the cache, database and asset setup below. As an administrator, open **Structured data → AI helper** and save a dedicated OpenAI key, or configure `SCHEMA_AI_API_KEY` in the application's `.env.local`. Installing the package does not copy entities or configuration from another site.
+
+Prepare a website/language inventory, then explicitly start analysis. Review grouped proposals before applying them; new entities and localized page assignments remain unpublished. Feedback can produce a separate revised review while preserving the original. Analysis and feedback send public source text and schema context to OpenAI and incur API usage. No API call is needed for ordinary schema management.
+
+This is a development preview: it is currently administrator-only, scans one language root per run, and does not automatically create or pair every language translation. Some schema fields and software-specific relationships are not yet supported. For a complete first scan, uncheck **Only new or changed content**. See [the AI implementation plan and pilot limitations](docs/schema-ai-plan.md).
+
+Run `python3 tests/ai-browser.py` with Playwright/Chromium for offline batch UI regressions. Run `tests/ai-integration.php` from an installed Contao application root for mocked-provider/database checks; fixture writes roll back. These tests make no paid API calls.
+
 ### Option B: develop with a local package folder
 
 This is the setup used by the pilot. Put a checkout or copy of this repository at:

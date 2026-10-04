@@ -95,3 +95,5 @@ $GLOBALS['TL_DCA']['tl_schema_entity']['fields']['knowledgeTopics'] = [
 foreach (['Person', 'Organization', 'LocalBusiness'] as $type) {
     $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace(';{links_legend}', ',knowledgeTopics;{links_legend}', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
 }
+
+$GLOBALS['TL_DCA']['tl_schema_entity']['list']['global_operations']['ai'] = ['href'=>'key=ai','primary'=>true,'icon'=>'search.svg','attributes'=>'data-turbo="false"'];

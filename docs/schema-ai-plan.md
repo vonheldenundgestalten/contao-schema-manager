@@ -154,7 +154,7 @@ Existing data is not silently replaced. No automatic publication, entity deletio
 2. **New entity drafts**: review cards, explicit candidate matching, localized homes, dependency-aware unpublished creation, permissions and versions.
 3. **Improvement review**: checkbox groups, before/after comparisons, rejection memory, stale-change detection and transactional application of facts/relationships.
 4. **Operational readiness**: background-job recovery, credential controls, usage reporting, retention, documentation and provider failure tests.
-5. **Optional later work**: contextual explanation/refinement chat and proposed-edge graph preview. No general autonomous website-management agent.
+5. **Review refinement (implemented on the AI feature branch)**: contextual feedback with a plain-language reply and a separate revised review. Originals remain available. Proposed-edge graph preview remains future work. No general autonomous website-management agent.
 
 Release gates:
 
@@ -182,3 +182,18 @@ Deployment region; package boundary (optional module in this repository first ve
 - [OpenAI production practices](https://developers.openai.com/api/docs/guides/production-best-practices): server-side credential management and production usage planning.
 
 Provider behavior, GPT-6.1 Sol availability and pricing must be rechecked at implementation time; do not silently substitute a different model. The workflow and storage decisions above are proposed extension design, not existing functionality.
+
+
+## Pilot feedback and editorial quality (2026-10-04)
+
+The first 16-source discovery run proposed too many entities from headings and brief mentions. Prefer the existing broad offering unless a separate service has clear editorial meaning. A case-study mention is not sufficient proof of a currently marketed product or service. Each creation should explain its benefit, supported relationships and remaining uncertainty; entity count is not a success metric.
+
+Review groups start collapsed with a type/name summary. Select all suggestions selects every pending proposal, including replacements; applying still requires the explicit apply button. Dependent draft/home creation steps are selected with their fields. No analysis applies changes automatically.
+
+The feedback conversation sends saved public sources, schema context, prior pending proposals and the editor's feedback to the fixed provider. It returns an explanation and a complete replacement proposal set in a separate analysis. Sources are not fetched again during refinement. The original review is preserved; apply only the preferred version. Unsaved text edits and selections are not part of feedback. Refinement is available after completion and before any proposals have been applied; otherwise start a fresh analysis. Provider errors pause the new review for manual retry. Usage belongs to each review separately. Feedback history is limited to the latest ten messages and normal context-size limits still apply.
+
+Discovery can propose page/news links to its new entities, subject to the same field and evidence validation. Other changes to existing records remain the improvement workflow's responsibility.
+
+Remaining modelling gaps are explained rather than filled with substitute relations. In particular, Product.organization currently maps to an offer seller, not software authorship or compatibility. SoftwareApplication/softwareRequirements is not yet exposed by the AI allowlist. A platform requirement can ultimately be text or a URL; a managed platform entity is optional. An external client may be the subject of a case study through about, but this is not an explicit customer relationship. Do not misuse parentOrganization, memberOf or customer to manufacture that relation.
+
+Validation: mocked provider integration covers separate refinement runs, preserved originals, explanation/usage, and refusal to refine applied reviews. Browser checks intercept refinement POSTs and cover collapsed summaries, full selection, dependency selection and review navigation. No additional paid API request was made for these checks; real refinement quality still needs pilot testing.

@@ -1,0 +1,150 @@
+<?php
+$e=static fn($value)=>htmlspecialchars((string)$value,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+$l=$this->l;$run=$this->run;
+$token='<input type="hidden" name="REQUEST_TOKEN" value="'.$e($this->token).'">';
+$name=static function($key)use($run){
+    if(str_contains($key,'@')){[$parent,$page]=explode('@',$key,2);$key=$parent;$suffix=' · '.($run['inventory']['pages'][(int)$page]['title'] ?? $page);}else{$suffix='';}
+    $r=$run['inventory']['records'][$key] ?? [];
+    if(str_starts_with($key,'translation:')){$parent=$run['inventory']['records']['entity:'.$r['pid']] ?? [];$r['name']=$parent['name'] ?? $key;}
+    foreach($run['proposals'] ?? [] as $p){if($p['action']==='create' && $p['target']===$key){return $p['value'].$suffix;}}
+    return ($r['name'] ?? $r['headline'] ?? $r['title'] ?? $key).$suffix;
+};
+$fieldLabel=static function($p)use($l){
+    if($p['action']==='create')return $p['field'];
+    if($p['action']==='home')return $l['home'];
+    $table=str_contains($p['target'],'@')||str_starts_with($p['target'],'translation:')?'tl_schema_translation':(str_starts_with($p['target'],'news:')?'tl_news':(str_starts_with($p['target'],'page:')?'tl_page':'tl_schema_entity'));
+    return $GLOBALS['TL_LANG'][$table][$p['field']][0] ?? $p['field'];
+};
+$display=static function($value,$p)use($name,$run){
+    if($p['action']==='home'){return $run['inventory']['pages'][(int)$value]['title'] ?? $value;}
+    if($p['action']==='add'){
+        if(is_string($value) && preg_match('/^(?:entity:|new:)/',$value))return $name($value);
+        $values=\Contao\StringUtil::deserialize($value,true);return implode(', ',array_map(static fn($id)=>$name('entity:'.$id),$values));
+    }
+    return is_array($value)?json_encode($value):($value ?: '—');
+};
+$renderKey=function()use($e,$l,$token):void { ?>
+<section><h3><?= $e($l['keyTitle']) ?></h3><p><?= $e($l[$this->hasKey?'keyPresent':'keyMissing']) ?> · <?= $e($this->model) ?></p>
+<details <?= $this->hasKey?'':'open' ?>><summary><?= $e($l[$this->hasKey?'replaceKey':'saveKey']) ?></summary>
+<form method="post" data-turbo="false" autocomplete="off"><?= $token ?><input type="hidden" name="ai_action" value="key">
+<label><?= $e($l['keyTitle']) ?><input type="password" name="api_key" autocomplete="new-password" required maxlength="515" placeholder="sk-…"></label>
+<p><?= $e($l['keyHelp']) ?></p><button class="tl_submit"><?= $e($l['saveKey']) ?></button></form></details></section>
+<?php };
+?>
+<div class="sai" data-schema-ai>
+<header><h2><?= $e($l['title']) ?></h2><a href="?do=schema_manager"><?= $e($l['back']) ?></a></header>
+<p><?= $e($l['intro']) ?></p>
+<?php if($this->error): ?><p class="tl_error" role="alert"><?= $e($this->error) ?></p><?php endif ?>
+<?php if($this->message): ?><p class="tl_confirm" role="status"><?= $e($this->message) ?></p><?php endif ?>
+<?php if(!$this->hasKey) { $renderKey(); } ?>
+<?php if(!$this->installed): ?><p class="tl_info"><?= $e($l['migrate']) ?></p><?php endif ?>
+<?php if($this->hasKey && $this->installed && !$run): ?>
+<section><h3><?= $e($l['startTitle']) ?></h3><form method="post" data-turbo="false"><?= $token ?><input type="hidden" name="ai_action" value="start">
+<div class="sai-fields"><label><?= $e($l['root']) ?><select name="root" required><?php foreach($this->roots as $root=>$title): ?><option value="<?= (int)$root ?>"><?= $e($title) ?> (#<?= (int)$root ?>)</option><?php endforeach ?></select></label>
+<label><?= $e($l['origin']) ?><input name="origin" type="url" required value="<?= $e($this->origin) ?>" placeholder="https://www.example.org"></label></div><p><?= $e($l['originHelp']) ?></p>
+<label><input type="radio" name="mode" value="discover" checked> <?= $e($l['discover']) ?></label>
+<label><input type="radio" name="mode" value="improve"> <?= $e($l['improve']) ?></label>
+<label><input type="checkbox" name="changed" value="1" checked> <?= $e($l['changed']) ?></label>
+<p><?= $e($l['coverage']) ?></p><p><?= $e($l['noAutomatic']) ?></p><button class="tl_submit"><?= $e($l['prepare']) ?></button></form></section>
+<?php endif ?>
+<?php if($run): ?>
+<section class="sai-run-summary"><h3><?= $e($l['run']) ?> #<?= (int)$this->runId ?></h3>
+<p><?= $e($l['status']) ?>: <?= $e($l[$run['status']] ?? $run['status']) ?> · <?= count($run['inventory']['sources']) ?> <?= $e($l['sources']) ?> · <?= count($run['queue']) ?> <?= $e($l['remaining']) ?></p>
+<?php if($run['queue'] && $this->hasKey): ?><form method="post" data-sai-run data-total="<?= count($run['inventory']['sources']) ?>" data-remaining="<?= count($run['queue']) ?>" data-turbo="false"><?= $token ?><input type="hidden" name="ai_action" value="step"><p><?= $e($l['disclosure']) ?></p><p role="status" data-sai-loading><?= $e($l['controlsLoading']) ?></p><button type="button" class="tl_submit" disabled data-sai-start><?= $e($l['continue']) ?></button> <button type="button" class="tl_submit" data-sai-stop hidden><?= $e($l['stop']) ?></button><p role="status" data-sai-progress data-label="<?= $e($l['progress']) ?>"></p></form><?php endif ?>
+<details><summary><?= $e($l['analysisDetails']) ?></summary><p><?= $e($l['usage']) ?>: <?= (int)$run['usage']['input_tokens'] ?> <?= $e($l['input']) ?> / <?= (int)$run['usage']['output_tokens'] ?> <?= $e($l['output']) ?>.<br><?= $e($l['cost']) ?>: $<?= number_format(($run['usage']['input_tokens']*2+$run['usage']['output_tokens']*10)/1000000,4) ?></p>
+<?php foreach($run['warnings'] as $warning): ?><p class="tl_info"><?= $e($warning) ?></p><?php endforeach ?>
+
+<details><summary><?= $e($l['sources']) ?></summary><ul><?php foreach($run['inventory']['sources'] as $source): ?><li><strong><?= $e($source['title']) ?></strong> · <?= $e($source['language']) ?> · <?= $e($source['id']) ?><details><summary><?= $e($l['evidence']) ?></summary><p><?= $e($source['coverage']) ?></p><p><?= $e($source['text']) ?></p></details></li><?php endforeach ?></ul></details>
+</details></section>
+<section class="sai-review-section"><h3><?= $e($l['review']) ?></h3><p><?= $e($l['selectHelp']) ?></p>
+<?php if(!$run['proposals']): ?><p><?= $e($l['empty']) ?></p><?php else: ?>
+<form method="post" data-sai-review data-turbo="false"><?= $token ?>
+<?php
+$groups=[];$creations=[];$homes=[];
+foreach($run['proposals'] as $i=>$p){
+ if($p['status']==='pending' && $p['action']==='create')$creations[$p['target']]=$i;
+ if($p['status']==='pending' && $p['action']==='home')$homes[$p['target'].'@'.$p['value']]=$i;
+ $key=explode('@',$p['target'],2)[0];
+ if(str_starts_with($key,'translation:'))$key='entity:'.($run['inventory']['records'][$key]['pid'] ?? $key);
+ $groups[$key][$i]=$p;
+}
+$pending=count(array_filter($run['proposals'],static fn($p)=>$p['status']==='pending'));
+?>
+<div class="sai-review-toolbar">
+<strong role="status" data-sai-count data-label="<?= $e($l['selectedCount']) ?>">0 <?= $e($l['selectedCount']) ?></strong>
+<div class="sai-actions"><button class="tl_submit sai-primary" name="ai_action" value="apply"><?= $e($l['apply']) ?></button><button class="tl_submit" name="ai_action" value="reject"><?= $e($l['reject']) ?></button></div>
+</div>
+<p class="sai-review-help"><?= $e($l['applyHelp']) ?></p>
+<div class="sai-actions sai-selection"><button type="button" class="tl_submit" data-sai-all><?= $e($l['selectAll']) ?></button><button type="button" class="tl_submit" data-sai-clear><?= $e($l['clear']) ?></button></div>
+<?php foreach($groups as $groupKey=>$items):
+$groupPending=count(array_filter($items,static fn($p)=>$p['status']==='pending'));
+$groupRecord=$run['inventory']['records'][$groupKey] ?? [];
+$groupType=match(strstr($groupKey,':',true)) {
+ 'news'=>$groupRecord['_mode'] ?? 'Article',
+ 'page'=>($groupRecord['schemaPageType'] ?? '') ?: 'WebPage',
+ default=>$groupRecord['entityType'] ?? 'Thing',
+};
+$groupTitle=$l['updateGroup'].' '.$groupType.' “'.$name($groupKey).'”';
+foreach($items as $item){if($item['action']==='create'){$groupTitle=$l['newGroup'].' '.$item['field'].' “'.$item['value'].'”';break;}}
+?>
+<details class="sai-entity"><summary><span class="sai-entity-name"><?= $e($groupTitle) ?></span><span class="sai-badge"><?= $groupPending ?> <?= $e($l['toReview']) ?></span></summary>
+<?php if(!empty($run['reviewNotes'][$groupKey])): ?><p class="sai-editor-note"><strong><?= $e($l['editorReview']) ?>:</strong> <?= $e($run['reviewNotes'][$groupKey]) ?></p><?php endif ?>
+<?php foreach($items as $i=>$p):
+$source=$run['inventory']['sources'][$p['source']] ?? [];
+$deps=[];$parent=explode('@',$p['target'],2)[0];
+if($p['action']!=='create' && isset($creations[$parent]))$deps[]=$creations[$parent];
+if($p['action']==='set' && isset($homes[$p['target']]))$deps[]=$homes[$p['target']];
+if($p['action']==='add' && isset($creations[$p['value']]))$deps[]=$creations[$p['value']];
+$help='';
+if($p['action']==='add'){$helpTable=str_starts_with($p['target'],'news:')?'tl_news':(str_starts_with($p['target'],'page:')?'tl_page':'tl_schema_entity');$help=$GLOBALS['TL_LANG'][$helpTable][$p['field']][1] ?? '';}
+$actionLabel=$p['action']==='create'?$l['createAction']:($p['action']==='home'?$l['homeAction']:($p['action']==='add'?$l['linkAction']:(empty($p['old'])?$l['fillAction']:$l['replaceAction'])));
+?>
+<article class="sai-proposal <?= $p['status']==='pending'?'':'sai-inactive' ?>">
+<div class="sai-proposal-heading">
+<?php if($p['status']==='pending'): ?><input id="sai-p-<?= (int)$i ?>" type="checkbox" name="selected[]" value="<?= (int)$i ?>" data-depends="<?= $e(json_encode($deps)) ?>" data-bulk="1" aria-label="<?= $e($name($p['target']).': '.$actionLabel.' '.$fieldLabel($p)) ?>"><?php endif ?>
+<div><span class="sai-action-label"><?= $e($actionLabel) ?></span><h4><?php if($p['status']==='pending'): ?><label for="sai-p-<?= (int)$i ?>"><?= $e($fieldLabel($p)) ?></label><?php else: ?><?= $e($fieldLabel($p)) ?> <small><?= $e($l[$p['status']==='applied'?'appliedState':($p['status']==='rejected'?'rejectedState':$p['status'])] ?? $p['status']) ?></small><?php endif ?></h4></div>
+</div>
+<div class="sai-proposal-body">
+<?php if($help): ?><p class="sai-hint"><?= $e($help) ?></p><?php endif ?>
+<?php if($p['old']!=='' && $p['old']!==null): ?><div class="sai-old"><strong><?= $e($l['current']) ?></strong><div><?= nl2br($e($display($p['old'],$p))) ?></div></div><?php endif ?>
+<div class="sai-proposed"><strong><?= $e($l['proposed']) ?></strong><div data-sai-value="<?= (int)$i ?>"><?= nl2br($e($display($p['value'],$p))) ?></div></div>
+<?php if($p['action']==='create'): ?><p class="sai-hint"><?= $e($l['draftHint']) ?></p><?php elseif($p['action']==='home'): ?><p class="sai-hint"><?= $e($l['homeHint']) ?></p><?php endif ?>
+<p><strong><?= $e($l['reason']) ?>:</strong> <?= $e($p['reason']) ?></p>
+<details><summary><?= $e($l['evidence'].': '.($source['title'] ?? $p['source'])) ?></summary><blockquote><?= $e($p['quote']) ?></blockquote><p><?= $e($source['url'] ?? '') ?></p></details>
+<?php if($p['status']==='pending' && $p['action']==='set'): ?><details><summary><?= $e($l['editSuggestion']) ?></summary><label><?= $e($l['proposed']) ?><textarea name="value[<?= (int)$i ?>]" data-sai-edit="<?= (int)$i ?>"><?= $e($p['value']) ?></textarea></label></details><?php endif ?>
+<?php if($p['error']): ?><p class="tl_error"><?= $e($p['error']) ?></p><?php endif ?>
+</div></article>
+<?php endforeach ?></details>
+<?php endforeach ?>
+</form>
+<?php endif ?></section>
+<?php endif ?>
+<?php if($run): ?>
+<section class="sai-feedback"><h3><?= $e($l['feedbackTitle']) ?></h3>
+<?php if(isset($run['refinementOf'])): ?><p><?= $e($l['alternativeReview']) ?> <a href="?do=schema_manager&amp;key=ai&amp;run=<?= (int)$run['refinementOf'] ?>"><?= $e($l['originalReview']) ?> #<?= (int)$run['refinementOf'] ?></a></p><?php endif ?>
+<?php if(!empty($run['conversation'])): ?><details><summary><?= $e($l['conversation']) ?></summary><?php foreach($run['conversation'] as $turn): ?><div class="sai-chat-turn"><strong><?= $e($l[$turn['role']==='user'?'you':'assistant']) ?></strong><p><?= nl2br($e($turn['text'])) ?></p></div><?php endforeach ?></details><?php endif ?>
+<?php if(!empty($run['explanation'])): ?><div class="sai-chat-turn"><strong><?= $e($l['assistant']) ?></strong><p><?= nl2br($e($run['explanation'])) ?></p></div><?php endif ?>
+<?php $hasApplied=(bool)array_filter($run['proposals'],static fn($p)=>$p['status']==='applied'); ?>
+<?php if($this->hasKey && $run['status']==='complete' && !$hasApplied): ?>
+<p><?= $e($l['feedbackHelp']) ?></p>
+<form method="post" data-sai-feedback data-turbo="false"><?= $token ?><input type="hidden" name="ai_action" value="refine">
+<label><?= $e($l['feedbackLabel']) ?><textarea name="feedback" required maxlength="4000" placeholder="<?= $e($l['feedbackExample']) ?>"></textarea></label>
+<p class="sai-hint"><?= $e($l['feedbackDisclosure']) ?></p><button class="tl_submit" type="submit"><?= $e($l['feedbackSend']) ?></button><p role="status" data-sai-feedback-status data-label="<?= $e($l['feedbackWorking']) ?>"></p>
+</form>
+<?php elseif($hasApplied): ?><p><?= $e($l['feedbackApplied']) ?></p><?php else: ?><p><?= $e($l['feedbackWait']) ?></p><?php endif ?>
+</section>
+<?php endif ?>
+<?php if($this->recent): ?>
+<section class="sai-recent"><h3><?= $e($l['recent']) ?></h3>
+<ul class="sai-recent-list">
+<?php foreach($this->recent as $item): $isCurrent=(int)$item['id']===(int)$this->runId; ?>
+<li><a class="sai-recent-link" href="?do=schema_manager&amp;key=ai&amp;run=<?= (int)$item['id'] ?>" <?= $isCurrent?'aria-current="page"':'' ?>>
+<span class="sai-recent-name"><strong><?= $e($l['run']) ?> #<?= (int)$item['id'] ?></strong><span><?= $e($this->roots[$item['root']] ?? '') ?></span></span>
+<span class="sai-recent-date"><span><?= $e($l['lastUpdated']) ?></span><time datetime="<?= $e(date('c',(int)$item['tstamp'])) ?>"><?= $e(date('Y-m-d H:i',(int)$item['tstamp'])) ?></time></span>
+<span class="sai-recent-action"><?= $e($l[$isCurrent?'viewingAnalysis':'openAnalysis']) ?></span>
+</a></li>
+<?php endforeach ?>
+</ul></section>
+<?php endif ?>
+<?php if($this->hasKey) { $renderKey(); } ?>
+</div>
