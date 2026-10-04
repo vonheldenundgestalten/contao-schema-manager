@@ -19,6 +19,14 @@ with sync_playwright() as p:
   page.add_script_tag(path=str(root/'public'/file))
  cy="document.querySelector('[data-schema-graph]').sgInstance"
  assert page.evaluate(cy+'.nodes().length')==5
+ cards=page.evaluate(cy+".nodes().map(n=>decodeURIComponent(n.data('card').split(',').slice(1).join(',')))")
+ from xml.etree import ElementTree
+ for svg in cards:
+  tree=ElementTree.fromstring(svg)
+  assert all(el.tag in ['{http://www.w3.org/2000/svg}svg','{http://www.w3.org/2000/svg}text'] for el in tree.iter())
+ assert '70173 Stuttgart' in ''.join(ElementTree.fromstring(cards[1]).itertext())
+ assert 'font-size="11"' in cards[0] and 'font-size="17"' in cards[0]
+
  assert page.evaluate(cy+".nodes('.isolated').length")==2
  assert page.evaluate(cy+".getElementById('entity-3').style('border-style')")=='dashed'
  page.locator('[data-sg-select]').select_option('entity-2')

@@ -20,12 +20,43 @@
       currentLanguage=saved==='*'||languages.includes(saved)?saved:languages.find(code=>code===backendLanguage||code.split('-')[0]===backendLanguage.split('-')[0])||languages[0]||'*';
       languageControl.value=currentLanguage;
     }
+    // Cytoscape labels have one font per node. A local SVG gives cards a clear
+    // hierarchy without another renderer or DOM overlays to synchronize on zoom.
+    const measure=document.createElement('canvas').getContext('2d');
+    const xml=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[char]));
+    function card(data){
+      const wide=['news','page'].includes(data.kind), width=wide?230:190;
+      const height=wide||data.type==='LocalBusiness'?140:90;
+      function lines(text,size,weight,maxLines){
+        measure.font=`${weight} ${size}px Arial`;
+        const result=[''];
+        for(const char of String(text).replace(/\s+/g,' ').trim()){
+          const i=result.length-1;
+          if(measure.measureText(result[i]+char).width>width-24){
+            if(result.length===maxLines){
+              while(measure.measureText(result[i]+'…').width>width-24)result[i]=result[i].slice(0,-1);
+              result[i]+='…';break;
+            }
+            const space=result[i].lastIndexOf(' ');
+            if(space>0){const tail=result[i].slice(space+1)+char;result[i]=result[i].slice(0,space);result.push(tail.trimStart());}
+            else result.push(char.trimStart());
+          }else result[i]+=char;
+        }
+        return result;
+      }
+      const title=lines(data.name,17,600,wide?4:3);
+      const location=data.type==='LocalBusiness'&&data.detail?lines(data.detail,11,400,2):[];
+      const titleY=location.length?47:Math.max(39,(height+26-title.length*19)/2+14);
+      const text=(line,y,size,weight,color)=>`<text x="${width/2}" y="${y}" text-anchor="middle" font-family="Arial, sans-serif" font-size="${size}" font-weight="${weight}" fill="${color}">${xml(line)}</text>`;
+      const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${text(data.type,19,11,400,'#42566c')}${title.map((line,i)=>text(line,titleY+i*19,17,600,'#14253b')).join('')}${location.map((line,i)=>text(line,height-25+i*13,11,400,'#42566c')).join('')}</svg>`;
+      return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+    }
     function visibleElements(){
       let nodes=elements.nodes.filter(n=>currentLanguage==='*'||(!n.data.language&&(!(n.data.languages||[]).length||n.data.languages.includes(currentLanguage)))||n.data.language===currentLanguage).map(n=>{
         const data={...n.data};
         data.homes=(data.homes||[]).filter(h=>currentLanguage==='*'||h.language===currentLanguage);
         if(currentLanguage!=='*'&&['Service','Product','Event'].includes(data.type))data.name=data.homes.find(h=>h.published&&h.name)?.name||data.name;
-        data.label=`${data.type}\n${data.name.length>65?data.name.slice(0,62)+'…':data.name}${data.detail?'\n'+data.detail:''}`;data.color=colors[data.type]||'#cbd5e1';
+        data.card=card(data);data.color=colors[data.type]||'#cbd5e1';
         return {data};
       });
       const ids=new Set(nodes.map(n=>n.data.id));
@@ -35,7 +66,7 @@
       return {nodes,edges};
     }
     const cy = window.cytoscape({container:q('[data-sg-canvas]'),elements:visibleElements(), minZoom:.12,maxZoom:2.5,wheelSensitivity:.25,
-      style:[{selector:'node',style:{label:'data(label)','background-color':'data(color)',shape:'round-rectangle',width:190,height:90,'text-wrap':'wrap','text-max-width':174,'font-size':17,'line-height':1.35,color:'#14253b','text-valign':'center','border-width':1,'border-color':'#8597aa'}},
+      style:[{selector:'node',style:{label:'','background-image':'data(card)','background-fit':'contain','background-color':'data(color)',shape:'round-rectangle',width:190,height:90,'text-wrap':'wrap','text-max-width':174,'font-size':17,'line-height':1.35,color:'#14253b','text-valign':'center','border-width':1,'border-color':'#8597aa'}},
         {selector:'node[type = "LocalBusiness"]',style:{height:140}},
         {selector:'node[kind = "news"], node[kind = "page"]',style:{width:230,height:140,'text-max-width':212}},
         {selector:'node[!published]',style:{'border-style':'dashed','border-width':2}},
