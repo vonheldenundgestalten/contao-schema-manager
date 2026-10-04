@@ -25,3 +25,23 @@ $GLOBALS['TL_LANG']['schema_graph'] = [
     'homes'=>'Sprachabhängige Hauptseiten',
     'page'=>'Seite',
 ];
+
+$GLOBALS['TL_LANG']['schema_graph']['intro'] = 'Websites, Seiten, Beiträge und verwaltete Entitäten gemeinsam erkunden. Wählen Sie einen Knoten, um seinen Beziehungen zu folgen.';
+
+$GLOBALS['TL_LANG']['schema_graph']['note'] = 'Redaktionelle Ansicht zugänglicher Datensätze, einschließlich Entwürfen. Gestrichelt: unveröffentlicht. Orange: keine Beziehungen. Rot: fehlender Datensatz. Pfeile zeigen die Richtung einer Beziehung. Veröffentlichungs-, Sprach- und Routingregeln gelten weiterhin. Beiträge ohne Leistungsverknüpfung werden separat geprüft: Autor und Herausgeber zählen nicht als Themen.';
+
+$GLOBALS['TL_LANG']['schema_graph']['editNews'] = 'Nachricht bearbeiten';
+
+$GLOBALS['TL_LANG']['schema_graph']['editPage'] = 'Seiteneinstellungen bearbeiten';
+
+$GLOBALS['TL_LANG']['schema_graph']['withoutService'] = 'Beiträge ohne Leistungsverknüpfung';
+
+$GLOBALS['TL_LANG']['schema_graph']['noService'] = 'Keine direkte about/mentions-Verknüpfung zu einer Service-Entität. Prüfen Sie, ob der Beitrag eine Leistung behandelt. Nicht jeder Beitrag benötigt diese Verknüpfung.';
+
+$GLOBALS['TL_LANG']['schema_graph']['missingIdentity'] = 'Noch keine permanente Schema-Identität konfiguriert.';
+
+$GLOBALS['TL_LANG']['schema_graph']['suppressed'] = 'Die Archiveinstellung unterdrückt die Schema-Ausgabe.';
+
+$GLOBALS['TL_LANG']['schema_graph']['expired'] = 'Die Bewerbungsfrist ist abgelaufen; die JobPosting-Ausgabe ist unterdrückt.';
+
+$GLOBALS['TL_LANG']['schema_graph']['unmappedAuthor'] = 'Core-Autor ohne gemeinsame Person-Identität. Verknüpfen Sie den Backend-Autor oder wählen Sie eine Person in der Nachricht.';

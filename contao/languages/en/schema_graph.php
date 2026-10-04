@@ -25,3 +25,23 @@ $GLOBALS['TL_LANG']['schema_graph'] = [
     'homes'=>'Localized homes',
     'page'=>'Page',
 ];
+
+$GLOBALS['TL_LANG']['schema_graph']['intro'] = 'Explore your websites, pages, posts and managed entities together. Select a node to follow its relationships.';
+
+$GLOBALS['TL_LANG']['schema_graph']['note'] = 'Editorial map of accessible saved records, including drafts. Dashed: unpublished. Orange: no relationships. Red: missing record. Arrows show the direction of each relationship. Frontend publication, language and routing rules still apply. Posts without service links is a separate check: author/publisher links do not count as subjects.';
+
+$GLOBALS['TL_LANG']['schema_graph']['editNews'] = 'Edit news item';
+
+$GLOBALS['TL_LANG']['schema_graph']['editPage'] = 'Edit page settings';
+
+$GLOBALS['TL_LANG']['schema_graph']['withoutService'] = 'Posts without service links';
+
+$GLOBALS['TL_LANG']['schema_graph']['noService'] = 'No direct about/mentions link to a Service. Review whether this post covers a service; a link is not required for every post.';
+
+$GLOBALS['TL_LANG']['schema_graph']['missingIdentity'] = 'No permanent schema identity configured yet.';
+
+$GLOBALS['TL_LANG']['schema_graph']['suppressed'] = 'Schema output is suppressed by the archive setting.';
+
+$GLOBALS['TL_LANG']['schema_graph']['expired'] = 'The job deadline has passed; JobPosting output is suppressed.';
+
+$GLOBALS['TL_LANG']['schema_graph']['unmappedAuthor'] = 'Core author without a shared Person identity. Link the backend author or select a Person in the News item to connect this author to managed people.';

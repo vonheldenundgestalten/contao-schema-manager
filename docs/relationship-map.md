@@ -1,6 +1,6 @@
 # Entity relationship map (feature branch)
 
-Branch: `codex/feature-relationship-graph`. No release tag. No database changes or changes to frontend schema output.
+Branch: `codex/feature-relationship-graph`. No release tag. Adds two optional News fields (`schemaAbout`, `schemaMentions`). Apply the normal Contao database update on this branch. Existing content/output is unchanged until editors select subjects or mentions.
 
 ## Library choice
 
@@ -11,6 +11,9 @@ The exact releases, MIT licenses and SHA-256 hashes are in `public/vendor/*/READ
 ## What it shows
 
 - Every saved managed Organization, LocalBusiness, Person, Service, Product and Event, including unpublished records.
+- Accessible Contao WebSite roots and WebPage records, their chosen page subtypes, localized main entities, about references, publishers and isPartOf links. Shared translated website roots resolve to one WebSite node.
+- Every accessible News record: BlogPosting/Article/NewsArticle or JobPosting according to archive settings; suppressed records are labelled explicitly. Author overrides, backend-user Person mappings, publisher/employer, translationOfWork, about and mentions connect them to the graph. A native core author without a shared identity remains a distinct Person node with a warning.
+- Separate reader WebPage nodes for each managed post URL, connected through mainEntity/mainEntityOfPage and the website. A shared reader record must not collapse different article URLs into one page node.
 - Parent organization, employer, provider, organizer, configured offer seller, memberships, workplaces, explicit/inferred office and subsidiary relationships, and service-catalogue links.
 - Relationships point from the subject to the related entity. Reciprocal parent/location links are intentional; exact duplicates are collapsed.
 - Full name and type, with street and postal locality for LocalBusiness. Entity identity and localized home assignments appear only when selected.
@@ -18,16 +21,33 @@ The exact releases, MIT licenses and SHA-256 hashes are in `public/vendor/*/READ
 
 This is an **editorial map of saved configuration**, not a crawler or a claim that every configured edge is currently published. For example `offers.seller` is the configured seller; an actual offer also requires a valid translated offer/home. Catalogue entries, drafts and language-specific data remain subject to the existing frontend output rules. Use the saved output preview and actual page JSON-LD to verify publication.
 
-Page assignments are detail metadata rather than edges, so sharing a homepage cannot conceal a missing business connection. The map does not yet expand News-generated Article/JobPosting nodes, WebPage/WebSite nodes, inline Offer/ContactPoint/ImageObject/value objects or arbitrary JSON-LD added by other bundles. Those can be added as separate layers later without overwhelming the business-entity overview. It does not infer links from matching names or sameAs URLs.
+Page assignments now form real mainEntity/mainEntityOfPage links. Missing references to managed entities appear as red placeholders. References to inaccessible pages or News records are omitted rather than leaking protected record titles. The graph still does not crawl arbitrary frontend JSON-LD or expand inline ImageObject/Offer/ContactPoint/value objects as separate nodes. It does not infer topic links from titles, matching names or sameAs URLs.
+
+### Blog subjects and service links
+
+In an archive using BlogPosting, Article or NewsArticle, open a News record's **Structured data** section:
+
+- **Main subjects (about)**: entities the article is about, such as a service it explains.
+- **Mentioned entities (mentions)**: entities referenced without being its principal subject.
+
+Both are multi-select pickers for existing entities. They add stable @id references and include published target entities in the actual article JSON-LD, preserving subjects supplied by templates or other graph contributors. Unpublished/deleted targets are omitted from frontend output. Each translated News record has its own selections: choose what its visible content actually covers. Jobs and core/suppressed archive modes do not expose these article fields.
+
+**Posts without service links** highlights article nodes with no direct about/mentions relationship to a Service. Author, publisher, page and website connections do not satisfy this check. It is a review aid, not a requirement that every article promote a service.
+
+![News subject and mention selectors](images/news-subjects.png)
+
+![A post connected to its author, publisher, reader page and selected service](images/post-relationships.png)
+
+The screenshots use an unpublished documentation example; the example is removed after verification.
 
 ## Backend use
 
-Open **Content → Structured data → Entity relationships**. Drag nodes, zoom and pan; select one to label its relationships and see details. The entity selector and relationship buttons provide a keyboard alternative to the canvas. Search highlights matches without deleting other records. **Unconnected entities** highlights nodes with no entity edges. **Fit all** restores the full framing; **Reset view** clears selection and filters.
+Open **Content → Structured data → Entity relationships**. Drag nodes, zoom and pan; select one to label its relationships and see details. Selecting a node zooms into its immediate relationships. Labels stay on selected edges; no all-label toggle was added. The entity selector and relationship buttons provide a keyboard alternative to the canvas. Search highlights matches without deleting other records. **Unconnected entities** highlights nodes with no entity edges. **Fit all** restores the full framing; **Reset view** clears selection and filters.
 
-The feature uses the existing Structured data module permission. Page titles and page URLs are not queried; page access remains controlled by Contao page mounts. The view has no write API. Editing opens the existing entity editor and its normal permission checks.
+The feature uses the existing Structured data module permission. Content sources additionally require the Page/News module and per-record Contao ReadAction authorization, including page mounts and archive access. Native author nodes expose only the name already used by core article markup, not login/email data. The graph view itself has no write API. Editing opens the existing entity editor and its normal permission checks.
 
 ## Verification
 
 Run `composer test` for mapping checks (cycles, directions, inferred/explicit deduplication, disconnected records, missing targets, location labels, empty datasets). With Playwright and Chromium installed, run `python3 tests/browser-relationship-map.py` for offline rendering, search, selection, draft/missing/orphan styling, hostile label handling, mobile width and Turbo lifecycle checks.
 
-Real backend testing on the pilot verifies the list action, local assets, authenticated rendering, entity selection and edit navigation. No entity relationships are changed by these checks.
+Real backend testing on the pilot verifies the list action, local assets, authenticated rendering, entity selection and edit navigation. The temporary unpublished News fixture is removed after browser tests; existing records are not changed. `tests/news.php` also checks real about/mentions output, contribution preservation and unpublished-target suppression. `tests/content-map-source.php` verifies per-record authorization against an installed database. Layout spacing is checked on the full pilot graph.

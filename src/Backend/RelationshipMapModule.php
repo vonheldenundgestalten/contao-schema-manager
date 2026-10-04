@@ -11,7 +11,7 @@ use VHUG\SchemaManagerBundle\Schema\RelationshipMap;
 
 final class RelationshipMapModule
 {
-    public function __construct(private readonly Connection $connection, private readonly RelationshipMap $map) {}
+    public function __construct(private readonly Connection $connection, private readonly RelationshipMap $map, private readonly ContentMapSource $content, private readonly \VHUG\SchemaManagerBundle\Schema\ContentRelationshipMap $contentMap) {}
     public function generate(): string
     {
         $user = BackendUser::getInstance();
@@ -22,15 +22,17 @@ final class RelationshipMapModule
             foreach (['memberOf','workLocation','locations','subservices'] as $field) { $row[$field] = StringUtil::deserialize($row[$field] ?? null, true); }
         }
         unset($row);
-        // Page titles/URLs are not queried here: page mounts remain an independent permission boundary.
-        $homes = $this->connection->fetchAllAssociative('SELECT pid,language,page,published,name FROM tl_schema_translation ORDER BY language,id');
+        // Content source applies Contao page/archive permissions before exposing content nodes.
+        $homes = $this->connection->fetchAllAssociative('SELECT pid,language,page,published,name,isMainEntity FROM tl_schema_translation ORDER BY language,id');
         $GLOBALS['TL_CSS'][] = 'bundles/schemamanager/relationship-map.css';
         $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/schemamanager/vendor/cytoscape/cytoscape.min.js';
         foreach (['layout-base','cose-base','cytoscape-fcose'] as $library) { $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/schemamanager/vendor/'.$library.'/'.$library.'.js'; }
         $GLOBALS['TL_JAVASCRIPT'][] = 'bundles/schemamanager/relationship-map.js';
         $template = new BackendTemplate('be_schema_relationships');
         $template->labels = $GLOBALS['TL_LANG']['schema_graph'];
-        $template->payload = json_encode(['elements'=>$this->map->build($rows,$homes), 'labels'=>$template->labels], JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_THROW_ON_ERROR);
+        $content = $this->content->load($user);
+        $elements = $this->contentMap->extend($this->map->build($rows,$homes), $content['pages'], $content['news'], $homes);
+        $template->payload = json_encode(['elements'=>$elements, 'labels'=>$template->labels], JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_THROW_ON_ERROR);
         return $template->parse();
     }
 }

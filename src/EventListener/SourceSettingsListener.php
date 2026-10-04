@@ -27,7 +27,7 @@ final class SourceSettingsListener
         foreach (array_keys($GLOBALS['TL_DCA']['tl_news']['palettes']) as $palette) {
             if ($palette === '__selector__' || str_contains($GLOBALS['TL_DCA']['tl_news']['palettes'][$palette], 'schemaIdentity')) { continue; }
             PaletteManipulator::create()->addLegend('schema_legend','title_legend',PaletteManipulator::POSITION_AFTER)
-                ->addField($archive['schemaType'] === 'JobPosting' ? array_merge(['schemaJobEmployer', 'schemaJobValidThrough'], array_keys(\VHUG\SchemaManagerBundle\Schema\JobFields::defaults()), ['schemaIdentity']) : ['schemaAuthor','schemaDateModified','schemaIdentity'],'schema_legend',PaletteManipulator::POSITION_APPEND)
+                ->addField($archive['schemaType'] === 'JobPosting' ? array_merge(['schemaJobEmployer', 'schemaJobValidThrough'], array_keys(\VHUG\SchemaManagerBundle\Schema\JobFields::defaults()), ['schemaIdentity']) : ['schemaAuthor','schemaAbout','schemaMentions','schemaDateModified','schemaIdentity'],'schema_legend',PaletteManipulator::POSITION_APPEND)
                 ->applyToPalette($palette,'tl_news');
         }
     }

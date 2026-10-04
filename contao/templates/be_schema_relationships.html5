@@ -7,6 +7,7 @@
     <button type="button" class="tl_submit" data-sg-fit><?= $e($l['fit']) ?></button>
     <button type="button" class="tl_submit" data-sg-reset><?= $e($l['reset']) ?></button>
     <label class="sg-check"><input type="checkbox" data-sg-isolated> <?= $e($l['isolated']) ?></label>
+    <label class="sg-check"><input type="checkbox" data-sg-topics> <?= $e($l['withoutService']) ?></label>
   </div>
   <p data-sg-summary role="status" aria-live="polite"></p>
   <div class="sg-workspace"><div class="sg-canvas" data-sg-canvas role="img" aria-label="<?= $e($l['canvas']) ?>"></div>

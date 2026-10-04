@@ -11,4 +11,4 @@ The feature branches retain their historical baseline and have not been updated 
 
 ## Relationship map preview
 
-`codex/feature-relationship-graph` adds a locally bundled Cytoscape.js/fCoSE view of saved business-entity relationships, including drafts and unconnected records. See [scope and use](relationship-map.md). This branch starts from 1.0.0 plus the README screenshot correction; main and existing release tags remain unchanged.
+`codex/feature-relationship-graph` adds a locally bundled Cytoscape.js/fCoSE view of business entities, websites, pages and News relationships, including drafts and unconnected records. News about/mentions pickers also enrich the frontend output; the map highlights articles without service links. See [scope and use](relationship-map.md). This branch starts from 1.0.0 plus the README screenshot correction; main and existing release tags remain unchanged.

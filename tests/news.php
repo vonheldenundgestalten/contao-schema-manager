@@ -56,7 +56,7 @@ try {
         $context=new Contao\CoreBundle\Routing\ResponseContext\ResponseContext();
         $manager=new Contao\CoreBundle\Routing\ResponseContext\JsonLd\JsonLdManager($context);
         $graph=$manager->getGraphForSchema($manager::SCHEMA_ORG);
-        $graph->set((new Spatie\SchemaOrg\NewsArticle())->setProperty('@id','#/schema/news/'.$id)->setProperty('genre','Preserved value'),'#/schema/news/'.$id);
+        $graph->set((new Spatie\SchemaOrg\NewsArticle())->setProperty('@id','#/schema/news/'.$id)->setProperty('genre','Preserved value')->setProperty('about',['@type'=>'Thing','name'=>'Existing template subject']),'#/schema/news/'.$id);
         $graph->set((new Spatie\SchemaOrg\NewsArticle())->setProperty('@id','https://example.org/#unrelated'),'unrelated');
         $emitted=[];$subjects=$news->apply([$item],'en',$manager,$emitted);
         return [$graph->toArray()['@graph'],$subjects];
@@ -72,6 +72,17 @@ try {
     $check(isset($article['publisher']['@id'],$article['author']['@id']),'Shared publisher and author');
     $check(!isset($article['dateModified']),'Administrative timestamp not claimed as revision');
     $check(count(array_filter($nodes,static fn($n)=>$n['@type']==='NewsArticle'))===1,'Unrelated news node remains');
+
+    $service=(int)$db->fetchOne("SELECT id FROM tl_schema_entity WHERE entityType='Service' AND published='1' LIMIT 1");
+    $serviceIdentity=$db->fetchOne('SELECT entityId FROM tl_schema_entity WHERE id=?',[$service]);
+    $db->insert('tl_schema_entity',['name'=>'Unpublished subject','entityType'=>'Service','identityBase'=>'https://example.org','entityId'=>'https://example.org/#hidden-'.$token,'published'=>'']);
+    $hidden=(int)$db->lastInsertId();
+    $db->update('tl_news',['schemaAbout'=>serialize([$service,$service,$hidden]),'schemaMentions'=>serialize([$org])],['id'=>$id]);
+    [$nodes]=$render('BlogPosting');
+    $article=array_values(array_filter($nodes,fn($n)=>($n['@id']??'')===$idUri))[0];
+    $check($article['about']===[['@type'=>'Thing','name'=>'Existing template subject'],['@id'=>$serviceIdentity]],'Existing subject retained; published subject deduplicated; unpublished subject omitted');
+    $check(count($article['mentions'])===1,'Explicit mentions emitted');
+    $check(count(array_filter($nodes,fn($n)=>($n['@id']??'')===$serviceIdentity))===1,'Subject entity included in graph');
     [$nodes,$subjects]=$render('suppress');
     $check(count($nodes)===1 && $nodes[0]['@id']==='https://example.org/#unrelated' && !$subjects,'Suppress only exact source node');
     [$nodes,$subjects]=$render('');
