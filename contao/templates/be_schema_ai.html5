@@ -19,6 +19,7 @@ $display=static function($value,$p)use($name,$run,$l){
     if($p['field']==='schemaPublisher')return $run['organizations'][(int)$value]['name'] ?? ((int)$value?'#'.$value:$l['noPublisher']);
     if($p['field']==='schemaType')return $value ?: $l['coreType'];
     if($p['action']==='home'){return $run['inventory']['pages'][(int)$value]['title'] ?? $value;}
+    if($p['action']==='remove'){if($value===$p['value'])return $l['removeLinkAction'].' #'.substr($value,7);$ids=\Contao\StringUtil::deserialize($value,true);return implode(', ',array_map(static fn($id)=>$name('entity:'.$id),$ids));}
     if($p['action']==='add'){
         if(is_string($value) && preg_match('/^(?:entity:|new:)/',$value))return $name($value);
         $values=\Contao\StringUtil::deserialize($value,true);return implode(', ',array_map(static fn($id)=>$name('entity:'.$id),$values));
@@ -108,11 +109,11 @@ if($p['action']==='set' && isset($homes[$p['target']]))$deps[]=$homes[$p['target
 if($p['action']==='add' && isset($creations[$p['value']]))$deps[]=$creations[$p['value']];
 $help='';
 if($p['action']==='add'){$helpTable=str_starts_with($p['target'],'news:')?'tl_news':(str_starts_with($p['target'],'page:')?'tl_page':'tl_schema_entity');$help=$GLOBALS['TL_LANG'][$helpTable][$p['field']][1] ?? '';}
-$actionLabel=$configuration?$l['reviewSetting']:($p['action']==='create'?$l['createAction']:($p['action']==='home'?$l['homeAction']:($p['action']==='add'?$l['linkAction']:(empty($p['old'])?$l['fillAction']:$l['replaceAction']))));
+$actionLabel=$p['action']==='remove'?$l['removeLinkAction']:($configuration?$l['reviewSetting']:($p['action']==='create'?$l['createAction']:($p['action']==='home'?$l['homeAction']:($p['action']==='add'?$l['linkAction']:(empty($p['old'])?$l['fillAction']:$l['replaceAction'])))));
 ?>
 <article class="sai-proposal <?= $p['status']==='pending'?'':'sai-inactive' ?>">
 <div class="sai-proposal-heading">
-<?php if($p['status']==='pending'): ?><input id="sai-p-<?= (int)$i ?>" type="checkbox" name="selected[]" value="<?= (int)$i ?>" data-depends="<?= $e(json_encode($deps)) ?>" data-bulk="<?= !empty($p['bulk'])&&!(($p['action']==='set'||in_array($p['field'],['organization','schemaPerson'],true))&&$p['old']!==''&&$p['old']!==null&&$p['old']!==0)?'1':'0' ?>" aria-label="<?= $e($name($p['target']).': '.$actionLabel.' '.$fieldLabel($p)) ?>"><?php endif ?>
+<?php if($p['status']==='pending'): ?><input id="sai-p-<?= (int)$i ?>" type="checkbox" name="selected[]" value="<?= (int)$i ?>" data-depends="<?= $e(json_encode($deps)) ?>" data-bulk="<?= !empty($p['bulk'])&&!(($p['action']==='set'||($p['action']!=='remove'&&in_array($p['field'],['organization','schemaPerson'],true)))&&$p['old']!==''&&$p['old']!==null&&$p['old']!==0)?'1':'0' ?>" aria-label="<?= $e($name($p['target']).': '.$actionLabel.' '.$fieldLabel($p)) ?>"><?php endif ?>
 <div><span class="sai-action-label"><?= $e($actionLabel) ?><?php $localePage=$p['action']==='home'?(int)$p['value']:(str_contains($p['target'],'@')?(int)substr(strrchr($p['target'],'@'),1):0);if($localePage): ?> · <?= $e(strtoupper($run['inventory']['pages'][$localePage]['language'] ?? '')) ?><?php endif ?></span><h4><?php if($p['status']==='pending'): ?><label for="sai-p-<?= (int)$i ?>"><?= $e($fieldLabel($p)) ?></label><?php else: ?><?= $e($fieldLabel($p)) ?> <small><?= $e($l[$p['status']==='applied'?'appliedState':($p['status']==='rejected'?'rejectedState':$p['status'])] ?? $p['status']) ?></small><?php endif ?></h4></div>
 </div>
 <div class="sai-proposal-body">
@@ -121,7 +122,7 @@ $actionLabel=$configuration?$l['reviewSetting']:($p['action']==='create'?$l['cre
 <div class="sai-proposed"><strong><?= $e($l[$configuration?'reviewValue':'proposed']) ?></strong><div data-sai-value="<?= (int)$i ?>"><?= nl2br($e($display($p['value'],$p))) ?></div></div>
 <?php if($p['action']==='create'): ?><p class="sai-hint"><?= $e($l['draftHint']) ?></p><?php elseif($p['action']==='home'): ?><p class="sai-hint"><?= $e($l['homeHint']) ?></p><?php endif ?>
 <p><strong><?= $e($l[$configuration?'effect':'reason']) ?>:</strong> <?= $e($configuration?($l[$p['reason']] ?? $p['reason']):$p['reason']) ?></p>
-<?php if(!$configuration): ?><details><summary><?= $e($l['evidence'].': '.($source['title'] ?? $p['source'])) ?></summary><blockquote><?= $e($p['quote']) ?></blockquote><p><?= $e($source['url'] ?? '') ?></p></details><?php endif ?>
+<?php if(!$configuration): ?><details><summary><?= $e(!empty($p['databaseEvidence'])?$l['storedRelationship']:$l['evidence'].': '.($source['title'] ?? $p['source'])) ?></summary><blockquote><?= $e($p['quote']) ?></blockquote><p><?= $e($source['url'] ?? '') ?></p></details><?php endif ?>
 <?php if($configuration&&$p['status']==='pending'&&in_array($p['field'],['schemaPublisher','schemaType'],true)): ?>
 <label><?= $e($l['proposed']) ?><select name="value[<?= (int)$i ?>]" data-sai-edit="<?= (int)$i ?>">
 <?php if($p['field']==='schemaPublisher'): ?><option value="0"><?= $e($l['noPublisher']) ?></option><?php foreach($run['organizations'] as $org): ?><option value="<?= (int)$org['id'] ?>" <?= (int)$p['value']===(int)$org['id']?'selected':'' ?>><?= $e($org['name'].(empty($org['published'])?' · '.$l['draftState']:'')) ?></option><?php endforeach ?>

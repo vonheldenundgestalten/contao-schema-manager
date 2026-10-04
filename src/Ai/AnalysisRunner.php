@@ -20,8 +20,10 @@ final class AnalysisRunner
         // skip all the primary-language context because a single-language run exists.
         if($multilingual && count($inventory['roots'])>1)$changed=false;
         foreach ($inventory['sources'] as $key=>$source) { if (!$changed || ($previous['hashes'][($stage==='foundation'?'foundation:':'').$mode.':'.$key] ?? '')!==$source['hash']) { $queue[]=$key; } }
-        return $this->store->create((int)$user->id,$root,['import'=>$stage==='import','auditResults'=>[],'importSources'=>[],'importPlan'=>[],'root'=>$root,'stage'=>$stage,'mode'=>$mode,'origin'=>$origin,'inventory'=>$inventory,'queue'=>$queue,'processed'=>[],
-            'localizationQueue'=>[],'localizationPrepared'=>false,'editorLanguage'=>$GLOBALS['TL_LANGUAGE'] ?? 'en','proposals'=>[],'mapped'=>[],'decisions'=>$previous['decisions'],'status'=>$queue?'ready':'complete','usage'=>['input_tokens'=>0,'output_tokens'=>0],'warnings'=>[],'createdAt'=>time()]);
+        $run=['import'=>$stage==='import','auditResults'=>[],'importSources'=>[],'importPlan'=>[],'root'=>$root,'stage'=>$stage,'mode'=>$mode,'origin'=>$origin,'inventory'=>$inventory,'queue'=>$queue,'processed'=>[],
+            'localizationQueue'=>[],'localizationPrepared'=>false,'editorLanguage'=>$GLOBALS['TL_LANGUAGE'] ?? 'en','proposals'=>[],'mapped'=>[],'decisions'=>$previous['decisions'],'status'=>$queue?'ready':'complete','usage'=>['input_tokens'=>0,'output_tokens'=>0],'warnings'=>[],'createdAt'=>time()];
+        (new MissingRelations($this->db))->propose($run);
+        return $this->store->create((int)$user->id,$root,$run);
     }
     /** A refinement is a separate proposal set. Never overwrite the source review. */
     public function refine(int $id,BackendUser $user,string $feedback): int
@@ -103,6 +105,7 @@ final class AnalysisRunner
             }
             if($localizing)$run['_localizationTask']=$task;
             $this->proposals->ingest($run,$result['suggestions'],$sources);
+            (new MissingRelations($this->db))->propose($run);
             unset($run['_localizationTask']);
             if(!empty($result['explanation'])){$run['explanation']=trim(($run['explanation'] ?? '')."\n\n".$result['explanation']);}
             foreach (['input_tokens','output_tokens'] as $field) { $run['usage'][$field]+=(int)($result['usage'][$field] ?? 0); }
