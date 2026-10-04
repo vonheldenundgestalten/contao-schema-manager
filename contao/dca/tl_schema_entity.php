@@ -15,7 +15,7 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
     'list' => [
         'sorting' => ['mode' => DataContainer::MODE_SORTED, 'fields' => ['name'], 'flag' => 1, 'panelLayout' => 'filter;search,limit'],
         'label' => ['fields' => ['name', 'entityType'], 'format' => '%s [%s]'],
-        'operations' => ['edit', 'children' => ['href' => 'table=tl_schema_translation'], 'contacts' => ['href' => 'table=tl_schema_contact', 'icon' => 'member.svg'], 'copy', 'delete', 'show'],
+        'operations' => ['edit', 'children', 'contacts' => ['href' => 'table=tl_schema_contact', 'icon' => 'member.svg'], 'copy', 'delete', 'show'],
     ],
     'palettes' => [
         '__selector__' => ['entityType'],
