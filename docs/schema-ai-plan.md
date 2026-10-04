@@ -116,21 +116,27 @@ Separate collection, inference, review and writing:
 5. **Review module**: filtering, evidence, editable before/after values and explicit approval.
 6. **ProposalApplier**: shared domain validation, authorization, versions, transactions and cache invalidation; no raw model SQL or unrestricted JSON-LD injection.
 
-Proposed tables (design, not migrations): `tl_schema_ai_run`, `tl_schema_ai_source`, `tl_schema_ai_proposal`, and a source-binding/decision ledger. A proposal stores target type/record or temporary candidate key, allowed field/property, locale, old-value fingerprint, proposed value, evidence references, evidence quality, dependencies, decision, actor and application result. Runs store scope, provider/model, prompt version, budget reservation, usage and status. Keep source excerpts separate with a retention policy; avoid retaining entire pages unnecessarily.
+Proposed tables (design, not migrations): `tl_schema_ai_run`, `tl_schema_ai_source`, `tl_schema_ai_proposal`, and a source-binding/decision ledger. A proposal stores target type/record or temporary candidate key, allowed field/property, locale, old-value fingerprint, proposed value, evidence references, evidence quality, dependencies, decision, actor and application result. Runs store scope, provider/model, prompt version, reported token usage, estimated cost and status. Keep source excerpts separate with a retention policy; avoid retaining entire pages unnecessarily.
 
 Apply through a dedicated writer using the existing validators/mappers, not direct AI-controlled writes. Calling a model save alone is not enough if it skips DCA callbacks: explicitly reuse/extract shared validation and test versioning, cache tags and save semantics. EntityGraph remains the only output path; the graph gains normal entities/edges after approval. A later preview may overlay proposed edges visually, but MVP must work without changing the visualization library.
 
 Run scanning/inference in resumable background jobs compatible with the installed Contao/Symfony setup; verify the supported job mechanism before implementation. Do not hold a browser request open for a full-site scan or require a permanent worker without documenting hosting prerequisites. Cancellation stops future batches; already issued requests may still incur cost. Retrying a job must not duplicate approved records or applications.
 
-## API setup and cost control
+## API setup and usage visibility
 
-Keep AI optional and disabled until an administrator configures it. Recommend a dedicated provider project and service credential per client/site (separate production and staging if useful), not one agency-wide key. Show provider/model, credential status, connection test, allowed roots and budgets in settings. Store the secret server-side through environment/Symfony secrets or an encrypted secret store with its encryption key outside the database; never send it to the browser, logs, exports or prompts. Do not require clients to give the key to the extension vendor.
+Keep AI optional and disabled until an administrator configures it. Recommend a dedicated provider project and service credential per client/site (separate production and staging if useful), not one agency-wide key. Show provider/model, credential status, connection test, allowed roots and read-only usage information in settings. Store the secret server-side through environment/Symfony secrets or an encrypted secret store with its encryption key outside the database; never send it to the browser, logs, exports or prompts. Do not require clients to give the key to the extension vendor.
 
-Start with one provider; keep the interface open for future adapters. Choose a model by evaluating representative extraction/matching fixtures at implementation time, not by hard-coding today's model name or price. Record the model and pricing snapshot for each run. Strict structured output is useful where supported, with explicit handling of refusals, malformed/truncated responses and retries.
+Use OpenAI **GPT-6.1 Sol** (`gpt-6.1-sol`) as the fixed model, with no editor/admin model selector. Start with standard processing and medium reasoning; evaluate the extraction fixtures before implementation is considered ready. Keep the model identifier centralized in code so a future supported-model change is a normal extension update, not another client configuration task. Retain the small provider interface for testability, not a provider-selection UI. Record the actual model and pricing snapshot for each run. Use structured output and handle refusals, malformed/truncated responses and retries explicitly.
 
-Control spending inside the extension: limits per run and per month, maximum pages/input/output tokens, concurrency and retry count. Before dispatch, atomically reserve a conservative upper bound from the configured budget for every request, including concurrent runs; reconcile with reported usage afterwards. Count failed/retried calls and retain uncertain reservations until resolved. Stop launching calls when insufficient budget remains. Display estimates as estimates, actual reported usage separately, and note that external use of the same key cannot be controlled by this local ledger. No paid connection test or rescan happens silently.
+Do not implement financial budget enforcement: no monthly/run spending limits, budget reservations, budget ledger or spending-based admission control. Keep the dedicated client key, a rough pre-run estimate and reported token usage/estimated cost afterwards. Technical bounds still prevent runaway crawling or retry loops: selected site scope, bounded requests, timeouts, finite retries and cancellation. These are operational controls, not configurable monetary budgets. No paid connection test or rescan happens silently.
 
-A separate key is useful for separation and attribution but is not by itself a guaranteed hard spending cap. Check the selected provider's current project-limit behavior during implementation; use local admission control even when provider budgets exist. Avoid quoting a fixed euro cost before measuring representative sites.
+### Rough pilot cost estimate
+
+As of 2026-10-04, the official GPT-6.1 Sol model page lists Standard pricing of **$2 per million input tokens and $10 per million output tokens** for requests at or below 272K input tokens. Higher-context requests and other processing options have different rates. Use small evidence batches; no Fast mode or paid model browsing is assumed.
+
+For recreating the pilot's roughly twenty business entities, their German/English descriptions and home assignments, plus relationship proposals, assume **60K–150K total input tokens** and **20K–60K total billed output tokens, including reasoning**, across collection/extraction/review passes. This gives approximately **$0.32–$0.90** in base text-model charges. A practical rough allowance of **$1–$3 for the whole initial fill** leaves room for repeated context, corrections and retries; it is an estimate, not a hard upper bound.
+
+This is a hypothetical purpose-built API workflow, not measured usage from the development conversation. It excludes building/debugging the extension, browser automation, hosting, tax and any optional regional surcharge. Incremental additions should usually cost less, depending on how much supporting context is reprocessed. Measure actual usage in the prototype before displaying a tighter estimate to clients.
 
 ## Evidence, permissions and data handling
 
@@ -147,7 +153,7 @@ Existing data is not silently replaced. No automatic publication, entity deletio
 1. **Read-only prototype**: bounded collection from selected pages, deterministic inventory/matching, evidence-linked output and measured usage. Evaluate on varied real client sites, including multiple offices/languages and custom Contao elements.
 2. **New entity drafts**: review cards, explicit candidate matching, localized homes, dependency-aware unpublished creation, permissions and versions.
 3. **Improvement review**: checkbox groups, before/after comparisons, rejection memory, stale-change detection and transactional application of facts/relationships.
-4. **Operational readiness**: background-job recovery, credential controls, concurrency-safe budgets, retention, documentation and provider failure tests.
+4. **Operational readiness**: background-job recovery, credential controls, usage reporting, retention, documentation and provider failure tests.
 5. **Optional later work**: contextual explanation/refinement chat and proposed-edge graph preview. No general autonomous website-management agent.
 
 Release gates:
@@ -161,16 +167,18 @@ Release gates:
 - Transaction failure, repeated clicks and job retry create no partial dependency groups or duplicate writes.
 - Real rendered JSON-LD, version history, cache invalidation and graph links match the approved changes.
 - Tests cover page prompt injection, unsafe URLs, secret redaction, unpublished sources and permission loss after scanning.
-- Parallel runs, timeouts and retries cannot bypass local reserved-budget limits; uncertain usage remains visible.
+- Retries are finite, cancellation stops future batches, and reported usage is recorded without claiming monetary enforcement.
 - AI disabled or unavailable has no effect on normal Schema Manager behavior.
 
 ## Decisions to revisit before coding
 
-Default provider/model and deployment region; package boundary (optional module in this repository first versus companion package if dependencies warrant it); run/source retention periods; conservative page/token/budget defaults; supported background execution on client hosting. These are implementation choices, not reasons to block this plan. Start with explicit public-site scanning and the review list; validate assumptions against the real projects before broadening scope.
+Deployment region; package boundary (optional module in this repository first versus companion package if dependencies warrant it); run/source retention periods; technical batch sizes and retry defaults; supported background execution on client hosting. These are implementation choices, not reasons to block this plan. Start with explicit public-site scanning and the review list; validate assumptions against the real projects before broadening scope.
 
 ## References checked for this plan
+
+- [GPT-6.1 Sol model and pricing](https://developers.openai.com/api/docs/models/gpt-6.1-sol): fixed model choice and the Standard token rates used in the rough pilot estimate.
 
 - [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs): constrained response shape; still requires application validation and evidence review.
 - [OpenAI production practices](https://developers.openai.com/api/docs/guides/production-best-practices): server-side credential management and production usage planning.
 
-Provider behavior, available models and pricing must be rechecked at implementation time. The workflow and storage decisions above are proposed extension design, not existing functionality.
+Provider behavior, GPT-6.1 Sol availability and pricing must be rechecked at implementation time; do not silently substitute a different model. The workflow and storage decisions above are proposed extension design, not existing functionality.
