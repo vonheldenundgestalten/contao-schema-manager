@@ -1,10 +1,14 @@
 # Entity expansion: research and planning
 
-**Round 1 · 5 October 2026 · Planning only · No implementation approved**
+**Round 2 · 5 October 2026 · Planning in progress · No implementation approved**
 
 Branch: `codex/feature-entity-expansion`. Baseline: released **1.2.0**, commit `b7477d9`. Calendar work remains separately on `codex/feature-calendar-events` (`689fc55`). The earlier parked outline is superseded by this research pack. No version is assigned to the expansion.
 
-## Recommendation
+## Current round
+
+Start with the [Round 2 proposal](entity-expansion/round-2.md), the [100-use-case catalogue](entity-expansion/use-cases-100.md), and [Round 2 feedback](entity-expansion/feedback/01-round-2.md). Your original shared-decision answers are preserved. Round 2 supersedes the narrow catalogue, optional course/standalone-video scope and import redesign proposed below. The first-round research remains useful evidence, not a frozen scope.
+
+## Initial recommendation and research context
 
 Build one coordinated expansion around a small set of reusable capabilities, rather than a separate implementation for every client's vocabulary. Editors should choose understandable profiles such as **House model**, **Show house**, **Medical department**, **Product system** or **Award result**. Profiles choose appropriate types and field groups; they are not all new Schema.org types.
 
@@ -51,11 +55,11 @@ Sources and qualifications are in the linked site files; the statements above ar
 
 The coordinated release should cover: a central type/profile definition mechanism; reusable Place/House and organization/medical profiles; generic product facts and composition; typed source/home resolution; opted-in public people; richer award/certification records; content relationships and categories; import/AI/graph coverage for everything accepted.
 
-The webinar review also exposes VideoObject and Course/CourseInstance needs. They are explicit scope decisions, not silently promised additions. Earlier publishing and vehicle requirements remain in the matrix and feedback even though no real examples were supplied this round. Smart social images and automatic price extraction remain parked. The expansion must interoperate with those future features without importing them now.
+The user narrowed media scope in round 2: optional recordings attached to Events, no standalone recording manager or Course/CourseInstance handling. Current import behavior remains the baseline; a generalized ownership/conflict redesign is deferred. Earlier publishing and vehicle requirements remain in the matrix and feedback even though no real examples were supplied this round. Smart social images and automatic price extraction remain parked. The expansion must interoperate with those future features without importing them now.
 
 ## Next planning rounds
 
-1. **Confirm meaning and ownership:** complete shared decisions D01–D09 and the project source/identity questions. Resolve medical organization boundaries and public-member selection before fixing the data model.
+1. **Confirm meaning and ownership:** review the received D01–D09 responses and complete the focused Round 2 questions and the project source/identity questions. Resolve medical organization boundaries and public-member selection before fixing the data model.
 2. **Review editorial walkthroughs:** agree the minimal fields, conditional sections, source authority and migration behavior with representative real records. Produce example output for tricky cases, not a giant type checklist.
 3. **Freeze the coordinated scope:** approve the type/property/relationship matrix and acceptance scenarios, including consciously deferred cases.
 4. **Only then implement:** internal steps may be incremental, but delivery remains one coordinated expansion, as requested. No implementation, deployment, merge to main or release is part of this round.

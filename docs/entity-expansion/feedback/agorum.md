@@ -32,9 +32,9 @@ Add answers and example URLs below. Database/source details cannot be establishe
 
 **Decision / date:** Pending.
 
-## AG03 — Academy scope
+## AG03 — Academy scope (deferred by D07)
 
-**Status:** Open · **Dependencies:** C19; D07
+**Status:** Deferred: no courses in this expansion, per D07. · **Dependencies:** C19; D07
 
 **Feedback needed:** Do you need Course/CourseInstance management in this expansion, or just event occurrences and recordings? How are curriculum, sessions and delivery modes stored?
 

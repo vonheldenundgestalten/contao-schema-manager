@@ -1,5 +1,7 @@
 # Capability and gap matrix
 
+> Round 1 research/proposal. [Round 2](round-2.md) takes precedence for catalogue breadth, source-field authority, event attachments and the decision to defer import redesign. Still planning; no implementation approved.
+
 [Planning index](../entity-expansion-plan.md) · [Shared decisions](feedback/00-shared-decisions.md)
 
 Status is based on **1.2.0 source**, not the richer dev event checkout. **Ready** means a usable manual path exists; **Add** means a bounded addition with understood semantics; **Design** means an ownership, routing or vocabulary decision is needed; **Branch** means separate unreleased work. These are complexity categories, not time estimates.

@@ -1,5 +1,7 @@
 # Proposed architecture and editorial workflow
 
+> Round 1 research/proposal. [Round 2](round-2.md) takes precedence for catalogue breadth, source-field authority, event attachments and the decision to defer import redesign. Still planning; no implementation approved.
+
 [Planning index](../entity-expansion-plan.md) · Status: proposals, not approved implementation
 
 ## 1. Keep four different responsibilities

@@ -1,6 +1,8 @@
 # Shared planning decisions
 
-[Planning index](../../entity-expansion-plan.md) · Round 1, 5 October 2026
+[Planning index](../../entity-expansion-plan.md) · Round 1 responses received, 5 October 2026
+
+**Your answers below are preserved verbatim.** The original Open/Pending placeholders are retained as part of that feedback. See [Round 2 synthesis](../round-2.md) for the interpretation and [next feedback](01-round-2.md) for outstanding questions. These answers do not authorize implementation.
 
 This is the central feedback log. Fill responses here or refer to the decision ID. Blank means **open**, not approval. Start with D02, D03, D04 and D06; those shape the data model. The other decisions can follow in later rounds. No implementation starts from these unanswered proposals.
 
@@ -15,6 +17,8 @@ This is the central feedback log. Fill responses here or refer to the decision I
 **Feedback needed:** Do you agree with profiles such as House model, Product system and Medical department, backed by shared fields? Which families must be in the coordinated release?
 
 **Response:**
+For a generic extension, I would much rather go broad and add let's say 100 additional entity types, so it can work in as many situations as possible. I also don't like the idea of a ontology editor, or rather: i like the idea a lot, but it seems like this puts too much work into the hands of the user. So instead of your pretty small selection: come up with maybe 100 use cases for things that people want to sell online - but critically: limit yourself to things not quickly and usually sold in an online store. Those will be handled by shopping software, not in the scope of a custom CMS solution. We usually handle complex and/or big items and services.
+
 
 > Pending.
 
@@ -31,6 +35,8 @@ This is the central feedback log. Fill responses here or refer to the decision I
 **Feedback needed:** Confirm the distinctions using the Diakonie and Woodmark diagrams requested in their feedback files. Which responsibilities need structured editing beyond an ordinary contact point?
 
 **Response:**
+I would also like to have an entity relationship properly set up, because Diakone and Woodmark both actually have multiple companies connected. Go with your recommendation. Companies, localBusiness for offices as a good point for now.
+
 
 > Pending.
 
@@ -47,6 +53,8 @@ This is the central feedback log. Fill responses here or refer to the decision I
 **Feedback needed:** Should results be editable beside the reporting News item as well as centrally? How should the awards overview be populated: existing content logic or a future optional module?
 
 **Response:**
+I would really welcome the additional Award entity, and link it to the NewsArticle, it's too hard to pick out the specific award fields from the news content. Same for Certifications. But the award should have the fields you mentioned above (where recipient can be any other entity, in Okal's examples it's almost always HouseModels that win the award). I honestly don't know how to do this correctly, because the official award is just text, and never a lot, mostly the name and year of the award. You have a good idea how to structure it?
+
 
 > Pending.
 
@@ -63,6 +71,7 @@ This is the central feedback log. Fill responses here or refer to the decision I
 **Feedback needed:** Confirm which source systems and routing patterns must be supported first. Should any source-derived fields allow explicit local overrides, and who maintains those after an import?
 
 **Response:**
+Don't overwrite, I would use the source fields as much as possible - our "additional" fields should only provide what the original element does not have. No double-editing. The mapping of course will be hard, especially on custom elements and data types like the OKAL tl_houses (which is home to HouseModels and Demo houses). Getting this mapping logic right is a major milestone, together with D01 for which entities to add. Maybe custom data types like for okal and viacor need a developer-facing API, and not even be handled in our extension? The same thing could then be used for Members being used as Persons, or at least the filtering if only certain members should be included. Again: smart, universally useful logic needed. Which is double-true when translation is also important (like at Viacor). The custom dev approach could also open the door for additional entity types, so the extension core can stay clean of those complexities.
 
 > Pending.
 
@@ -79,6 +88,8 @@ This is the central feedback log. Fill responses here or refer to the decision I
 **Feedback needed:** Is an explicitly labelled editorial-only relationship acceptable? Which categories need a shared identity rather than a label and CollectionPage?
 
 **Response:**
+I don't get what we're talking about here, probably an example would help.
+
 
 > Pending.
 
@@ -95,6 +106,7 @@ This is the central feedback log. Fill responses here or refer to the decision I
 **Feedback needed:** Provide one concrete cross-domain reuse example and its preferred home. Which facts differ by site/market, rather than by language?
 
 **Response:**
+We're already on a good path here, with central truths in the entity directly, and only using translation fields when the content can / should differ in language versions. Which in Contao will always be the URL connected, a URL can always only be one language content.
 
 > Pending.
 
@@ -111,6 +123,8 @@ This is the central feedback log. Fill responses here or refer to the decision I
 **Feedback needed:** Should recordings be part of this expansion? Are actual course catalogues required now? For historical events, should changed venue facts be preserved through an explicit snapshot?
 
 **Response:**
+Skip standalone recordings, but include them when the recording is not the main content - just "a" content in an event. Which is what Agorum is doing. This is still events, we're not handling courses or similar right now.
+
 
 > Pending.
 
@@ -127,6 +141,8 @@ This is the central feedback log. Fill responses here or refer to the decision I
 **Feedback needed:** For each legacy block, choose externally maintained or explicitly imported. Who reviews conflicting facts when a new native field overlaps preserved JSON?
 
 **Response:**
+I like the recommendation, but I'm not sure how to handle your problem case. I would say it's an edge case for the core extension and not our problem right now. Keep the handling simple, what we have for importing is good enough.
+
 
 > Pending.
 
@@ -143,6 +159,8 @@ This is the central feedback log. Fill responses here or refer to the decision I
 **Feedback needed:** Please add representative book, magazine/newspaper and vehicle pages when available. Which are required for the first coordinated expansion, and which may be explicitly deferred?
 
 **Response:**
+I'm with you, we will probably not do a good job adding things by guessing - please combine D01 and D04 into a compact, stable, flexible extension model.
+
 
 > Pending.
 

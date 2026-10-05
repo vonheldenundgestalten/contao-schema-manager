@@ -1,5 +1,7 @@
 # Vocabulary and consumer decisions
 
+> Round 1 research/proposal. [Round 2](round-2.md) takes precedence for catalogue breadth, source-field authority, event attachments and the decision to defer import redesign. Still planning; no implementation approved.
+
 [Planning index](../entity-expansion-plan.md) · Proposed mappings, not implemented features
 
 Checked on 5 October 2026 against the official Schema.org vocabulary (the site displayed V30.1, 16 September 2026). Some useful properties are pending. Pin and recheck the chosen vocabulary and Contao/library support before implementation; a valid vocabulary term does not automatically have a convenient library class or Google feature.

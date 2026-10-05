@@ -1,5 +1,7 @@
 # Acceptance scenarios for the future expansion
 
+> Round 1 research/proposal. [Round 2](round-2.md) takes precedence for catalogue breadth, source-field authority, event attachments and the decision to defer import redesign. Still planning; no implementation approved.
+
 [Planning index](../entity-expansion-plan.md) · These are planning criteria, not implemented or executed tests.
 
 Approve the semantics and source ownership first. Then turn the accepted scenarios into focused integration tests and editorial walkthroughs.
