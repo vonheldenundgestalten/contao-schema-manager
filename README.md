@@ -532,3 +532,5 @@ Choose **SoftwareApplication** for software, including Contao extensions. Shared
 
 Run the Contao database update after installing this addition. Fields are optional; enter only supported facts. Software markup alone does not guarantee a Google rich result.
 
+
+Content analyses now include a deterministic author coverage check in both new-entry and improvement mode. Named, unmapped authors of eligible published news get a reviewed Person creation/link suggestion, even if the model omits them. Existing Persons are reused; draft or ambiguous matches and generic account names require review. No account email/login data or invented biography is included. New Persons remain drafts: publish after review and add suitable localized homes for richer details. Start a fresh content run to receive these suggestions.
