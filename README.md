@@ -503,7 +503,7 @@ For a site with existing JSON-LD, start with **1 · Import existing schema**. Ke
 2. Review each entity's original IDs, home pages, mapped fields and retained properties. Conflicting identities or existing field values block that entity instead of being overwritten. Resolve these in the source/editor and rescan.
 3. Import selected entities as drafts. Supported values become normal editable fields; other properties remain available as retained structured data. Page and website changes are staged in the review and take effect only when published.
 4. Review the drafts, then publish the selected imports **and their localized homes**. Original public IDs are preserved, including different legacy IDs for localized homes. New native values take precedence over retained properties; replacing a list replaces the whole list.
-5. Verify the replacement output. The helper only offers to disable exact, local, schema-only HTML elements when a published replacement preserves the compared data and ID. Visible HTML, changed data and unknown/template origins require manual review. Disabling is explicit, versioned and reversible.
+5. Review the published output and disable the old handwritten schema manually in its Contao content element when ready. The comparison and automatic disabling feature is postponed.
 6. Continue with organisation completion, website/archive settings, and finally content discovery or improvement. Imported drafts reserve their identities against duplicate creation; publish reviewed imports before enrichment so their fields can be used as active context.
 
 For example, an existing `https://example.org/#organization` remains that same ID. Import does not generate a replacement UUID for it. Repeated descriptions are grouped around the linked home page; unsupported nested properties remain visible in the review rather than silently disappearing.
@@ -532,4 +532,3 @@ Choose **SoftwareApplication** for software, including Contao extensions. Shared
 
 Run the Contao database update after installing this addition. Fields are optional; enter only supported facts. Software markup alone does not guarantee a Google rich result.
 
-The final handover comparison remains available at the bottom of a completed step 1 scan, even when there are no new import candidates. Publish the intended replacement entities and language records, choose a page, then compare its original and replacement JSON. Review and disable only eligible schema-only HTML elements; missing facts or changed identities block automatic retirement. Each page comparison is a separate request and uses no AI API call.

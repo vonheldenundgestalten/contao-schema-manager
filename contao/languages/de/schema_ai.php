@@ -223,7 +223,6 @@ $GLOBALS['TL_LANG']['schema_ai']['importPrepare'] = 'Importprüfung vorbereiten'
 
 $GLOBALS['TL_LANG']['schema_ai']['importScan'] = 'Vorhandene Entitäten suchen';
 
-$GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'Keine alten Entitäten gefunden. Nach Prüfung eventueller Warnungen mit der Grundlage fortfahren.';
 
 $GLOBALS['TL_LANG']['schema_ai']['import_pending'] = 'Zur Prüfung';
 
@@ -251,11 +250,8 @@ $GLOBALS['TL_LANG']['schema_ai']['importApplied'] = '%d Einträge importiert. En
 
 $GLOBALS['TL_LANG']['schema_ai']['importPublished'] = '%d Importe mit Sprachversionen veröffentlicht.';
 
-$GLOBALS['TL_LANG']['schema_ai']['importRetireTitle'] = 'Umstellung abschließen';
 
-$GLOBALS['TL_LANG']['schema_ai']['importRetireHelp'] = 'Nach Veröffentlichung prüfen, ob der Manager die Originaldaten erhält. Erst dann passende reine Schema-Inhaltselemente deaktivieren. Templates und nicht zuordenbare Quellen bleiben manuell zu prüfen.';
 
-$GLOBALS['TL_LANG']['schema_ai']['importVerify'] = 'Importierte Ausgabe prüfen';
 
 $GLOBALS['TL_LANG']['schema_ai']['importUnknownOrigin'] = 'Keine lokale HTML-Quelle gefunden; Template oder Erweiterung manuell prüfen.';
 
@@ -272,16 +268,10 @@ $GLOBALS['TL_LANG']['schema_ai']['importOriginalIdentity'] = "Wiederherzustellen
 $GLOBALS['TL_LANG']['schema_ai']['removeLinkAction'] = 'Defekten Verweis entfernen';
 $GLOBALS['TL_LANG']['schema_ai']['storedRelationship'] = 'Gespeicherte Beziehung';
 
-$GLOBALS['TL_LANG']['schema_ai']['comparePage'] = 'Seite vergleichen';
 
-$GLOBALS['TL_LANG']['schema_ai']['compareData'] = 'Original und veröffentlichten Ersatz vergleichen';
 
-$GLOBALS['TL_LANG']['schema_ai']['compareOriginal'] = 'Bisheriges manuelles Schema';
 
-$GLOBALS['TL_LANG']['schema_ai']['compareReplacement'] = 'Veröffentlichter Ersatz (ohne dieses Inhaltselement)';
 
-$GLOBALS['TL_LANG']['schema_ai']['compareMissing'] = 'Kein eindeutiger veröffentlichter Ersatz gefunden.';
 
-$GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'Keine neuen Einträge zum Importieren. Vorhandene veröffentlichte Ersatzdaten können Sie unten vergleichen. Beachten Sie die Scan-Hinweise.';
 
-$GLOBALS['TL_LANG']['schema_ai']['importVerify'] = 'Veröffentlichte Ausgabe vergleichen';
+$GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'Keine neuen Einträge zum Importieren. Beachten Sie die Scan-Hinweise und fahren Sie fort. Bisheriges manuelles Schema deaktivieren Sie bei Bedarf selbst im Inhaltselement.';

@@ -223,7 +223,6 @@ $GLOBALS['TL_LANG']['schema_ai']['importPrepare'] = 'Prepare import scan';
 
 $GLOBALS['TL_LANG']['schema_ai']['importScan'] = 'Find existing entities';
 
-$GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'No legacy entities found. Continue to the foundation step; check any scan warnings first.';
 
 $GLOBALS['TL_LANG']['schema_ai']['import_pending'] = 'Ready for review';
 
@@ -251,11 +250,8 @@ $GLOBALS['TL_LANG']['schema_ai']['importApplied'] = '%d items imported. Review t
 
 $GLOBALS['TL_LANG']['schema_ai']['importPublished'] = '%d imports published with their language records.';
 
-$GLOBALS['TL_LANG']['schema_ai']['importRetireTitle'] = 'Finish the handover';
 
-$GLOBALS['TL_LANG']['schema_ai']['importRetireHelp'] = 'After publishing, verify that the manager preserves the original data. Only then disable matching schema-only content elements. Templates and unsupported sources remain a manual task.';
 
-$GLOBALS['TL_LANG']['schema_ai']['importVerify'] = 'Verify imported output';
 
 $GLOBALS['TL_LANG']['schema_ai']['importUnknownOrigin'] = 'No local HTML source found; check the template or extension manually.';
 
@@ -272,16 +268,10 @@ $GLOBALS['TL_LANG']['schema_ai']['importOriginalIdentity'] = "Original ID to res
 $GLOBALS['TL_LANG']['schema_ai']['removeLinkAction'] = 'Remove broken link';
 $GLOBALS['TL_LANG']['schema_ai']['storedRelationship'] = 'Stored relationship';
 
-$GLOBALS['TL_LANG']['schema_ai']['comparePage'] = 'Page to compare';
 
-$GLOBALS['TL_LANG']['schema_ai']['compareData'] = 'Compare original and published replacement';
 
-$GLOBALS['TL_LANG']['schema_ai']['compareOriginal'] = 'Original handwritten schema';
 
-$GLOBALS['TL_LANG']['schema_ai']['compareReplacement'] = 'Published replacement (excluding this content element)';
 
-$GLOBALS['TL_LANG']['schema_ai']['compareMissing'] = 'No unique published replacement found.';
 
-$GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'No new legacy entities to import. You can still compare existing published replacements below. Check scan warnings before continuing.';
 
-$GLOBALS['TL_LANG']['schema_ai']['importVerify'] = 'Compare published output';
+$GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'No new legacy entities to import. Check any scan warnings, then continue. Existing handwritten schema must be disabled manually in its content element when you are ready.';
