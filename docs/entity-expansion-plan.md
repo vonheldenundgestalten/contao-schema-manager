@@ -1,80 +1,61 @@
-# Coordinated entity expansion
+# Entity expansion: research and planning
 
-Status: planning only, parked until the real client examples are available.
-Date: 2026-10-05
-Branch: codex/feature-entity-expansion (based on main).
+**Round 1 · 5 October 2026 · Planning only · No implementation approved**
 
-## Delivery decision
+Branch: `codex/feature-entity-expansion`. Baseline: released **1.2.0**, commit `b7477d9`. Calendar work remains separately on `codex/feature-calendar-events` (`689fc55`). The earlier parked outline is superseded by this research pack. No version is assigned to the expansion.
 
-Develop and release one coordinated expansion covering the agreed entity families, their relationships, editorial forms, localization, graph display and AI support. Do not split the work into successive small type releases. Internal implementation steps and tests can be incremental, but the user-facing delivery is one coherent update. The previous suggestion to prioritize separate smaller additions is superseded.
+## Recommendation
 
-This branch currently contains documentation only. No schema changes, migrations, runtime changes or deployment are part of this planning task. No version is assigned yet. Existing SoftwareApplication support is already in main. Reconcile the current AI and calendar branches when implementation begins; do not assume those features have been released. Smart image and product-source hook work remains separately parked.
+Build one coordinated expansion around a small set of reusable capabilities, rather than a separate implementation for every client's vocabulary. Editors should choose understandable profiles such as **House model**, **Show house**, **Medical department**, **Product system** or **Award result**. Profiles choose appropriate types and field groups; they are not all new Schema.org types.
 
-## Gather examples before fixing the model
+The important improvement is the ability to distinguish and connect **organizations, places, offerings, people and content**. Awards and certificates add evidence about those things. Category pages help people navigate them. None of these roles should be inferred solely from a page's position or a mention in an article.
 
-The user will supply representative public pages and explain their underlying Contao sources. Review the examples together across all families before agreeing the final supported types and properties. In particular, Diakonie is substantially more complex than the earlier hospital/clinic sketch: that sketch is not an approved model or a complete scope.
+Keep ordinary editing in Contao: archive defaults for news/jobs/cases, event defaults on calendars, source data on the original record. The Schema Manager owns shared identities, extra semantic facts and reusable relationships. It must not become a second CMS or a universal ontology editor.
 
-For each example record: page URL, actual subject, existing JSON-LD and IDs, source record/module, related entities, shared facts, translated facts, publication rules, expected output and editorial maintenance workflow. Separate a product model from a physical instance, an organization from its locations, and an offering from an article describing it. Capture examples with no public price, multiple languages and shared entities across pages.
+## Read and respond
 
-## Candidate families (not a final type commitment)
-
-| Family | Examples and modelling questions |
+| File | Purpose |
 | --- | --- |
-| Houses and locations / OKAL | Orderable house models versus specific built houses; show houses and showrooms; organization/location hierarchy, address, coordinates, opening hours, displayed models, floor area, rooms and other specifications. Evaluate Product/ProductModel, House/SingleFamilyResidence, Place and LocalBusiness with the actual examples. A design is not automatically a physical Place. |
-| Flooring systems / VIACOR | Named flooring systems as Product, installation/consulting as Service; applications such as hospitals and running tracks, materials, thickness, colours and documented technical properties. Reuse additionalProperty/PropertyValue only where no appropriate native property exists. Distinguish a system, its components, application categories and installed reference projects. |
-| Healthcare / Diakonie | Discover the real organizational, location, department, personnel, care and other content structures first. MedicalOrganization, Hospital, MedicalClinic and MedicalProcedure are candidates, not a sufficient or mandatory set. Verify the meaning and allowed relationships of every chosen type against the source pages. Do not force all content into Service or infer medical claims. |
-| Publishing | Book, Periodical, PublicationIssue and links to existing Article/NewsArticle handling. Authors, publisher, ISBN/ISSN, editions, formats, issue numbers, publication dates, language and offers. Distinguish a publication series, issue, article and separately purchasable edition/subscription. |
-| Vehicles | Vehicle/Car and further subtypes only when examples justify them; model versus individual stock vehicle, manufacturer, technical specifications, condition, mileage, VIN and offers. |
-| Services | Retain Service as the common model for actual service offerings. Improve reusable relations and field groups only where examples demonstrate a gap; do not invent a specialist type for every service category. |
-| Awards and recognition / especially OKAL | Reusable editorial records, exact recipients, award year/category/result, awarding body, evidence and award reporting. Keep distinctions between an award, a certification, a rating and an article. See below. |
+| [Capability matrix](entity-expansion/capability-matrix.md) | What 1.2.0 already solves, bounded additions, and difficult changes; cross-references all clients |
+| [Architecture and editorial flow](entity-expansion/architecture.md) | Proposed ownership, field groups, source adapters, homes, localization and graph output |
+| [Vocabulary decisions](entity-expansion/vocabulary.md) | Exact relationship semantics, including where Schema.org has no exact equivalent |
+| [Acceptance scenarios](entity-expansion/acceptance.md) | Concrete checks a future implementation must satisfy; no test code yet |
+| [Research coverage](entity-expansion/sources.md) | Public URLs inspected, redirects, observed JSON-LD and limits of the research |
+| [Shared feedback](entity-expansion/feedback/00-shared-decisions.md) | Recommended decisions, alternatives and answer slots for the next round |
 
-## Awards: editorial records and schema output are different decisions
+| Project | Findings | Feedback |
+| --- | --- | --- |
+| OKAL | [Houses, awards, locations, advisers, stories and events](entity-expansion/sites/okal.md) | [Answer here](entity-expansion/feedback/okal.md) |
+| VIACOR | [Materials, systems, categories, certificates, people and group](entity-expansion/sites/viacor.md) | [Answer here](entity-expansion/feedback/viacor.md) |
+| Diakonie | [Hospital, departments, centres, MVZ, medical information and STARS](entity-expansion/sites/diakonie.md) | [Answer here](entity-expansion/feedback/diakonie.md) |
+| Woodmark | [Group, subsidiaries, offices, services and cases](entity-expansion/sites/woodmark.md) | [Answer here](entity-expansion/feedback/woodmark.md) |
+| Agorum | [Existing identities, software, webinars, learning and cases](entity-expansion/sites/agorum.md) | [Answer here](entity-expansion/feedback/agorum.md) |
+| VHUG agency | [Services, cases, news, people and jobs](entity-expansion/sites/vhug.md) | [Answer here](entity-expansion/feedback/vhug.md) |
 
-Goal: make it easy to write useful articles about awards clients won and connect those articles to the right company, house model, product, service or person. An award for a house model must not silently become an award for every house or for its manufacturer.
+Fill the **Response** fields in the feedback files, or give feedback using their IDs. An unanswered decision remains open, not approved. Keep resolved answers in place with their decision date so later rounds do not lose context.
 
-Candidate editorial record fields (validate with OKAL examples):
+## Findings that shape the design
 
-- Official award name, edition/year, category and distinction (winner, finalist, etc.).
-- Explicit recipient(s) and awarding organization, with existing entity references where appropriate.
-- Award date, official evidence URL and optional supporting media.
-- Linked Contao news articles and a canonical editorial home if there is one.
-- Translated explanation/reporting text; shared identity, recipient, date and official facts. Preserve existing globally stored company awards. Do not silently move them back into translated fields.
+1. **The model and the place are different identities.** OKAL's Black Label 95 is a reusable house design. Arnsberg is a visitable built house. A sales office can be LocalBusiness, while a venue need only be Place. A showroom is not automatically a shop, museum or EventVenue.
+2. **Awards need result records, not a made-up Award type.** The 2024 OKAL article reports different placements for two houses. A result needs an exact recipient, year, category and distinction; the article can cover several results. Existing company award text must survive.
+3. **A system is not a category or a product variant group.** VIACOR's system combines materials. Parking and Ramps are navigation/application categories. A certificate belongs to its actual certified subject; it must not propagate to all components.
+4. **Organizations and geography have separate hierarchies.** Diakonie's hospital departments, interdisciplinary centres, separately operated MVZ and cooperation partners cannot be flattened into locations. Woodmark's subsidiary is not just an office address. Neither shared branding nor co-location proves ownership.
+5. **Entity homes must resolve actual content records.** A shared reader page is insufficient for an adviser profile, award article or calendar event. This is a foundational change, not another dropdown option.
+6. **Public people require selective source binding.** OKAL's `tl_member` use is a valid public directory use case. It must not turn all members into public people. News authors retain their `tl_user` path. A sales contact is not automatically an article author.
+7. **Content remains content.** A case study is normally an Article about services/products and possibly a named client; it is not another sellable Service. A recording is not a newly scheduled Event. An award report is not itself an award winner.
+8. **Existing schema is an integration input.** Agorum has real public IDs and additional software/offer properties. Preserve them intentionally; do not replace whole scripts or normalize away established identities.
 
-Schema.org's `award` property takes Text, not an award object or an @id reference. It applies to Organization, Person, Product, Service and CreativeWork. Therefore a richer internal award record can generate a concise, accurate textual award value on its supported recipient, without pretending that all internal metadata has a direct schema equivalent. Do not introduce a made-up Schema.org Award type or emit arbitrary fields into a generic node.
+Sources and qualifications are in the linked site files; the statements above are design conclusions, not an assertion that every proposed relation is implemented.
 
-An article about winning an award can use the archive-selected Article/NewsArticle type and `about` to reference the actual recipient(s). Evaluate `subjectOf` on the recipient where appropriate. Preserve archive-level type selection; do not introduce per-news type overrides. Use `mentions` for genuinely secondary subjects. A ceremony is an Event only when a real event is represented, not merely because an award exists.
+## Scope proposed for discussion
 
-Certification is a separate candidate for actual authoritative certifications, with issuer, identifier and validity data. An ordinary prize must not be relabelled Certification merely to obtain richer fields. Likewise, jury scores are not automatically customer aggregate ratings. Decide the best output for each example before introducing schema relations for it.
+The coordinated release should cover: a central type/profile definition mechanism; reusable Place/House and organization/medical profiles; generic product facts and composition; typed source/home resolution; opted-in public people; richer award/certification records; content relationships and categories; import/AI/graph coverage for everything accepted.
 
-Existing free-text awards must remain valid and survive any migration. Decide whether richer award records supplement them or replace selected lines through an explicit editorial conversion. Avoid duplicate output and do not create awarding organizations solely from unverified mentions.
+The webinar review also exposes VideoObject and Course/CourseInstance needs. They are explicit scope decisions, not silently promised additions. Earlier publishing and vehicle requirements remain in the matrix and feedback even though no real examples were supplied this round. Smart social images and automatic price extraction remain parked. The expansion must interoperate with those future features without importing them now.
 
-## Common design work
+## Next planning rounds
 
-- A central, extensible type definition mechanism should describe shared/localized fields, allowed relations, output mapping, validation and AI permissions. Audit current hardcoded type lists before designing it. Adding a type must consistently update forms, graph, import, analysis and output.
-- Reuse field groups for identity, locations, offers, technical quantities, publications, vehicles and healthcare where semantics match. Do not assume every entity is a Product or every organization relation means the same thing.
-- Consider per-site enabled families/types to keep selectors short. Determine how existing records remain editable if a family is disabled. This is a proposed UX decision, not implemented functionality.
-- Keep stable IDs and localized homes. Define global versus translated fields explicitly; preserve imported IDs and existing supported properties.
-- Provide constrained relation pickers with meaningful labels and exact Schema.org property mappings. Check property domains/ranges and multiple-type modelling where necessary.
-- Manual maintenance must remain fully usable without AI. The optional AI helper should propose only supported facts/relations with evidence, respect existing data, and understand the expanded types in initial import, new-entry and improvement runs.
-- Display new entities and meaningful relationships in the existing graph, including isolated entities, localized labels and existing page/source visibility filters.
-
-## One implementation and acceptance round
-
-1. Review the complete example set and agree an entity/property/relationship matrix, including gaps that remain out of scope.
-2. Design the shared extension points and editorial forms against that matrix; decide award storage/output and healthcare structure before coding them.
-3. Implement the agreed families together, including localization, import/AI rules, graph integration and additive migrations.
-4. Validate on representative development fixtures drawn from the supplied examples. No unrequested live content changes.
-5. Review the entire expansion with the user, document it, then merge/release as one coordinated update when authorized.
-
-Acceptance must cover correct recipients and relationships, draft/active records, translations, stable imported IDs, no duplicate entities, safe changes to existing data, and regression coverage for current types. Validate emitted JSON-LD and distinguish Schema.org validity from any separately verified search-engine feature eligibility. Include editorial walkthroughs and screenshots for the final documentation. Do not promise rich results from adding types.
-
-## Reference starting points
-
-Recheck these when implementation begins; they describe vocabulary, not a complete client-specific model.
-
-- [Schema.org award: text values and supported subjects](https://schema.org/award)
-- [Schema.org Certification](https://schema.org/Certification)
-- [Product](https://schema.org/Product), [ProductModel](https://schema.org/ProductModel), [House](https://schema.org/House), [Place](https://schema.org/Place)
-- [MedicalOrganization](https://schema.org/MedicalOrganization), [MedicalProcedure](https://schema.org/MedicalProcedure)
-- [Book](https://schema.org/Book), [Periodical](https://schema.org/Periodical), [PublicationIssue](https://schema.org/PublicationIssue)
-- [Vehicle](https://schema.org/Vehicle), [Car](https://schema.org/Car)
+1. **Confirm meaning and ownership:** complete shared decisions D01–D09 and the project source/identity questions. Resolve medical organization boundaries and public-member selection before fixing the data model.
+2. **Review editorial walkthroughs:** agree the minimal fields, conditional sections, source authority and migration behavior with representative real records. Produce example output for tricky cases, not a giant type checklist.
+3. **Freeze the coordinated scope:** approve the type/property/relationship matrix and acceptance scenarios, including consciously deferred cases.
+4. **Only then implement:** internal steps may be incremental, but delivery remains one coordinated expansion, as requested. No implementation, deployment, merge to main or release is part of this round.
