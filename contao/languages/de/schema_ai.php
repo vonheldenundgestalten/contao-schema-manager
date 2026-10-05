@@ -271,3 +271,17 @@ $GLOBALS['TL_LANG']['schema_ai']['importOriginalIdentity'] = "Wiederherzustellen
 
 $GLOBALS['TL_LANG']['schema_ai']['removeLinkAction'] = 'Defekten Verweis entfernen';
 $GLOBALS['TL_LANG']['schema_ai']['storedRelationship'] = 'Gespeicherte Beziehung';
+
+$GLOBALS['TL_LANG']['schema_ai']['comparePage'] = 'Seite vergleichen';
+
+$GLOBALS['TL_LANG']['schema_ai']['compareData'] = 'Original und veröffentlichten Ersatz vergleichen';
+
+$GLOBALS['TL_LANG']['schema_ai']['compareOriginal'] = 'Bisheriges manuelles Schema';
+
+$GLOBALS['TL_LANG']['schema_ai']['compareReplacement'] = 'Veröffentlichter Ersatz (ohne dieses Inhaltselement)';
+
+$GLOBALS['TL_LANG']['schema_ai']['compareMissing'] = 'Kein eindeutiger veröffentlichter Ersatz gefunden.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'Keine neuen Einträge zum Importieren. Vorhandene veröffentlichte Ersatzdaten können Sie unten vergleichen. Beachten Sie die Scan-Hinweise.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importVerify'] = 'Veröffentlichte Ausgabe vergleichen';

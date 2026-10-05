@@ -99,5 +99,23 @@ try {
  $native=['@type'=>'Service','@id'=>'https://example.org/new','name'=>'Edited','sameAs'=>['https://example.org/new-link']];
  $merged=VHUG\SchemaManagerBundle\Schema\ImportedSchema::merge($native,json_encode(['@id'=>'https://example.org/old','termsOfService'=>'https://example.org/terms','sameAs'=>['old','obsolete']]));
  $check($merged['@id']==='https://example.org/old'&&$merged['sameAs']===['https://example.org/new-link']&&isset($merged['termsOfService']),'Native lists replace, identity and unsupported facts survive');
+ // A fresh scan with no import candidates must still compare existing published entities.
+ $legacy=['@context'=>'https://schema.org','@type'=>'Organization','@id'=>'https://example.org/#handover-'.$suffix,'name'=>'Handover fixture','description'=>'Keep this fact'];
+ $db->insert('tl_schema_entity',['entityType'=>'Organization','name'=>$legacy['name'],'entityId'=>$legacy['@id'],'published'=>'1']);
+ $article=(int)$db->fetchOne('SELECT id FROM tl_article WHERE pid=?',[$first['page']]);
+ $db->insert('tl_content',['pid'=>$article,'ptable'=>'tl_article','type'=>'html','html'=>$markup($legacy),'invisible'=>0]);$contentId=(int)$db->lastInsertId();
+ $replacement=$legacy;$replacement['url']=$first['url'];
+ $audit->html=$markup($legacy).$markup($replacement);
+ $emptyRun=['stage'=>'import','status'=>'complete','importPlan'=>[],'inventory'=>$data];
+ $importer->verify($emptyRun,$first['id']);
+ $items=array_values(array_filter($emptyRun['auditResults'][$first['id']]['elements'],fn($item)=>$item['id']===$contentId));
+ $check(count($items)===1&&$items[0]['ready']&&$items[0]['comparisons'][0]['replacement']['url']===$first['url'],'Empty fresh import supports independent original/replacement comparison');
+ unset($replacement['description']);$audit->html=$markup($legacy).$markup($replacement);
+ $importer->verify($emptyRun,$first['id']);
+ $items=array_values(array_filter($emptyRun['auditResults'][$first['id']]['elements'],fn($item)=>$item['id']===$contentId));
+ $check(!$items[0]['ready']&&$items[0]['comparisons'][0]['differences'],'Missing original facts block retirement');
+ $audit->html=$markup($legacy);$importer->verify($emptyRun,$first['id']);
+ $items=array_values(array_filter($emptyRun['auditResults'][$first['id']]['elements'],fn($item)=>$item['id']===$contentId));
+ $check(!$items[0]['ready']&&$items[0]['comparisons'][0]['replacement']===null,'Original cannot serve as its own replacement');
  echo "PASS: core exclusion, multilingual grouping, editable fields, preserved IDs/data, drafts, publication and overwrite guard.\n";
 } finally {$db->rollBack();echo "Import fixtures rolled back.\n";}

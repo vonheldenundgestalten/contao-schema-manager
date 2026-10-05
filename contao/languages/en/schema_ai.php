@@ -271,3 +271,17 @@ $GLOBALS['TL_LANG']['schema_ai']['importOriginalIdentity'] = "Original ID to res
 
 $GLOBALS['TL_LANG']['schema_ai']['removeLinkAction'] = 'Remove broken link';
 $GLOBALS['TL_LANG']['schema_ai']['storedRelationship'] = 'Stored relationship';
+
+$GLOBALS['TL_LANG']['schema_ai']['comparePage'] = 'Page to compare';
+
+$GLOBALS['TL_LANG']['schema_ai']['compareData'] = 'Compare original and published replacement';
+
+$GLOBALS['TL_LANG']['schema_ai']['compareOriginal'] = 'Original handwritten schema';
+
+$GLOBALS['TL_LANG']['schema_ai']['compareReplacement'] = 'Published replacement (excluding this content element)';
+
+$GLOBALS['TL_LANG']['schema_ai']['compareMissing'] = 'No unique published replacement found.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'No new legacy entities to import. You can still compare existing published replacements below. Check scan warnings before continuing.';
+
+$GLOBALS['TL_LANG']['schema_ai']['importVerify'] = 'Compare published output';

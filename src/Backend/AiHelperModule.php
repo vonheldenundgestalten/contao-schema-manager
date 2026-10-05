@@ -45,12 +45,12 @@ final class AiHelperModule
                     $this->proposals->invalidate();
                 } elseif($action==='retire'){
                     $this->db->beginTransaction();
-                    try{$auditRun=$this->runs->get($id,(int)$user->id,true);$this->importer->verify($auditRun);$auditRun['audit']=true;$count=$this->audit->retire($auditRun,$request->request->all('retire'),$user);unset($auditRun['audit']);$this->runs->save($id,(int)$user->id,$auditRun);$this->db->commit();$message=sprintf($l['auditRetired'],$count);}
+                    try{$auditRun=$this->runs->get($id,(int)$user->id,true);$auditRun['audit']=true;$count=$this->audit->retire($auditRun,$request->request->all('retire'),$user);unset($auditRun['audit']);$this->runs->save($id,(int)$user->id,$auditRun);$this->db->commit();$message=sprintf($l['auditRetired'],$count);}
                     catch(\Throwable $e){$this->db->rollBack();throw $e;}
                     $container->get('contao.cache.tag_manager')->invalidateTagsForModelClass(\Contao\ContentModel::class);
                 } elseif($action==='import_verify'){
                     $this->db->beginTransaction();
-                    try{$importRun=$this->runs->get($id,(int)$user->id,true);$this->importer->verify($importRun);$this->runs->save($id,(int)$user->id,$importRun);$this->db->commit();}
+                    try{$importRun=$this->runs->get($id,(int)$user->id,true);$this->importer->verify($importRun,$request->request->getString('verify_source')?:null);$this->runs->save($id,(int)$user->id,$importRun);$this->db->commit();}
                     catch(\Throwable $e){$this->db->rollBack();throw $e;}
                 } elseif ($action==='refine') {
                     if (!$this->keys->get()) { throw new \RuntimeException($l['keyMissing']); }
