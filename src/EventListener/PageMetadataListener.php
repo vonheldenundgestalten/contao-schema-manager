@@ -86,6 +86,8 @@ final class PageMetadataListener
     {
         $site=$root->schemaWebsiteRoot ? PageModel::findById($root->schemaWebsiteRoot) : $root;
         if(!$site || $site->type!=='root' || !$site->schemaWebsiteId){return;}
+        // Older backend saves stored HTML entities; JSON-LD needs the actual IRI.
+        $websiteId=\Contao\StringUtil::decodeEntities((string)$site->schemaWebsiteId);
         $this->tags->tagWithModelInstance($site);
         $home=$site->schemaWebsiteHome ? PageModel::findById($site->schemaWebsiteHome) : PageModel::findFirstPublishedRegularByPid($site->id);
         if(!$home || $home->requireItem){return;}
@@ -97,15 +99,15 @@ final class PageMetadataListener
             $homeUrl=$parts['scheme'].'://'.$parts['host'].(isset($parts['port'])?':'.$parts['port']:'').($this->requests->getMainRequest()?->getBasePath() ?? '').'/';
         }
         $languages=$this->connection->fetchFirstColumn("SELECT language FROM tl_page WHERE type='root' AND published='1' AND (id=? OR schemaWebsiteRoot=?)",[$site->id,$site->id]);
-        $node=['@type'=>'WebSite','@id'=>$site->schemaWebsiteId,'name'=>$site->schemaSiteName ?: $site->title,'url'=>$homeUrl,
+        $node=['@type'=>'WebSite','@id'=>$websiteId,'name'=>$site->schemaSiteName ?: $site->title,'url'=>$homeUrl,
             'inLanguage'=>array_values(array_unique(array_filter($languages)))];
         if($site->schemaSiteAlternateName){$node['alternateName']=$site->schemaSiteAlternateName;}
         $publisher=$this->connection->fetchOne("SELECT entityId FROM tl_schema_entity WHERE id=? AND published='1'",[$site->schemaPublisher]);
         if($publisher){$node['publisher']=['@id'=>$publisher];}
         if($site->schemaImportedActive)$node=\VHUG\SchemaManagerBundle\Schema\ImportedSchema::merge($node,$site->schemaImportedData);
         // The editable root identity is authoritative, including after legacy import.
-        $node['@id']=$site->schemaWebsiteId;
-        $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->set($manager->createSchemaOrgTypeFromArray($node),$site->schemaWebsiteId);
-        $web->setProperty('isPartOf',['@id'=>$site->schemaWebsiteId]);
+        $node['@id']=$websiteId;
+        $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->set($manager->createSchemaOrgTypeFromArray($node),$websiteId);
+        $web->setProperty('isPartOf',['@id'=>$websiteId]);
     }
 }

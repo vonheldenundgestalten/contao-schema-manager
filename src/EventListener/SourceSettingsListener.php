@@ -65,13 +65,18 @@ final class SourceSettingsListener
     {
         return (string) $this->connection->fetchOne('SELECT schemaIdentity FROM tl_news WHERE id=?',[$dc->id]);
     }
+    #[AsCallback(table:'tl_page',target:'fields.schemaWebsiteId.load')]
+    public function loadWebsiteIdentity(mixed $value): string
+    {
+        return \Contao\StringUtil::decodeEntities((string)$value);
+    }
     #[AsCallback(table:'tl_page',target:'fields.schemaWebsiteId.save')]
     public function keepWebsiteIdentity(mixed $value, DataContainer $dc): string
     {
         $row=$this->connection->fetchAssociative('SELECT schemaWebsiteId,schemaWebsiteRoot FROM tl_page WHERE id=?',[$dc->id]);
-        $value=trim((string)$value);
+        $value=trim($this->loadWebsiteIdentity($value));
         if(!empty($row['schemaWebsiteRoot'])){
-            if($value!==($row['schemaWebsiteId']??''))throw new \InvalidArgumentException('Edit the website ID on the shared website root #'.$row['schemaWebsiteRoot'].'.');
+            if($value!==$this->loadWebsiteIdentity($row['schemaWebsiteId']??''))throw new \InvalidArgumentException('Edit the website ID on the shared website root #'.$row['schemaWebsiteRoot'].'.');
             return $value;
         }
         if($value===''){

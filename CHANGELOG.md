@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Preserve literal fragments in editable website IDs through Contao input handling. Decode already-stored HTML entities when editing and emitting the website node and its references.
+
 ## 1.2.0 — 2026-10-05
 
 - Optional administrator-only AI helper with a dedicated OpenAI key, source evidence, reviewable proposals, feedback refinement and resumable analysis batches.

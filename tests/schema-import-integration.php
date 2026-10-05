@@ -85,7 +85,13 @@ try {
  $check($db->fetchOne('SELECT schemaWebsiteId FROM tl_page WHERE id=?',[$siteRoot])===$original,'Publishing restores original website identity');
  $settings=new VHUG\SchemaManagerBundle\EventListener\SourceSettingsListener($db);
  $dc=new class($siteRoot) extends Contao\DataContainer { public function __construct(int $id){$this->intId=$id;} public function getPalette(){return '';} protected function save($value){} };
+ Contao\Controller::loadDataContainer('tl_page');
+ Contao\Input::setPost('schemaWebsiteId','https://example.org/#website');
+ $input=Contao\Input::post('schemaWebsiteId',$GLOBALS['TL_DCA']['tl_page']['fields']['schemaWebsiteId']['eval']['decodeEntities']??false);
+ $check($input==='https://example.org/#website','Website field preserves fragments through real Contao input handling');
  $check($settings->keepWebsiteIdentity('https://example.org/#website',$dc)==='https://example.org/#website','Original website ID can be entered in the backend');
+ $check($settings->keepWebsiteIdentity('https://example.org/&#35;website',$dc)==='https://example.org/#website','Contao-encoded fragment is decoded before saving');
+ $check($settings->loadWebsiteIdentity('https://example.org/&#35;website')==='https://example.org/#website','Previously encoded identity is editable as a literal fragment');
  foreach(['javascript:alert(1)','https://user:secret@example.org/#website',''] as $bad){try{$settings->keepWebsiteIdentity($bad,$dc);throw new LogicException('Invalid website ID accepted');}catch(InvalidArgumentException){}}
  $secondHome=Contao\PageModel::findById($second['page']);$secondHome->loadDetails();$owner=(int)$secondHome->rootId;
  $db->update('tl_page',['schemaWebsiteRoot'=>0,'schemaWebsiteId'=>$configured,'schemaImportedData'=>null,'schemaImportedActive'=>''],['id'=>$owner]);
