@@ -76,6 +76,7 @@ try {
  $check($staged['proposals'][1]['status']==='applied'&&(int)$staged['mapped']['new:test@'.$page->id]>0,'Staged apply recovers the exact existing language record without a new scan');
  $staged['proposals'][1]['status']='pending';$staged['proposals'][1]['value']='Do not overwrite a later edit';$staged['proposals'][1]['old']='Reliable technical support.';
  try{$engine->apply($staged,[1],$user);throw new LogicException('Stale recovered translation was overwritten');}catch(RuntimeException $expected){$check(str_contains($expected->getMessage(),'changed since analysis'),'Recovered home keeps stale-field protection');}
+ $db->update('tl_schema_translation',['description'=>'Reliable technical support.'],['id'=>$staged['mapped']['new:test@'.$page->id]]);
  // A normalized snapshot must also compare with a serialized nonempty list.
  $relationSnapshot=$run;$relationSnapshot['mode']='improve';$relationSnapshot['proposals']=[];
  $entityId=(int)$run['mapped']['new:test'];
