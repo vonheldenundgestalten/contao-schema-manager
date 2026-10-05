@@ -6,7 +6,7 @@ use Contao\BackendUser;
 /** Deterministic migration before AI discovery. Original IDs and unsupported data are retained. */
 final class SchemaImport
 {
-    private const BUSINESS=['Organization','LocalBusiness','Person','Service','Product','Event'];
+    private const BUSINESS=['Organization','LocalBusiness','Person','Service','Product','SoftwareApplication','Event'];
     public function __construct(private readonly Connection $db,private readonly SchemaAudit $audit,private readonly FieldPolicy $policy,private readonly SiteInventory $inventory){}
     public function scan(array $source): array
     {
@@ -135,7 +135,7 @@ final class SchemaImport
         if(!in_array($type,self::BUSINESS,true))return [$shared,$localized,$retained];
         foreach(['tl_schema_entity','tl_schema_translation'] as $table){
             foreach(FieldPolicy::fields($table,$type) as $field){
-                if($table==='tl_schema_entity'&&$field==='name'&&in_array($type,['Service','Product','Event'],true))continue;
+                if($table==='tl_schema_entity'&&$field==='name'&&in_array($type,['Service','Product','SoftwareApplication','Event'],true))continue;
                 $value=$node[$field]??($node['address'][$field]??null);
                 if($field==='sameAs'&&is_array($value))$value=implode("\n",array_filter($value,'is_string'));
                 if(!is_string($value)&&!is_int($value)&&!is_float($value))continue;

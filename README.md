@@ -506,12 +506,10 @@ On a company or location, **Registration identifiers** provides repeatable regis
 
 Company and LocalBusiness `sameAs` links are edited per language on their localized homes. Existing shared links remain a fallback until the localized field is saved; saving it empty explicitly removes those links for that language. Registration numbers remain shared. Each home can translate register names by matching its existing registration number; the shared register name is the fallback. Run the database update after upgrading.
 
-<<<<<<< HEAD
 **Broken relationships in improvement runs:** Content → Check schema for improvements also detects stored links to deleted Schema Manager records. Review the “Remove broken link” suggestions and apply the ones you want, individually or with Select all suggestions. This uses database evidence, adds no API call, never deletes entities, and leaves draft/unpublished targets and external JSON-LD references alone. Applying rechecks that the target is still absent and removes only that reference, preserving other links. Contao versions record the change. Start a fresh improvement run to get this check.
-=======
+
 ### Software applications
 
 Choose **SoftwareApplication** for software, including Contao extensions. Shared fields cover application category (e.g. `BusinessApplication`), operating system, software version and runtime platform (e.g. `Contao 5.7`). Related organization is the **publisher**. Each language home has its own name, description, requirements, feature list and optional manual offer. The same entity can be linked from pages, news and people's knowledge topics and appears in the relationship graph.
 
 Run the Contao database update after installing this addition. Fields are optional; enter only supported facts. Software markup alone does not guarantee a Google rich result.
->>>>>>> main

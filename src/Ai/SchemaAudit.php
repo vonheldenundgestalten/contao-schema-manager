@@ -32,7 +32,7 @@ class SchemaAudit
         foreach($this->db->fetchFirstColumn("SELECT t.schemaImportedData FROM tl_schema_translation t JOIN tl_schema_entity e ON e.id=t.pid WHERE t.published='1' AND e.published='1'") as $json){$n=json_decode($json??'',true);if(!empty($n['@id']))$managed[$n['@id']]=true;}
         $managerNodes=array_values(array_filter($rendered['nodes'],static fn($n)=>isset($managed[$n['@id']??''])));
         foreach($rendered['nodes'] as $node){
-            if(!in_array($node['@type']??'', ['Organization','LocalBusiness','Person','Service','Product','Event','WebSite','WebPage','BlogPosting','Article','NewsArticle'],true))continue;
+            if(!in_array($node['@type']??'', ['Organization','LocalBusiness','Person','Service','Product','SoftwareApplication','Event','WebSite','WebPage','BlogPosting','Article','NewsArticle'],true))continue;
             $matches=array_values(array_filter($managerNodes,static fn($n)=>SchemaMarkup::sameThing($node,$n)));
             $isManaged=isset($managed[$node['@id']??'']);
             $result['nodes'][]=['label'=>SchemaMarkup::label($node),'id'=>$node['@id']??'','data'=>$node,'replacementData'=>count($matches)===1?$matches[0]:null,'managed'=>$isManaged,'replacement'=>count($matches)===1?$matches[0]['@id']:null,'differences'=>!$isManaged&&count($matches)===1?SchemaMarkup::missing($node,$matches[0]):[]];
