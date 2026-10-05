@@ -14,6 +14,24 @@ final class ProposalQueue
         $locale=$page?' / '.($run['inventory']['pages'][$page]['language']??'').' / '.($run['inventory']['pages'][$page]['title']??('page #'.$page)):'';
         return trim($type.' "'.$name.'"').$locale.' — '.$p['action'].' '.$p['field'];
     }
+    private static function missingHome(string $key,array $run): string
+    {
+        if(!preg_match('/^(.+)@([0-9]+)$/D',$key,$match))return 'The required entity has not been created or linked. Review its creation suggestion.';
+        $target=$match[1];$page=(int)$match[2];$language=$run['inventory']['pages'][$page]['language']??'';
+        $title=$run['inventory']['pages'][$page]['title']??('page #'.$page);
+        $prefix='The '.strtoupper($language).' language record for "'.$title.'" is not available. ';
+        $same=[];$other=[];
+        foreach($run['proposals'] as $p){
+            if($p['action']!=='home'||$p['target']!==$target)continue;
+            if((int)$p['value']===$page)$same[]=$p;
+            elseif(($run['inventory']['pages'][(int)$p['value']]['language']??null)===$language&&!in_array($p['status'],['invalid','rejected'],true))$other[]=$p;
+        }
+        if($other){$titles=array_map(static fn($p)=>$run['inventory']['pages'][(int)$p['value']]['title']??('page #'.$p['value']),$other);return $prefix.'This entity already has a language-home suggestion for "'.implode('", "',$titles).'". Review which page should represent it; this description was proposed for a different page.';}
+        foreach($same as $p)if($p['status']==='rejected')return $prefix.'Its language-home creation was rejected. It will not be restored automatically.';
+        foreach($same as $p)if($p['status']==='invalid')return $prefix.'Its language-home suggestion could not be used: '.($p['error']??'invalid suggestion');
+        if($same)return $prefix.'Its creation could not be resolved uniquely. Review the language-home suggestions for this entity.';
+        return $prefix.'The AI proposed a description but omitted the language-home creation. Add this language record to the entity, then run improvement analysis to fill it. This description remains pending; other applicable suggestions can still be applied.';
+    }
     public static function plan(array $run,array $selected): array
     {
         $providers=[];$ready=array_fill_keys(array_keys($run['inventory']['records']),true);
@@ -51,7 +69,7 @@ final class ProposalQueue
         $blocked=[];
         foreach(array_keys($pending) as $i){
             $missing=array_values(array_filter($requirements($run['proposals'][$i]),static fn($key)=>!isset($ready[$key])));
-            $blocked[$i]=self::label($run['proposals'][$i],$run).': missing or ambiguous prerequisite '.implode(', ',$missing).'. Kept pending; review the entity/home suggestion or prepare a fresh analysis.';
+            $blocked[$i]=self::label($run['proposals'][$i],$run).': '.implode(' ',array_map(static fn($key)=>self::missingHome($key,$run),$missing));
         }
         return ['order'=>$order,'blocked'=>$blocked];
     }
