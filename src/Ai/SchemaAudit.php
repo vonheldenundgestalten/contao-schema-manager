@@ -40,12 +40,12 @@ class SchemaAudit
         // Exact block equality identifies content origins without guessing from similar text.
         $table=str_starts_with($source['id'],'news:')?'tl_news':(str_starts_with($source['id'],'event:')?'tl_calendar_events':'tl_article');
         $parents=$table==='tl_article'?$this->db->fetchFirstColumn('SELECT id FROM tl_article WHERE pid=?',[$source['page']]):[(int)substr(strstr($source['id'],':'),1)];
-        foreach($this->db->fetchAllAssociative("SELECT id,pid,ptable,html,invisible FROM tl_content WHERE type='html' AND invisible='' AND html LIKE '%application/ld+json%' ORDER BY id") as $row){
-            if($row['ptable']!==$table||!in_array((int)$row['pid'],array_map('intval',$parents),true))continue;
+        foreach($this->db->fetchAllAssociative("SELECT id,pid,ptable,html,invisible FROM tl_content WHERE type='html' AND invisible=0 AND html LIKE '%application/ld+json%' ORDER BY id") as $row){
+            if(($row['ptable']?:'tl_article')!==$table||!in_array((int)$row['pid'],array_map('intval',$parents),true))continue;
             $parsed=SchemaMarkup::parse($row['html']);if(!$parsed['blocks'])continue;
             $present=true;foreach($parsed['blocks'] as $block)if(!in_array($block,$rendered['blocks'],true))$present=false;
             if(!$present)continue;
-            $reasons=[];if(!SchemaMarkup::scriptOnly($row['html']))$reasons[]='This element also contains other markup; edit it manually.';
+            $comparisons=[];$reasons=[];if(!SchemaMarkup::scriptOnly($row['html']))$reasons[]='This element also contains other markup; edit it manually.';
             if($result['errors'])$reasons[]='The page has JSON-LD errors.';
             // Top-level entities are checked recursively, so nested data cannot disappear unnoticed.
             $top=[];foreach($parsed['blocks'] as $block){foreach($block['@graph']??(array_is_list($block)?$block:[$block]) as $n)if(is_array($n))$top[]=$n;}
@@ -53,11 +53,12 @@ class SchemaAudit
             $replacementNodes=[];foreach($remaining as $block){foreach(SchemaMarkup::parse('<script type="application/ld+json">'.json_encode($block).'</script>')['nodes'] as $n)if(isset($managed[$n['@id']??''])||in_array($n['@type']??'', ['WebPage','AboutPage','ContactPage','CollectionPage','ProfilePage','ItemPage'],true))$replacementNodes[json_encode($n)]=$n;}
             foreach($top as $node){
                 $matches=array_values(array_filter($replacementNodes,static fn($n)=>SchemaMarkup::sameThing($node,$n)));
+                $comparisons[]=['original'=>$node,'replacement'=>count($matches)===1?$matches[0]:null,'differences'=>count($matches)===1?SchemaMarkup::missing($node,$matches[0]):[]];
                 if(count($matches)!==1){$reasons[]='No unique published replacement: '.SchemaMarkup::label($node);continue;}
                 if(!empty($node['@id'])&&$node['@id']!==($matches[0]['@id']??''))$reasons[]='Different identity: review references to '.$node['@id'].' before retiring this definition.';
                 $missing=SchemaMarkup::missing($node,$matches[0]);if($missing)$reasons[]=SchemaMarkup::label($node).': review '.implode(', ',$missing);
             }
-            $result['elements'][]=['id'=>(int)$row['id'],'module'=>$table==='tl_news'?'news':($table==='tl_calendar_events'?'calendar':'article'),'hash'=>hash('sha256',$row['html']),'ready'=>!$reasons,'reasons'=>$reasons,'status'=>'pending'];
+            $result['elements'][]=['id'=>(int)$row['id'],'module'=>$table==='tl_news'?'news':($table==='tl_calendar_events'?'calendar':'article'),'hash'=>hash('sha256',$row['html']),'comparisons'=>$comparisons,'ready'=>!$reasons,'reasons'=>$reasons,'status'=>'pending'];
         }
         return $result;
     }

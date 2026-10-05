@@ -38,14 +38,15 @@ $token='<input type="hidden" name="REQUEST_TOKEN" value="'.$e($this->token).'">'
 </details><?php endforeach ?>
 <p><?= $e($l['importPublishHelp']) ?></p><button class="tl_submit" name="ai_action" value="import_apply"><?= $e($l['importApply']) ?></button> <button class="tl_submit" name="ai_action" value="import_publish"><?= $e($l['importPublish']) ?></button>
 </form>
-<section><h3><?= $e($l['importRetireTitle']) ?></h3><p><?= $e($l['importRetireHelp']) ?></p><form method="post"><?= $token ?><button class="tl_submit" name="ai_action" value="import_verify"><?= $e($l['importVerify']) ?></button></form>
+<?php endif ?>
+<section><h3><?= $e($l['importRetireTitle']) ?></h3><p><?= $e($l['importRetireHelp']) ?></p><form method="post"><?= $token ?><label><?= $e($l['comparePage']) ?><select name="verify_source"><?php foreach($run['inventory']['sources'] as $sourceKey=>$source): ?><option value="<?= $e($sourceKey) ?>"><?= $e(($source['language']??'').' — '.$source['title']) ?></option><?php endforeach ?></select></label> <button class="tl_submit" name="ai_action" value="import_verify"><?= $e($l['importVerify']) ?></button></form>
 <?php if(!empty($run['auditResults'])): ?><form method="post"><?= $token ?><input type="hidden" name="ai_action" value="retire">
-<?php foreach($run['auditResults'] as $key=>$result): ?><?php foreach($result['elements'] as $item): ?><div class="sai-proposal"><strong><?= $e($l['auditElement']) ?> #<?= (int)$item['id'] ?></strong> <a href="?do=<?= $e($item['module']) ?>&amp;table=tl_content&amp;act=edit&amp;id=<?= (int)$item['id'] ?>"><?= $e($l['auditEdit']) ?></a>
+<?php foreach($run['auditResults'] as $key=>$result): ?><h4><?= $e($result['title']) ?></h4><?php foreach($result['elements'] as $item): ?><div class="sai-proposal"><strong><?= $e($l['auditElement']) ?> #<?= (int)$item['id'] ?></strong> <a href="?do=<?= $e($item['module']) ?>&amp;table=tl_content&amp;act=edit&amp;id=<?= (int)$item['id'] ?>"><?= $e($l['auditEdit']) ?></a>
+<?php foreach($item['comparisons']??[] as $comparison): ?><details><summary><?= $e($l['compareData']) ?></summary><h4><?= $e($l['compareOriginal']) ?></h4><pre style="white-space:pre-wrap;overflow-wrap:anywhere"><?= $e(json_encode($comparison['original'],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)) ?></pre><h4><?= $e($l['compareReplacement']) ?></h4><pre style="white-space:pre-wrap;overflow-wrap:anywhere"><?= $e($comparison['replacement']===null?$l['compareMissing']:json_encode($comparison['replacement'],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)) ?></pre></details><?php endforeach ?>
 <?php foreach($item['reasons'] as $reason): ?><p><?= $e($reason) ?></p><?php endforeach ?>
 <?php if($item['status']==='disabled'): ?><p><?= $e($l['auditDisabled']) ?></p><?php elseif($item['ready']): ?><label><input type="checkbox" name="retire[]" value="<?= $e($key.'|'.$item['id']) ?>"><?= $e($l['auditSelect']) ?></label><?php endif ?></div><?php endforeach ?>
 <?php foreach($result['errors'] as $error): ?><p class="tl_error"><?= $e($error) ?></p><?php endforeach ?>
 <?php if(!$result['elements']): ?><p><?= $e($result['title'].': '.$l['importUnknownOrigin']) ?></p><?php endif ?>
 <?php endforeach ?><button class="tl_submit"><?= $e($l['auditRetire']) ?></button></form><?php endif ?></section>
-<?php endif ?>
 <p><a class="tl_submit" href="?do=schema_manager&amp;key=ai&amp;stage=foundation&amp;root=<?= (int)$this->selectedRoot ?>"><?= $e($l['importNext']) ?></a></p>
 <?php endif ?><?php endif ?></div>

@@ -26,7 +26,7 @@ final class SchemaImport
         $local=[];$fingerprints=[];$table=str_starts_with($source['id'],'news:')?'tl_news':(str_starts_with($source['id'],'event:')?'tl_calendar_events':'tl_article');
         $parents=$table==='tl_article'?$this->db->fetchFirstColumn('SELECT id FROM tl_article WHERE pid=?',[$source['page']]):[(int)substr(strstr($source['id'],':'),1)];
         foreach($this->db->fetchAllAssociative("SELECT id,pid,ptable,html FROM tl_content WHERE type='html' AND invisible=0 AND html LIKE '%application/ld+json%'") as $row){
-            if($row['ptable']!==$table||!in_array((int)$row['pid'],array_map('intval',$parents),true))continue;
+            if(($row['ptable']?:'tl_article')!==$table||!in_array((int)$row['pid'],array_map('intval',$parents),true))continue;
             $fingerprints[(int)$row['id']]=hash('sha256',$row['html']);
             foreach(SchemaMarkup::parse($row['html'])['blocks'] as $block){$local[hash('sha256',json_encode($block))]=(int)$row['id'];}
         }
@@ -224,13 +224,14 @@ final class SchemaImport
         }
         if(!$count)throw new \RuntimeException('Select the legacy entities to import.');return $count;
     }
-    public function verify(array &$run): void
+    public function verify(array &$run, ?string $sourceKey = null): void
     {
-        if(($run['stage']??'')!=='import'||$run['status']!=='complete')throw new \RuntimeException('Complete the import first.');
-        $keys=[];foreach($run['importPlan'] as $g)if($g['status']==='published')foreach($g['sources'] as $key=>$url)$keys[$key]=true;
-        if(!$keys)throw new \RuntimeException('Publish reviewed imports before verifying their output.');
-        $run['auditResults']=[];
-        foreach(array_keys($keys) as $key)$run['auditResults'][$key]=$this->audit->inspect($run['inventory']['sources'][$key]);
+        if(($run['stage']??'')!=='import'||$run['status']!=='complete')throw new \RuntimeException('Complete the scan first.');
+        // Comparison is also available after imports were completed in another run.
+        $sources=$run['inventory']['sources'];
+        if($sourceKey===null){$sourceKey=array_key_first($sources);}
+        if($sourceKey===null||!isset($sources[$sourceKey]))throw new \RuntimeException('Choose a scanned page to compare.');
+        $run['auditResults'][$sourceKey]=$this->audit->inspect($sources[$sourceKey]);
     }
     public function publish(array &$run,array $selected,BackendUser $user): int
     {
