@@ -6,7 +6,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['schemaPublisher'] = [
     'eval'=>['includeBlankOption'=>true,'chosen'=>true,'tl_class'=>'w50'],'sql'=>'int unsigned NOT NULL default 0',
 ];
 $GLOBALS['TL_DCA']['tl_page']['fields']['schemaWebsiteId'] = [
-    'inputType'=>'text','eval'=>['maxlength'=>255,'doNotCopy'=>true,'tl_class'=>'clr long'],'sql'=>"varchar(255) NOT NULL default ''",
+    'inputType'=>'text','eval'=>['maxlength'=>255,'decodeEntities'=>true,'doNotCopy'=>true,'tl_class'=>'clr long'],'sql'=>"varchar(255) NOT NULL default ''",
 ];
 $GLOBALS['TL_DCA']['tl_page']['fields']['schemaSiteName'] = [
     'inputType'=>'text','eval'=>['maxlength'=>255,'tl_class'=>'w50'],'sql'=>"varchar(255) NOT NULL default ''",

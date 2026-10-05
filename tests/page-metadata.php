@@ -17,7 +17,7 @@ foreach($db->fetchFirstColumn("SELECT id FROM tl_page WHERE type='regular' AND p
 if(!$page){throw new RuntimeException('A public regular page is required');}
 $page->schemaPageType='ContactPage';
 $root=Contao\PageModel::findById($page->rootId);$savedRoot=$root->row();
-$root->schemaWebsiteRoot=0;$root->schemaWebsiteHome=$page->id;$root->schemaWebsiteId='https://example.test/#manually-restored';
+$root->schemaWebsiteRoot=0;$root->schemaWebsiteHome=$page->id;$root->schemaWebsiteId='https://example.test/&#35;manually-restored';
 $root->schemaImportedActive='1';$root->schemaImportedData=json_encode(['@type'=>'WebSite','@id'=>'https://example.test/#outdated-import']);
 $request=Symfony\Component\HttpFoundation\Request::create(getenv('SCHEMA_TEST_ORIGIN') ?: 'https://example.test/');
 $request->attributes->set('pageModel',$page);
