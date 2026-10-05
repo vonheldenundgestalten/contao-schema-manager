@@ -458,3 +458,9 @@ Select **Worldwide coverage** on an Organization, LocalBusiness or Service to ou
 On a company or location, **Registration identifiers** provides repeatable register-name/number rows. For example, `Commercial Register Estonia` / `17334484` outputs `identifier: {"@type":"PropertyValue","name":"Commercial Register Estonia","value":"17334484"}`. Multiple rows output an array. Keep VAT and tax numbers in their dedicated fields. After updating, run Contao's database update. Existing tax IDs are not reclassified automatically: move any incorrectly entered registration number to the new field and clear that tax ID.
 
 Company and LocalBusiness `sameAs` links are edited per language on their localized homes. Existing shared links remain a fallback until the localized field is saved; saving it empty explicitly removes those links for that language. Registration numbers remain shared. Each home can translate register names by matching its existing registration number; the shared register name is the fallback. Run the database update after upgrading.
+
+### Software applications
+
+Choose **SoftwareApplication** for software, including Contao extensions. Shared fields cover application category (e.g. `BusinessApplication`), operating system, software version and runtime platform (e.g. `Contao 5.7`). Related organization is the **publisher**. Each language home has its own name, description, requirements, feature list and optional manual offer. The same entity can be linked from pages, news and people's knowledge topics and appears in the relationship graph.
+
+Run the Contao database update after installing this addition. Fields are optional; enter only supported facts. Software markup alone does not guarantee a Google rich result.

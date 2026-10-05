@@ -109,7 +109,7 @@ final class BusinessDetailsListener
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.knowledgeTopics.save')]
     public function knowledgeTopics(mixed $value, DataContainer $dc): mixed
     {
-        return $this->relationships($value, $dc, ['Organization','LocalBusiness','Person','Service','Product','Event']);
+        return $this->relationships($value, $dc, ['Organization','LocalBusiness','Person','Service','Product','SoftwareApplication','Event']);
     }
     private function relationships(mixed $value, DataContainer $dc, array $types): mixed
     {
