@@ -274,5 +274,21 @@ try {
 
  } finally {foreach(glob($keyPath.'/var/*') as $f)unlink($f);rmdir($keyPath.'/var');unlink($keyPath.'/.env.local');rmdir($keyPath);}
  foreach($inventory['pages'] as $r){$check(empty($r['requireItem']) && !str_contains($r['robots'] ?? '','noindex'),'Reader containers and noindex pages excluded');}
+ $authorName='Schema Testauthor';
+ $db->update('tl_user',['schemaPerson'=>0],['id'=>1]);
+ $db->insert('tl_news',['pid'=>0,'author'=>1,'headline'=>'Author fixture','published'=>1]);$authorNews=(int)$db->lastInsertId();$authorSource='news:'.$authorNews;
+ $authorRun=['stage'=>'content','mode'=>'improve','origin'=>'https://example.org','warnings'=>[],'decisions'=>[],'proposals'=>[],'mapped'=>[],
+  'inventory'=>['identities'=>[],'pages'=>[],'sources'=>[$authorSource=>['id'=>$authorSource,'text'=>'Contao editorial author: '.$authorName.'.','hash'=>'author-fixture','language'=>'en']],
+  'records'=>['author:1'=>['id'=>1,'name'=>$authorName,'schemaPerson'=>0],$authorSource=>['id'=>$authorNews,'_authorTarget'=>'author:1']]]];
+ $engine->proposeAuthors($authorRun);$engine->proposeAuthors($authorRun);
+ $check(count($authorRun['proposals'])===2&&count(array_filter($authorRun['proposals'],fn($p)=>$p['status']==='pending'))===2,'Improvement author coverage creates a Person and mapping once');
+ $engine->apply($authorRun,[0,1],$user);$createdPerson=$authorRun['mapped']['new:author-1'];
+ $check((int)$db->fetchOne('SELECT schemaPerson FROM tl_user WHERE id=1')===$createdPerson&&$db->fetchOne('SELECT published FROM tl_schema_entity WHERE id=?',[$createdPerson])==='','Reviewed author mapping applies and Person remains draft');
+ $authorRun['proposals']=[];$authorRun['mapped']=[];$authorRun['inventory']['identities']=[['id'=>$createdPerson,'entityType'=>'Person','name'=>$authorName]];
+ $engine->proposeAuthors($authorRun);$check(!$authorRun['proposals']&&str_contains(implode(' ',$authorRun['warnings']),'draft'),'Existing draft is not duplicated');
+ $authorRun['inventory']['records']['entity:'.$createdPerson]=['id'=>$createdPerson,'entityType'=>'Person','name'=>$authorName,'published'=>'1'];
+ $engine->proposeAuthors($authorRun);$check(count($authorRun['proposals'])===1&&$authorRun['proposals'][0]['value']==='entity:'.$createdPerson,'Existing published Person gets only a mapping suggestion');
+ $authorRun['proposals']=[];$authorRun['inventory']['records']['author:1']['schemaPerson']=$createdPerson;$engine->proposeAuthors($authorRun);$check(!$authorRun['proposals'],'Already mapped author is left alone');
+ $authorRun['inventory']['records']['author:1']['schemaPerson']=0;$authorRun['inventory']['records']['author:1']['name']='Editorial Team';$engine->proposeAuthors($authorRun);$check(!$authorRun['proposals'],'Generic team account is not a Person');
  echo "PASS: key storage, fixed provider, evidence validation, draft dependencies, versions, identity protection and stale edits.\n";
 } finally { $db->rollBack();echo "AI fixtures rolled back.\n"; }

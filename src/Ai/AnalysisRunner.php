@@ -22,6 +22,7 @@ final class AnalysisRunner
         foreach ($inventory['sources'] as $key=>$source) { if (!$changed || ($previous['hashes'][($stage==='foundation'?'foundation:':'').$mode.':'.$key] ?? '')!==$source['hash']) { $queue[]=$key; } }
         $run=['import'=>$stage==='import','auditResults'=>[],'importSources'=>[],'importPlan'=>[],'root'=>$root,'stage'=>$stage,'mode'=>$mode,'origin'=>$origin,'inventory'=>$inventory,'queue'=>$queue,'processed'=>[],
             'localizationQueue'=>[],'localizationPrepared'=>false,'editorLanguage'=>$GLOBALS['TL_LANGUAGE'] ?? 'en','proposals'=>[],'mapped'=>[],'decisions'=>$previous['decisions'],'status'=>$queue?'ready':'complete','usage'=>['input_tokens'=>0,'output_tokens'=>0],'warnings'=>[],'createdAt'=>time()];
+        $this->proposals->proposeAuthors($run);
         (new MissingRelations($this->db))->propose($run);
         return $this->store->create((int)$user->id,$root,$run);
     }
@@ -92,6 +93,7 @@ final class AnalysisRunner
             $run['inventory']=$fresh;
             foreach($run['proposals'] as &$proposal){if($proposal['status']==='pending'&&!isset($fresh['sources'][$proposal['source']])){$proposal['status']='invalid';$proposal['reason']='The source is no longer active.';}}unset($proposal);
             if(isset($run['previousSuggestions']))$run['previousSuggestions']=array_values(array_filter($run['previousSuggestions'],static fn($p)=>isset($fresh['sources'][$p['source']])));
+            if(!$localizing)$this->proposals->proposeAuthors($run);
             if(!$sources){$result=['suggestions'=>[],'usage'=>[],'warning'=>null,'explanation'=>''];}
             else {
                 $context=$this->proposals->context($run,$sources);

@@ -94,7 +94,43 @@ final class ProposalEngine
         if ($m[1]==='translation') { $type=$run['inventory']['records']['entity:'.$row['pid']]['entityType'] ?? ''; }
         return [match($m[1]){'entity'=>'tl_schema_entity','translation'=>'tl_schema_translation','news'=>'tl_news','author'=>'tl_user','page'=>'tl_page'},(int)$m[2],$type,$row];
     }
-    public function ingest(array &$run,array $suggestions,array $sources): void
+    /** Author coverage must not depend on whether the language model happens to propose it. */
+    public function proposeAuthors(array &$run): void
+    {
+        if(($run['stage']??'content')!=='content')return;
+        $normalize=static fn($name)=>mb_strtolower(trim(preg_replace('/\s+/u',' ',(string)$name)));
+        foreach($run['inventory']['records'] as $target=>$author){
+            if(!str_starts_with($target,'author:')||!empty($author['schemaPerson']))continue;
+            $name=trim($author['name']??'');$source=null;
+            foreach($run['inventory']['sources'] as $key=>$candidate){
+                if(str_starts_with($key,'news:')&&($run['inventory']['records'][$key]['_authorTarget']??'')===$target){$source=$candidate;break;}
+            }
+            if(!$source)continue;
+            // A display name alone cannot prove that an account represents a human.
+            if(!preg_match('/^\p{L}[\p{L}\p{M} .\x{2019}\x{0027}-]+\s+\p{L}[\p{L}\p{M} .\x{2019}\x{0027}-]*$/u',$name)||preg_match('/\b(team|admin|editor|redaktion|support|marketing|office|gmbh|company)\b/iu',$name)){
+                $run['warnings'][]='Review author "'.$name.'": confirm a named person in Contao before creating a public Person.';continue;
+            }
+            $matches=array_filter($run['inventory']['identities']??[],static fn($r)=>($r['entityType']??'')==='Person'&&$normalize($r['name']??'')===$normalize($name));
+            $related=null;$create=null;
+            if(count($matches)>1){$run['warnings'][]='Multiple Persons match author "'.$name.'". Choose the public author entity in user settings.';continue;}
+            if($matches){
+                $match=reset($matches);$related='entity:'.$match['id'];
+                if(!isset($run['inventory']['records'][$related])){$run['warnings'][]='Person "'.$name.'" already exists as a draft. Review/publish it and link it in user settings; no duplicate was proposed.';continue;}
+            }else{
+                foreach($run['proposals'] as $p){if($p['action']==='create'&&$p['field']==='Person'&&$normalize($p['value'])===$normalize($name)&&!in_array($p['status'],['invalid','rejected'],true)){$related=$p['target'];break;}}
+                $related??='new:author-'.substr($target,7);
+                $create=['action'=>'create','target'=>$related,'field'=>'Person','value'=>$name];
+            }
+            $quote='Contao editorial author: '.$name.'.';
+            $evidence=['source'=>$source['id'],'quote'=>$quote,'reason'=>'This named Contao author writes published articles. Review that this is a person, then create/link a public Person so all their articles share one identity. No biography, job title or home page is inferred. New entries remain drafts; publish after review.'];
+            $suggestions=[];
+            if($create&&!array_filter($run['proposals'],static fn($p)=>$p['action']==='create'&&$p['target']===$related))$suggestions[]=$create+$evidence;
+            if(!array_filter($run['proposals'],static fn($p)=>$p['action']==='add'&&$p['target']===$target&&$p['field']==='schemaPerson'&&!in_array($p['status'],['invalid','rejected'],true)))$suggestions[]=['action'=>'add','target'=>$target,'field'=>'schemaPerson','value'=>$related]+$evidence;
+            $this->ingest($run,$suggestions,[$source['id']=>$source],true);
+        }
+        $run['warnings']=array_values(array_unique($run['warnings']));
+    }
+    public function ingest(array &$run,array $suggestions,array $sources,bool $authorCoverage=false): void
     {
         // Define candidates before their fields, irrespective of provider ordering.
         usort($suggestions,static fn($a,$b)=>(['create'=>0,'home'=>1][$a['action']] ?? 2)<=>(['create'=>0,'home'=>1][$b['action']] ?? 2));
@@ -119,7 +155,7 @@ final class ProposalEngine
                 }
                 $authorMapping=$p['action']==='add'&&str_starts_with($p['target'],'author:')&&$p['field']==='schemaPerson';
                 if (empty($run['_localizationTask']) && $run['mode']==='discover' && !$authorMapping && !str_starts_with($p['target'],'new:') && !($p['action']==='add' && preg_match('/^(news|page):[1-9][0-9]*$/D',$p['target']) && str_starts_with($p['value'],'new:'))) { throw new \InvalidArgumentException('New-subject analysis cannot edit existing records.'); }
-                if (empty($run['_localizationTask']) && $run['mode']==='improve' && str_starts_with($p['target'],'new:')) { throw new \InvalidArgumentException('Improvement analysis cannot create new entities.'); }
+                if (empty($run['_localizationTask']) && $run['mode']==='improve' && str_starts_with($p['target'],'new:') && !($authorCoverage && $p['action']==='create' && $p['field']==='Person')) { throw new \InvalidArgumentException('Improvement analysis cannot create new entities.'); }
                 if(!empty($run['_localizationTask'])){
                     $task=$run['_localizationTask'];
                     $home=$p['action']==='home'&&$p['target']===$task['target']&&in_array((int)$p['value'],$task['missingPages'],true);
