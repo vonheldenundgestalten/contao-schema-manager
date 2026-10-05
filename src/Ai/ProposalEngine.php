@@ -77,9 +77,9 @@ final class ProposalEngine
     public function resolve(string $key,array $run): array
     {
         if (preg_match('/^(entity:[1-9][0-9]*|new:[a-z0-9-]{1,64})@([1-9][0-9]*)$/D',$key,$m)) {
-            [,,$type]=$this->resolve($m[1],$run);
+            [,$parentId,$type]=$this->resolve($m[1],$run);
             $id=(int)($run['mapped'][$key] ?? 0);
-            foreach ($run['inventory']['records'] as $k=>$row) { if (str_starts_with($k,'translation:') && 'entity:'.$row['pid']===$m[1] && (int)$row['page']===(int)$m[2]) { return ['tl_schema_translation',(int)$row['id'],$type,$row]; } }
+            foreach ($run['inventory']['records'] as $k=>$row) { if (str_starts_with($k,'translation:') && ((int)$row['pid']===$parentId || 'entity:'.$row['pid']===$m[1]) && (int)$row['page']===(int)$m[2]) { return ['tl_schema_translation',(int)$row['id'],$type,$row]; } }
             return ['tl_schema_translation',$id,$type,[]];
         }
         if (str_starts_with($key,'new:')) {
@@ -211,6 +211,16 @@ final class ProposalEngine
     /** Caller holds the run row lock and a DB transaction. All selected changes are atomic. */
     public function apply(array &$run,array $selected,BackendUser $user): int
     {
+        // A language record may have been created by an earlier apply or manually
+        // since the scan. Resolve exact entity + page identities, never names.
+        foreach($run['proposals'] as $proposal){
+            $key=$proposal['target'];
+            if($proposal['status']!=='pending'||!preg_match('/^(entity:[1-9][0-9]*|new:[a-z0-9-]+)@([1-9][0-9]*)$/D',$key,$parts)||!empty($run['mapped'][$key]))continue;
+            try{[,$parentId,$parentType]=$this->resolve($parts[1],$run);}catch(\InvalidArgumentException){continue;}
+            if(!$parentId)continue;
+            $homes=$this->db->fetchFirstColumn('SELECT t.id FROM tl_schema_translation t JOIN tl_schema_entity e ON e.id=t.pid WHERE t.pid=? AND t.page=? AND e.entityType=?',[$parentId,(int)$parts[2],$parentType]);
+            if(count($homes)===1)$run['mapped'][$key]=(int)$homes[0];
+        }
         $plan=ProposalQueue::plan($run,$selected);$indices=$plan['order'];$run['applyBlocked']=$plan['blocked'];$versions=[];$count=0;
         foreach ($indices as $index) {
             $p=$run['proposals'][$index] ?? null;
