@@ -516,3 +516,5 @@ Run the Contao database update after installing this addition. Fields are option
 
 
 Content analyses now include a deterministic author coverage check in both new-entry and improvement mode. Named, unmapped authors of eligible published news get a reviewed Person creation/link suggestion, even if the model omits them. Existing Persons are reused; draft or ambiguous matches and generic account names require review. No account email/login data or invented biography is included. New Persons remain drafts: publish after review and add suitable localized homes for richer details. Start a fresh content run to receive these suggestions.
+
+Applying AI suggestions now builds a dependency queue: required pending entity/home creations are included first, then fields and relationships. Rejected or invalid prerequisites are never revived. Suggestions without a resolvable prerequisite stay pending with their entity, field and missing dependency named; independent changes can apply. Other validation/concurrency failures still roll back the batch and identify the affected suggestion.

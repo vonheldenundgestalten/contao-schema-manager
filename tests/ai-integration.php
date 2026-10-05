@@ -64,7 +64,7 @@ try {
  $run['inventory']['records']['page:'.$relationPage]=$relationRow;
  $engine->ingest($run,[$proposal('add','page:'.$relationPage,'schemaEntities','new:test')],[$source['id']=>$source]);
  $check(count($run['proposals'])===4 && end($run['proposals'])['old']===[],'Empty array relationship snapshot retained');
- $engine->apply($run,[0,1,2,3],$user);
+ $engine->apply($run,[2,3],$user); // Queue includes the required entity and home automatically.
  $check(Contao\StringUtil::deserialize($db->fetchOne('SELECT schemaEntities FROM tl_page WHERE id=?',[$relationPage]),true)===[(int)$run['mapped']['new:test']],'Apply all accepts NULL and empty array as equivalent');
  // A normalized snapshot must also compare with a serialized nonempty list.
  $relationSnapshot=$run;$relationSnapshot['mode']='improve';$relationSnapshot['proposals']=[];
