@@ -8,7 +8,7 @@ final class EntityMapper
     public function map(array $entity, ?array $translation, ?string $url, ?array $organization = null): array
     {
         $type = $entity['entityType'];
-        $name = in_array($type, ['Service', 'Product', 'SoftwareApplication', 'Event'], true)
+        $name = in_array($type, ['Service', 'Product', 'SoftwareApplication', 'Event', 'Place'], true)
             ? ($translation['name'] ?? '') ?: $entity['name']
             : $entity['name'];
         $node = [
@@ -41,11 +41,9 @@ final class EntityMapper
         if ($type === 'LocalBusiness') {
             foreach (['hasMap', 'priceRange'] as $field) { $node[$field] = $entity[$field] ?? null; }
             if ($hours = self::lines($entity['openingHours'] ?? '')) { $node['openingHours'] = $hours; }
-            $lat = $entity['latitude'] ?? ''; $lon = $entity['longitude'] ?? '';
-            if (is_numeric($lat) && is_numeric($lon) && abs((float) $lat) <= 90 && abs((float) $lon) <= 180) {
-                $node['geo'] = ['@type' => 'GeoCoordinates', 'latitude' => (float) $lat, 'longitude' => (float) $lon];
-            }
+            if($geo=LocationData::physical($entity)['geo']??null)$node['geo']=$geo;
         }
+        if ($type === 'Place') { $node += array_diff_key(LocationData::physical($entity), ['@type'=>true]); }
         if ($type === 'Person') {
             $node['jobTitle'] = $translation['jobTitle'] ?? null;
             if ($credentials = self::lines($translation['credentials'] ?? '')) {
@@ -57,7 +55,7 @@ final class EntityMapper
             $node['serviceType'] = $translation['serviceType'] ?? null;
             if (!empty($translation['audienceType'])) { $node['audience'] = ['@type' => 'Audience', 'audienceType' => $translation['audienceType']]; }
         }
-        if ($organization && $type !== 'Product') {
+        if ($organization && !in_array($type, ['Product','Place'], true)) {
             $property = match ($type) {
                 'Person' => 'worksFor', 'Service' => 'provider',
                 'Event' => 'organizer', 'SoftwareApplication' => 'publisher', default => 'parentOrganization',
@@ -105,21 +103,8 @@ final class EntityMapper
             if (in_array($mode, ['OfflineEventAttendanceMode', 'OnlineEventAttendanceMode', 'MixedEventAttendanceMode'], true)) {
                 $node['eventAttendanceMode'] = 'https://schema.org/'.$mode;
             }
-            $places = [];
-            if ($mode !== 'OnlineEventAttendanceMode') {
-                $place = ['@type' => 'Place'];
-                if (!empty($entity['locationName'])) { $place['name'] = $entity['locationName']; }
-                $address = [];
-                foreach (['streetAddress', 'postalCode', 'addressLocality', 'addressRegion', 'addressCountry'] as $field) {
-                    if (!empty($entity[$field])) { $address[$field] = $entity[$field]; }
-                }
-                if ($address) { $place['address'] = ['@type' => 'PostalAddress'] + $address; }
-                if (count($place) > 1) { $places[] = $place; }
-            }
-            if (in_array($mode, ['OnlineEventAttendanceMode', 'MixedEventAttendanceMode'], true) && !empty($entity['eventUrl'])) {
-                $places[] = ['@type' => 'VirtualLocation', 'url' => $entity['eventUrl']];
-            }
-            if ($places) { $node['location'] = count($places) === 1 ? $places[0] : $places; }
+            $physical=($entity['eventLocationMode']??'')==='existing'?null:LocationData::physical($entity);
+            if($locations=LocationData::combine($mode,$physical,(string)($entity['eventUrl']??'')))$node['location']=$locations;
         }
         return array_filter($node, static fn ($v): bool => $v !== null && $v !== '' && $v !== []);
     }

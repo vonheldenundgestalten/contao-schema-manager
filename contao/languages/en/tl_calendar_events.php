@@ -17,3 +17,18 @@ $GLOBALS['TL_LANG']['tl_calendar_events']['schemaIdentity'] = ['Stable event ide
 $GLOBALS['TL_LANG']['tl_calendar_events']['schemaLatitude'] = ['Latitude', 'Manual decimal coordinates. Enter both values. Leave both empty to inherit the calendar pair; a partial event pair does not inherit.'];
 
 $GLOBALS['TL_LANG']['tl_calendar_events']['schemaLongitude'] = ['Longitude', 'Manual decimal coordinates. Enter both values. Leave both empty to inherit the calendar pair; a partial event pair does not inherit.'];
+
+$GLOBALS['TL_LANG']['tl_calendar_events']['schemaLocationMode'] = ['Event location', 'Link an existing venue or enter a custom address. Hidden fields remain saved.'];
+
+$GLOBALS['TL_LANG']['tl_calendar_events']['schemaPlace'] = ['Existing location', 'Choose a Place or LocalBusiness. Only published entries are output; custom address fields are ignored.'];
+
+$GLOBALS['TL_LANG']['tl_calendar_events']['schemaAddressRegion'] = ['Region / state', ''];
+
+$GLOBALS['TL_LANG']['tl_calendar_events']['schemaHasMap'] = ['Map link', 'Optional public map URL.'];
+$GLOBALS['TL_LANG']['tl_calendar_events']['locationModes'][''] = 'Calendar default / legacy address';
+$GLOBALS['TL_LANG']['tl_calendar_events']['locationModes']['existing'] = 'Existing location';
+$GLOBALS['TL_LANG']['tl_calendar_events']['locationModes']['custom'] = 'Custom location';
+$GLOBALS['TL_LANG']['tl_calendar_events']['attendanceModes']['']='Calendar default / in person';
+$GLOBALS['TL_LANG']['tl_calendar_events']['attendanceModes']['OfflineEventAttendanceMode']='In person';
+$GLOBALS['TL_LANG']['tl_calendar_events']['attendanceModes']['OnlineEventAttendanceMode']='Online';
+$GLOBALS['TL_LANG']['tl_calendar_events']['attendanceModes']['MixedEventAttendanceMode']='Hybrid: in person and online';

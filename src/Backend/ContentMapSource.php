@@ -60,6 +60,7 @@ final class ContentMapSource
             foreach($this->connection->fetchAllAssociative('SELECT * FROM tl_calendar_events ORDER BY startTime,id') as $row){
                 if(!$user->isAdmin&&!$this->security->isGranted(ContaoCorePermissions::DC_PREFIX.'tl_calendar_events',new ReadAction('tl_calendar_events',$row)))continue;
                 $calendar=$calendars[$row['pid']]??null;if(!$calendar)continue;
+                $venue=\VHUG\SchemaManagerBundle\Schema\LocationData::calendar($row,$calendar);$row['_venue']=($row['schemaAttendanceMode']?:$calendar['schemaAttendanceMode'])!=='OnlineEventAttendanceMode'&&$venue['mode']==='existing'?$venue['id']:0;
                 $row['_reader']=(int)$calendar['jumpTo'];$row['_mode']=$calendar['schemaMode'];$row['_protected']=$calendar['protected'];$row['_organizer']=(int)($row['schemaOrganizer']?:$calendar['schemaOrganizer']);$row['url']='';
                 try{if($model=\Contao\CalendarEventsModel::findById($row['id']))$row['url']=$this->urls->generate($model,[],UrlGeneratorInterface::ABSOLUTE_URL);}catch(RoutingException){}
                 foreach(['schemaAbout','schemaPerformer'] as $field)$row[$field]=StringUtil::deserialize($row[$field]??null,true);

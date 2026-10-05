@@ -538,3 +538,16 @@ Run the Contao database update after installing this addition. Fields are option
 Content analyses now include a deterministic author coverage check in both new-entry and improvement mode. Named, unmapped authors of eligible published news get a reviewed Person creation/link suggestion, even if the model omits them. Existing Persons are reused; draft or ambiguous matches and generic account names require review. No account email/login data or invented biography is included. New Persons remain drafts: publish after review and add suitable localized homes for richer details. Start a fresh content run to receive these suggestions.
 
 Applying AI suggestions now builds a dependency queue: required pending entity/home creations are included first, then fields and relationships. Rejected or invalid prerequisites are never revived. Suggestions without a resolvable prerequisite stay pending with their entity, field and missing dependency named; independent changes can apply. Other validation/concurrency failures still roll back the batch and identify the affected suggestion.
+
+
+### Reusable event locations (Calendar feature branch)
+
+Create and publish a **Place** in Schema Manager with its name, address and optional latitude/longitude and map link. A LocalBusiness can also be used directly as a venue, without creating a duplicate Place. Places use the usual localized homes for translated name/description; a shared venue can also be referenced without a dedicated page.
+
+In a standalone Event or Calendar event, choose the attendance mode, then **Existing location** or **Custom location**. Existing location offers Places and LocalBusiness entries, labelled with their city. Draft choices are marked and never emitted publicly. A missing/unpublished selected venue does not fall back to stale custom data. Physical venue details are included on the event page, including when the LocalBusiness is otherwise emitted as a compact company reference.
+
+Online-only events show only the online URL. Hybrid events show both physical and online settings. Switching modes retains hidden values but excludes them from JSON-LD output. These controls manage structured data; Contao’s ordinary event text/template fields remain available and are not rewritten. Coordinates stay manual and require a valid pair. Place, LocalBusiness and custom event locations use the same coordinate validation.
+
+Calendars can supply a shared venue. Calendar events retain **Calendar default / legacy address** for compatibility; select **Custom location** to replace that default completely, or **Existing location** to choose another venue. Old per-event addresses remain custom. Explicit custom addresses never borrow calendar coordinates or mix with the selected shared venue.
+
+Run the Contao database update for the new selection fields and rebuild the application cache. This feature remains on the event branch; it does not implement the broader entity expansion or automatic venue discovery.

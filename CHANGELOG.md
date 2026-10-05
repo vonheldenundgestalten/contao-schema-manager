@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — Calendar feature branch
+
+- Reusable Place venues with address, manual coordinates and map links; existing LocalBusiness entities are available as event venues.
+- Standalone and calendar events choose an existing or custom location, with conditional online/hybrid fields and preserved hidden data. Explicit selections avoid mixing venue facts with old custom/calendar addresses.
+
+
 ## 1.2.1 — 2026-10-05
 
 - Preserve literal fragments in editable website IDs through Contao input handling. Decode already-stored HTML entities when editing and emitting the website node and its references.

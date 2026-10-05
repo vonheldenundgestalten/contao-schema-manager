@@ -23,10 +23,8 @@ final class CalendarEventGraph
             if(($calendar['schemaMode']??'')==='suppress'){$graph->hide(Event::class,$key);continue;}
             if(empty($record['published'])||!empty($calendar['protected'])||(!empty($record['start'])&&$record['start']>time())||(!empty($record['stop'])&&$record['stop']<=time())){$graph->hide(Event::class,$key);continue;}
             $values=[];foreach(array_keys(CalendarEventFields::defaults()) as $field)$values[$field]=($record[$field]??'')?:($calendar[$field]??'');
-            $coordinates=trim((string)($record['schemaLatitude']??''))!==''||trim((string)($record['schemaLongitude']??''))!==''?$record:$calendar;
-            $latitude=trim((string)($coordinates['schemaLatitude']??''));$longitude=trim((string)($coordinates['schemaLongitude']??''));
-            if($latitude!==''&&$longitude!==''&&is_numeric($latitude)&&is_numeric($longitude)&&abs((float)$latitude)<=90&&abs((float)$longitude)<=180)$geo=['@type'=>'GeoCoordinates','latitude'=>(float)$latitude,'longitude'=>(float)$longitude];else $geo=null;
-            if(!$geo&&($calendar['schemaMode']??'')!=='enrich'&&!array_filter($values)&&empty($record['schemaAbout'])&&empty($record['schemaPerformer']))continue;
+            $location=LocationData::calendar($record,$calendar);
+            if(!$location['id']&&empty($record['schemaLocationMode'])&&empty($calendar['schemaLocationMode'])&&!array_filter($location['facts'],static fn($value)=>trim((string)$value)!=='')&&($calendar['schemaMode']??'')!=='enrich'&&!array_filter($values)&&empty($record['schemaAbout'])&&empty($record['schemaPerformer']))continue;
             $node=$graph->get(Event::class,$key)->toArray();unset($node['@context']);
             $model=\Contao\CalendarEventsModel::findById($record['id']);if(!$model)continue;
             $url=$this->urls->generate($model,[],UrlGeneratorInterface::ABSOLUTE_URL);
@@ -35,15 +33,18 @@ final class CalendarEventGraph
             unset($node['identifier']);$node['@id']=$identity;$node['url']=$url;$node['inLanguage']=$language;$node['mainEntityOfPage']=['@id'=>$url.'#webpage'];
             if($values['schemaEventStatus'])$node['eventStatus']='https://schema.org/'.$values['schemaEventStatus'];
             $mode=$values['schemaAttendanceMode'];if($mode)$node['eventAttendanceMode']='https://schema.org/'.$mode;
-            $place=$node['location']??['@type'=>'Place'];if(!is_array($place)||array_is_list($place))$place=['@type'=>'Place'];
-            if($values['schemaLocationName'])$place['name']=$values['schemaLocationName'];
-            $address=$place['address']??['@type'=>'PostalAddress'];if(!is_array($address))$address=['@type'=>'PostalAddress','description'=>$address];
-            foreach(['schemaStreetAddress'=>'streetAddress','schemaPostalCode'=>'postalCode','schemaAddressLocality'=>'addressLocality','schemaAddressCountry'=>'addressCountry'] as $field=>$property)if($values[$field])$address[$property]=$values[$field];
-            if(count($address)>1)$place['address']=$address;
-            if($geo)$place['geo']=$geo;
-            $locations=[];if($mode!=='OnlineEventAttendanceMode'&&count($place)>1)$locations[]=$place;
-            if(in_array($mode,['OnlineEventAttendanceMode','MixedEventAttendanceMode'],true)&&$values['schemaEventUrl'])$locations[]=['@type'=>'VirtualLocation','url'=>$values['schemaEventUrl']];
-            if($locations)$node['location']=count($locations)===1?$locations[0]:$locations;elseif($mode==='OnlineEventAttendanceMode')unset($node['location']);
+            if($location['mode']==='existing'){
+                $place=$mode==='OnlineEventAttendanceMode'?null:$this->entities->venue($location['id'],$language,$manager,$emitted);
+            }else{
+                $place=LocationData::physical($location['facts']);
+                // Preserve core location only for legacy/default custom fields, not an explicit replacement.
+                if(empty($record['schemaLocationMode']) && empty($calendar['schemaLocationMode'])){
+                    $core=$node['location']??[];
+                    if(is_array($core)&&!array_is_list($core))$place=array_replace_recursive($core,$place);
+                }
+            }
+            unset($node['location']);
+            if($locations=LocationData::combine($mode,$place,(string)$values['schemaEventUrl']))$node['location']=$locations;
             if($organizer=$this->entities->emit((int)$values['schemaOrganizer'],$language,$manager,$emitted))$node['organizer']=['@id'=>$organizer['@id']];
             foreach(['schemaAbout'=>'about','schemaPerformer'=>'performer'] as $field=>$property){$refs=[];foreach(\Contao\StringUtil::deserialize($record[$field]??null,true) as $id){if($entity=$this->entities->emit((int)$id,$language,$manager,$emitted))$refs[]=['@id'=>$entity['@id']];}if($refs){$existing=$node[$property]??[];if(!is_array($existing)||!array_is_list($existing))$existing=[$existing];$node[$property]=array_values(array_unique(array_merge($existing,$refs),SORT_REGULAR));}}
             if($identity!==$key)$graph->hide(Event::class,$key);$graph->set($manager->createSchemaOrgTypeFromArray($node),$identity);

@@ -10,3 +10,5 @@ $names=array_merge(array_keys((VHUG\SchemaManagerBundle\Schema\CalendarEventFiel
 foreach(array_keys($GLOBALS['TL_DCA']['tl_calendar_events']['palettes']) as $palette){if($palette==='__selector__')continue;PaletteManipulator::create()->addLegend('schema_legend','details_legend',PaletteManipulator::POSITION_AFTER)->addField($names,'schema_legend',PaletteManipulator::POSITION_APPEND)->applyToPalette($palette,'tl_calendar_events');}
 
 $fields['schemaPerformer']['options_callback']=[VHUG\SchemaManagerBundle\EventListener\CalendarSettingsListener::class,'performers'];
+
+$fields['schemaAttendanceMode']['reference']=&$GLOBALS['TL_LANG']['tl_calendar_events']['attendanceModes'];

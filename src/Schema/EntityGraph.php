@@ -26,6 +26,21 @@ final class EntityGraph
         return $row && !empty($row['entityId']) ? $row : null;
     }
 
+    /** A venue reference needs its physical facts even when LocalBusiness is compact elsewhere. */
+    public function venue(int $id,string $language,JsonLdManager $manager,array &$emitted): ?array
+    {
+        $this->tags->tagWithModelClass(\VHUG\SchemaManagerBundle\Model\EntityModel::class);
+        $record=$this->record($id);
+        if(!$record || !in_array($record['entityType'],['Place','LocalBusiness'],true))return null;
+        $node=$this->emit($id,$language,$manager,$emitted);
+        if(!$node)return null;
+        $facts=LocationData::physical($record);
+        foreach(['address','geo','hasMap'] as $property)if(isset($facts[$property]))$node[$property]=$facts[$property];
+        $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->set($manager->createSchemaOrgTypeFromArray($node),$node['@id']);
+        $emitted[$record['entityId']]=$node;
+        return array_intersect_key($node,array_flip(['@type','@id','name','url','address','geo','hasMap']));
+    }
+
     public function emit(int $id, string $language, JsonLdManager $manager, array &$emitted): ?array
     {
         if (!$entity = $this->record($id)) { return null; }
@@ -133,6 +148,17 @@ final class EntityGraph
         }
         if ($url && !empty($translation['isMainEntity'])) { $homeData=!empty($home->schemaImportedActive)?json_decode($home->schemaImportedData??'',true):[];$node['mainEntityOfPage'] = ['@id' => $homeData['@id']??($url.'#webpage')]; }
         $node=ImportedSchema::merge($node,$translation['schemaImportedData']??null);
+        if($entity['entityType']==='Event'){
+            $mode=(string)($entity['eventAttendanceMode']??'');
+            if(($entity['eventLocationMode']??'')==='existing'){
+                $venue=$mode==='OnlineEventAttendanceMode'?null:$this->venue((int)($entity['eventPlace']??0),$language,$manager,$emitted);
+                unset($node['location']);
+                if($locations=LocationData::combine($mode,$venue,(string)($entity['eventUrl']??'')))$node['location']=$locations;
+            } elseif($mode==='OnlineEventAttendanceMode') {
+                unset($node['location']);
+                if($locations=LocationData::combine($mode,null,(string)($entity['eventUrl']??'')))$node['location']=$locations;
+            }
+        }
         // A company keeps its full description on its localized home. Supporting
         // references stay identifiable without repeating all legal/contact facts.
         // Decide before publishing the node, so later graph listeners can enrich it.

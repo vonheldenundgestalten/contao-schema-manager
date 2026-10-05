@@ -120,6 +120,7 @@ final class ContentRelationshipMap
             $add($key,'Event',$event['title'],(int)$event['id'],'event',['identity'=>$event['schemaIdentity']??'','detail'=>$reader['language']??'','published'=>(bool)$event['published'],'warnings'=>$event['_mode']==='suppress'?['suppressed']:[]]);
             if($event['_mode']==='suppress')continue;
             $link($key,'entity-'.$event['_organizer'],'organizer');
+            if(!empty($event['_venue']))$link($key,'entity-'.$event['_venue'],'location');
             foreach(['schemaAbout'=>'about','schemaPerformer'=>'performer'] as $field=>$property)foreach($event[$field]??[] as $id)$link($key,'entity-'.$id,$property);
             if($reader&&!empty($event['url'])){
                 $detail='event-reader-'.$event['id'];$add($detail,'ItemPage',$event['title'],(int)$reader['id'],'page',['identity'=>$event['url'].'#webpage','detail'=>$reader['language']??'','published'=>(bool)$event['published']]);
