@@ -67,3 +67,7 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['registrationNames'] = ["Localized 
 $GLOBALS['TL_LANG']['tl_schema_translation']['registerNumber'] = "Registration number (fixed)";
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['registerName'] = "Register name in this language";
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['softwareRequirements'] = ['Software requirements', 'Requirements in this language.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['featureList'] = ['Features', 'Describe the main software features in this language.'];

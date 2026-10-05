@@ -137,12 +137,17 @@ final class DataContainerListener
             'Person' => 'description,jobTitle,knowsAbout,credentials,award',
             'Organization', 'LocalBusiness' => 'description,slogan,knowsAbout,catalogName,sameAs,registrationNames',
             'Service' => 'name,description,serviceType,audienceType,catalogName',
+            'SoftwareApplication' => 'name,description,softwareRequirements,featureList',
             'Product', 'Event' => 'name,description',
             default => 'description',
         };
         $GLOBALS['TL_DCA']['tl_schema_translation']['palettes']['default'] =
             '{home_legend},page,language,isMainEntity;{content_legend},'.$fields.
+<<<<<<< HEAD
             (in_array($type, ['Service', 'Product'], true) ? ';{offer_legend},offerMode,offerDescription' : '').';{publish_legend},published;{import_legend:hide},schemaImportedData;{preview_legend:hide},schemaPreview';
+=======
+            (in_array($type, ['Service', 'Product', 'SoftwareApplication'], true) ? ';{offer_legend},offerMode,offerDescription' : '').';{publish_legend},published;{preview_legend:hide},schemaPreview';
+>>>>>>> main
     }
 
 

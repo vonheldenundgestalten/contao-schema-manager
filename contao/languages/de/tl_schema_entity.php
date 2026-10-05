@@ -108,3 +108,11 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['registerName'] = "Registername";
 $GLOBALS['TL_LANG']['tl_schema_entity']['registerNumber'] = "Registernummer";
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['registerName'] = "Standard-Registername";
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['applicationCategory'] = ['Anwendungskategorie', 'Zum Beispiel BusinessApplication oder DeveloperApplication.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['operatingSystem'] = ['Betriebssystem', 'Unterstützte Systeme oder Plattformunabhängigkeit.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['softwareVersion'] = ['Softwareversion', 'Die aktuelle Version, sofern relevant.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['runtimePlatform'] = ['Laufzeitumgebung', 'Zum Beispiel Contao 5.7 und PHP 8.3.'];

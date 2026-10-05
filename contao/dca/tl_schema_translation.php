@@ -76,3 +76,7 @@ $GLOBALS['TL_DCA']['tl_schema_translation']['fields']['schemaImportedData'] = ['
 
 $GLOBALS['TL_DCA']['tl_schema_translation']['fields']['sameAs'] = ['inputType'=>'textarea','eval'=>['tl_class'=>'clr'],'sql'=>'text NULL'];
 $GLOBALS['TL_DCA']['tl_schema_translation']['fields']['registrationNames'] = ['inputType'=>'keyValueWizard','eval'=>['allowEmptyKeys'=>true,'tl_class'=>'clr','keyLabel'=>&$GLOBALS['TL_LANG']['tl_schema_translation']['registerNumber'],'valueLabel'=>&$GLOBALS['TL_LANG']['tl_schema_translation']['registerName']],'sql'=>'blob NULL'];
+
+foreach (['softwareRequirements', 'featureList'] as $field) {
+    $GLOBALS['TL_DCA']['tl_schema_translation']['fields'][$field] = ['inputType'=>'textarea', 'eval'=>['tl_class'=>'clr'], 'sql'=>'text NULL'];
+}
