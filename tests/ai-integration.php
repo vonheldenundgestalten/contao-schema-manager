@@ -66,6 +66,16 @@ try {
  $check(count($run['proposals'])===4 && end($run['proposals'])['old']===[],'Empty array relationship snapshot retained');
  $engine->apply($run,[2,3],$user); // Queue includes the required entity and home automatically.
  $check(Contao\StringUtil::deserialize($db->fetchOne('SELECT schemaEntities FROM tl_page WHERE id=?',[$relationPage]),true)===[(int)$run['mapped']['new:test']],'Apply all accepts NULL and empty array as equivalent');
+ // Simulate a partly applied run whose composite mapping was lost while the actual home exists.
+ $staged=$run;$staged['proposals']=[];$staged['mode']='improve';unset($staged['mapped']['new:test@'.$page->id]);
+ $staged['proposals'][]=$proposal('create','new:test','Service',$name)+['status'=>'applied'];
+ $staged['proposals'][]=$proposal('set','new:test@'.$page->id,'jobTitle','')+['status'=>'pending','old'=>''];
+ // Use a valid localized Service field, preserving the original snapshot for concurrency checks.
+ $staged['proposals'][1]['field']='description';$staged['proposals'][1]['value']='Updated staged description';$staged['proposals'][1]['old']='Reliable technical support.';
+ $engine->apply($staged,[1],$user);
+ $check($staged['proposals'][1]['status']==='applied'&&(int)$staged['mapped']['new:test@'.$page->id]>0,'Staged apply recovers the exact existing language record without a new scan');
+ $staged['proposals'][1]['status']='pending';$staged['proposals'][1]['value']='Do not overwrite a later edit';$staged['proposals'][1]['old']='Reliable technical support.';
+ try{$engine->apply($staged,[1],$user);throw new LogicException('Stale recovered translation was overwritten');}catch(RuntimeException $expected){$check(str_contains($expected->getMessage(),'changed since analysis'),'Recovered home keeps stale-field protection');}
  // A normalized snapshot must also compare with a serialized nonempty list.
  $relationSnapshot=$run;$relationSnapshot['mode']='improve';$relationSnapshot['proposals']=[];
  $entityId=(int)$run['mapped']['new:test'];

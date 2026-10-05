@@ -32,20 +32,26 @@ final class ProposalQueue
         if($same)return $prefix.'Its creation could not be resolved uniquely. Review the language-home suggestions for this entity.';
         return $prefix.'The AI proposed a description but omitted the language-home creation. Add this language record to the entity, then run improvement analysis to fill it. This description remains pending; other applicable suggestions can still be applied.';
     }
+    private static function canonical(string $key,array $run): string
+    {
+        $parts=explode('@',$key,2);
+        if(str_starts_with($parts[0],'new:')&&!empty($run['mapped'][$parts[0]]))$parts[0]='entity:'.$run['mapped'][$parts[0]];
+        return implode('@',$parts);
+    }
     public static function plan(array $run,array $selected): array
     {
         $providers=[];$ready=array_fill_keys(array_keys($run['inventory']['records']),true);
-        foreach($run['mapped']??[] as $key=>$id)if($id)$ready[$key]=true;
+        foreach($run['mapped']??[] as $key=>$id)if($id)$ready[self::canonical($key,$run)]=true;
         foreach($run['inventory']['records'] as $key=>$row)if(str_starts_with($key,'translation:'))$ready['entity:'.$row['pid'].'@'.$row['page']]=true;
         foreach($run['proposals'] as $i=>$p){
             if($p['status']!=='pending')continue;
             $key=match($p['action']){'create'=>$p['target'],'home'=>$p['target'].'@'.$p['value'],default=>null};
-            if($key!==null)$providers[$key][]=$i;
+            if($key!==null)$providers[self::canonical($key,$run)][]=$i;
         }
-        $requirements=static function(array $p):array{
+        $requirements=static function(array $p)use($run):array{
             $keys=$p['action']==='create'?[]:[$p['target']];
             if($p['action']==='add')$keys[]=$p['value'];
-            return array_unique($keys);
+            return array_unique(array_map(static fn($key)=>self::canonical($key,$run),$keys));
         };
         $pending=[];$visit=function(int $i)use(&$visit,&$pending,$run,$ready,$providers,$requirements):void{
             if(isset($pending[$i]))return;
@@ -62,8 +68,8 @@ final class ProposalQueue
                 $p=$run['proposals'][$i];$missing=array_filter($requirements($p),static fn($key)=>!isset($ready[$key]));
                 if($missing)continue;
                 $order[]=$i;unset($pending[$i]);$progress=true;
-                if($p['action']==='create')$ready[$p['target']]=true;
-                if($p['action']==='home')$ready[$p['target'].'@'.$p['value']]=true;
+                if($p['action']==='create')$ready[self::canonical($p['target'],$run)]=true;
+                if($p['action']==='home')$ready[self::canonical($p['target'].'@'.$p['value'],$run)]=true;
             }
         }while($progress&&$pending);
         $blocked=[];
