@@ -8,7 +8,7 @@
     const q = selector => root.querySelector(selector);
     const events=new AbortController();
     const listen=(element,type,callback)=>element?.addEventListener(type,callback,{signal:events.signal});
-    const colors = {Organization:'#b7dcff',LocalBusiness:'#a9e1d2',Person:'#d4c5f4',Service:'#ffe1a3',Product:'#ffcbb5',Event:'#ffc8e1',Missing:'#ffaaaa',WebSite:'#91d8ea',WebPage:'#dbe6ef',AboutPage:'#dbe6ef',ContactPage:'#dbe6ef',CollectionPage:'#dbe6ef',ProfilePage:'#dbe6ef',ItemPage:'#dbe6ef',BlogPosting:'#d5edb0',Article:'#d5edb0',NewsArticle:'#d5edb0',JobPosting:'#f2d0aa'};
+    const colors = {Organization:'#b7dcff',LocalBusiness:'#a9e1d2',Person:'#d4c5f4',Service:'#ffe1a3',Product:'#ffcbb5',SoftwareApplication:'#bdcafa',Event:'#ffc8e1',Missing:'#ffaaaa',WebSite:'#91d8ea',WebPage:'#dbe6ef',AboutPage:'#dbe6ef',ContactPage:'#dbe6ef',CollectionPage:'#dbe6ef',ProfilePage:'#dbe6ef',ItemPage:'#dbe6ef',BlogPosting:'#d5edb0',Article:'#d5edb0',NewsArticle:'#d5edb0',JobPosting:'#f2d0aa'};
     const languageControl=q('[data-sg-language]');
     const languages=[...new Set(elements.nodes.flatMap(n=>[n.data.language,...(n.data.languages||[])]).filter(Boolean))].sort();
     let currentLanguage='*';
@@ -57,7 +57,7 @@
       let nodes=elements.nodes.filter(n=>currentLanguage==='*'||(!n.data.language&&(!(n.data.languages||[]).length||n.data.languages.includes(currentLanguage)))||n.data.language===currentLanguage).map(n=>{
         const data={...n.data};
         data.homes=(data.homes||[]).filter(h=>currentLanguage==='*'||h.language===currentLanguage);
-        if(currentLanguage!=='*'&&['Service','Product','Event'].includes(data.type))data.name=data.homes.find(h=>h.published&&h.name)?.name||data.name;
+        if(currentLanguage!=='*'&&['Service','Product','SoftwareApplication','Event'].includes(data.type))data.name=data.homes.find(h=>h.published&&h.name)?.name||data.name;
         data.card=card(data);data.color=colors[data.type]||'#cbd5e1';
         return {data};
       });
@@ -83,7 +83,7 @@
     function arrange(){
       cy.elements().removeClass('focused dim');
       if(q('[data-sg-layout]')?.value==='type'){
-        const order=['WebSite','Organization','LocalBusiness','Person','Service','Product','Event','BlogPosting','Article','NewsArticle','JobPosting','WebPage','AboutPage','ContactPage','CollectionPage','ProfilePage','ItemPage','Missing'];
+        const order=['WebSite','Organization','LocalBusiness','Person','Service','Product','SoftwareApplication','Event','BlogPosting','Article','NewsArticle','JobPosting','WebPage','AboutPage','ContactPage','CollectionPage','ProfilePage','ItemPage','Missing'];
         const groups=[...new Set(cy.nodes().map(n=>n.data('type')))].sort((a,b)=>order.indexOf(a)-order.indexOf(b));
         let x=0,y=0,rowHeight=0;
         groups.forEach((type,index)=>{
