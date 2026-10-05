@@ -1,4 +1,4 @@
-# Contao Schema Manager 1.2
+# Contao Schema Manager 1.3
 
 **Describe your company, people, products and services once. Connect them to your Contao content in every language.**
 
@@ -10,9 +10,9 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. Product, contact, service-catalogue, job, office, qualification and event screenshots use unpublished documentation examples.*
 
-> **Release 1.2.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. The extension focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Release 1.3.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension focuses on manually managed entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
-> **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.2.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
+> **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.3.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
 
 ## Entity relationships
 
@@ -61,7 +61,7 @@ Register the repository and require the current release:
 
 ```sh
 composer config repositories.schema-manager vcs https://github.com/vonheldenundgestalten/contao-schema-manager.git
-composer require vonheldenundgestalten/contao-schema-manager:^1.2
+composer require vonheldenundgestalten/contao-schema-manager:^1.3
 ```
 
 The Git tag supplies the package version; there is no separate Packagist publication assumed here. If the repository requires authentication, configure Composer's normal GitHub access separately.
@@ -71,7 +71,7 @@ The Git tag supplies the package version; there is no separate Packagist publica
 Available in **1.2.0**, alongside ordinary manual editing. No API key is required unless you use AI analysis or feedback. To move an installation from the former AI development branch to the released package, run:
 
 ```sh
-composer require "vonheldenundgestalten/contao-schema-manager:^1.2" --with-all-dependencies
+composer require "vonheldenundgestalten/contao-schema-manager:^1.3" --with-all-dependencies
 ```
 
 Complete the cache, database and asset setup below. As an administrator, open **Structured data → AI helper** and save a dedicated OpenAI key, or configure `SCHEMA_AI_API_KEY` in the application's `.env.local`. Installing the package does not copy entities or configuration from another site.
@@ -380,9 +380,9 @@ For a Person, put the name, portrait, public telephone/email and actual related 
 
 ![Localized professional qualifications and expertise](docs/images/person-qualifications.png)
 
-### Calendar-backed events (development branch)
+### Calendar-backed events
 
-The `codex/feature-calendar-events` branch adds optional integration with `contao/calendar-bundle`. Install the Calendar bundle matching your Contao version, update the extension, run `contao:migrate`, clear the application cache and install assets. Websites without Calendar can continue using standalone Event entities.
+Since **1.3.0**, Schema Manager includes optional integration with `contao/calendar-bundle`. Install the Calendar bundle matching your Contao version, update the extension, run `contao:migrate`, clear the application cache and install assets. Websites without Calendar can continue using standalone Event entities.
 
 1. Create a normal Contao calendar, published event list page and event reader page. Set the calendar's reader page as usual.
 2. In **AI helper → Websites and archives**, or the calendar editor, review its schema defaults: organiser, status, attendance mode and venue/address. **Enrich** enables the integration; **Suppress** removes only that calendar's Event nodes. Default mode preserves core output unless enrichment fields are configured.
@@ -399,7 +399,7 @@ Run `tests/calendars.php` from the pilot application root for rollback-only inte
 
 A **standalone Event** can use the entire homepage as its localized home. You do not need to create a Contao Calendar event. This is useful when a complete landing page represents one conference.
 
-Events support dates, status, organizer, localized text, a physical venue with its full address, and offline/online/mixed attendance. Online and mixed events can include a public VirtualLocation URL. Dates accept `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS+HH:MM`. Event ticket offers and a Calendar-record adapter are not included. Never put private access tokens in the public event URL.
+Events support dates, status, organizer, localized text, a physical venue with its full address, and offline/online/mixed attendance. Online and mixed events can include a public VirtualLocation URL. Dates accept `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS+HH:MM`. Event ticket offers are not included. Calendar-record integration is optional, as described above. Never put private access tokens in the public event URL.
 
 ![Physical and online event venue](docs/images/event-venue.png)
 
@@ -459,9 +459,9 @@ Preserve generated IDs when migrating or importing records. Removing and recreat
 
 ## Current scope and limitations
 
-Available in **1.2.0**: Organization, LocalBusiness, Person, Product, SoftwareApplication, Service and standalone Event with physical/online venues; manual offers; localized homes; compact supporting organizations; page purposes; website publisher/identity; public news authors; archive-controlled article enrichment and JobPosting; saved previews; the visual relationship map; optional AI-assisted setup and enrichment; English/German labels.
+Available in **1.3.0**: Organization, LocalBusiness, Place, Person, Product, SoftwareApplication, Service and standalone Event with physical/online venues; manual offers; localized homes; compact supporting organizations; page purposes; website publisher/identity; public news authors; archive-controlled article enrichment and JobPosting; saved previews; the visual relationship map; optional AI-assisted setup and enrichment; Calendar-backed Event enrichment and reusable venues; English/German labels.
 
-Not included: smart/automatic page images, social-tag generation, pricing-source hooks, Product variants/inventory/reviews, full Event rich-result fields, FAQ adapters or a Calendar-record adapter. A valid Product or Event node does not by itself guarantee eligibility for Google's feature-specific rich results.
+Not included: smart/automatic page images, social-tag generation, pricing-source hooks, Product variants/inventory/reviews, full Event rich-result fields, FAQ adapters. A valid Product or Event node does not by itself guarantee eligibility for Google's feature-specific rich results.
 
 The [roadmap](docs/roadmap.md) links the separate ongoing feature branches. See [release notes](CHANGELOG.md) for the pilot-to-release transition.
 
@@ -540,7 +540,7 @@ Content analyses now include a deterministic author coverage check in both new-e
 Applying AI suggestions now builds a dependency queue: required pending entity/home creations are included first, then fields and relationships. Rejected or invalid prerequisites are never revived. Suggestions without a resolvable prerequisite stay pending with their entity, field and missing dependency named; independent changes can apply. Other validation/concurrency failures still roll back the batch and identify the affected suggestion.
 
 
-### Reusable event locations (Calendar feature branch)
+### Reusable event locations
 
 Create and publish a **Place** in Schema Manager with its name, address and optional latitude/longitude and map link. A LocalBusiness can also be used directly as a venue, without creating a duplicate Place. Places use the usual localized homes for translated name/description; a shared venue can also be referenced without a dedicated page.
 
@@ -550,4 +550,7 @@ Online-only events show only the online URL. Hybrid events show both physical an
 
 Calendars can supply a shared venue. Calendar events retain **Calendar default / legacy address** for compatibility; select **Custom location** to replace that default completely, or **Existing location** to choose another venue. Old per-event addresses remain custom. Explicit custom addresses never borrow calendar coordinates or mix with the selected shared venue.
 
-Run the Contao database update for the new selection fields and rebuild the application cache. This feature remains on the event branch; it does not implement the broader entity expansion or automatic venue discovery.
+Run the Contao database update for the new selection fields and rebuild the application cache. Available in 1.3.0. The broader entity expansion and automatic venue discovery remain out of scope.
+
+
+Calendar is detected from the installed bundle, not from leftover database tables. Removing Calendar leaves ordinary Schema Manager editing, standalone Events/Places, the graph and AI helper usable; calendar records are excluded from new scans and setup reviews. A saved proposal targeting an uninstalled calendar asks for a fresh analysis rather than changing leftover records. No database cleanup is needed for this optional-dependency behavior.

@@ -86,6 +86,7 @@ final class ProposalEngine
             foreach ($run['proposals'] as $p) { if ($p['action']==='create' && $p['target']===$key && !in_array($p['status'],['invalid','rejected'],true)) { return ['tl_schema_entity',(int)($run['mapped'][$key] ?? 0),$p['field'],[]]; } }
             throw new \InvalidArgumentException('Select a valid candidate creation first.');
         }
+        if((str_starts_with($key,'calendar:')||str_starts_with($key,'event:'))&&!class_exists(\Contao\CalendarEventsModel::class))throw new \InvalidArgumentException('Calendar is no longer installed. Prepare a fresh analysis.');
         if(!empty($run['configuration']) && preg_match('/^(root|archive|calendar):([1-9][0-9]*)$/D',$key,$m) && isset($run['inventory']['records'][$key])){
             return [$m[1]==='root'?'tl_page':($m[1]==='calendar'?'tl_calendar':'tl_news_archive'),(int)$m[2],$m[1]==='root'?'WebSite':'Archive',$run['inventory']['records'][$key]];
         }
