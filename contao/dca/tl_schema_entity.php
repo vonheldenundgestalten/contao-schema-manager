@@ -15,7 +15,7 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
     'list' => [
         'sorting' => ['mode' => DataContainer::MODE_SORTED, 'fields' => ['name'], 'flag' => 1, 'panelLayout' => 'filter;search,limit'],
         'label' => ['fields' => ['name', 'entityType'], 'format' => '%s [%s]'],
-        'operations' => ['edit', 'children', 'contacts' => ['href' => 'table=tl_schema_contact', 'icon' => 'member.svg'], 'copy', 'delete', 'show'],
+        'operations' => ['!edit', '!children', '!toggle', 'contacts' => ['href' => 'table=tl_schema_contact', 'icon' => 'member.svg'], 'copy', 'delete', 'show'],
     ],
     'palettes' => [
         '__selector__' => ['entityType'],
@@ -63,6 +63,7 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
             'eval' => ['tl_class' => 'w50'], 'sql' => "varchar(32) NOT NULL default 'EventScheduled'",
         ],
         'published' => [
+            'toggle' => true, 'filter' => true,
             'inputType' => 'checkbox', 'eval' => ['doNotCopy' => true, 'tl_class' => 'clr'],
             'sql' => "char(1) NOT NULL default ''",
         ],
@@ -97,6 +98,8 @@ $GLOBALS['TL_DCA']['tl_schema_entity']['fields']['knowledgeTopics'] = [
 foreach (['Person', 'Organization', 'LocalBusiness'] as $type) {
     $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace(';{links_legend}', ',knowledgeTopics;{links_legend}', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
 }
+
+$GLOBALS['TL_DCA']['tl_schema_entity']['list']['global_operations']['ai'] = ['href'=>'key=ai','primary'=>true,'icon'=>'search.svg','attributes'=>'data-turbo="false"'];
 
 $GLOBALS['TL_DCA']['tl_schema_entity']['fields']['award'] = ['inputType'=>'textarea', 'eval'=>['tl_class'=>'clr'], 'sql'=>'text NULL'];
 

@@ -7,7 +7,9 @@
         "php": "^8.3",
         "contao/core-bundle": "^5.7",
         "doctrine/dbal": "^3.6 || ^4.0",
-        "spatie/schema-org": "^3.10 || ^4.0"
+        "spatie/schema-org": "^3.10 || ^4.0",
+        "symfony/http-client": "^6.4 || ^7.0",
+        "symfony/dotenv": "^6.4 || ^7.0"
     },
     "autoload": {
         "psr-4": {
@@ -23,12 +25,14 @@
     "scripts": {
         "test": [
             "@php tests/mapper.php",
+            "@php tests/proposal-queue.php",
             "@php tests/manual-products.php",
             "@php tests/jobs.php",
             "@php tests/business-mapper.php",
             "@php tests/business-facts.php",
             "@php tests/relationship-map.php",
-            "@php tests/content-relationship-map.php"
+            "@php tests/content-relationship-map.php",
+            "@php tests/schema-markup.php"
         ]
     }
 }

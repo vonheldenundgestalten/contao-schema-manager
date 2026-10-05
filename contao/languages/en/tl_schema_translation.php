@@ -56,6 +56,10 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['award'] = ['Awards', 'One public a
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['credentials'] = ['Professional qualifications', 'One substantiated public qualification per line.'];
 
+$GLOBALS['TL_LANG']['tl_schema_translation']['schemaImportedData'] = ['Preserved imported properties', 'Original IDs and properties without a native editor field. Native fields take precedence.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['import_legend'] = 'Imported structured data';
+
 $GLOBALS['TL_LANG']['tl_schema_translation']['sameAs'] = ["Identity links (sameAs)", "Links for this language, one URL per line. Include universal profiles in each language. Existing shared links are used until this field is saved; saving an empty field removes them for this language."];
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['registrationNames'] = ["Localized register names", "Registration number on the left, translated register name on the right. Numbers must already exist on the shared entity. Empty overrides use the default name."];

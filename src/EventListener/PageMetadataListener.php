@@ -69,6 +69,10 @@ final class PageMetadataListener
                 $web->setProperty('breadcrumb',['@id'=>$id]);
             }
         }
+        if($page->schemaImportedActive && $page->schemaImportedData){
+            $merged=\VHUG\SchemaManagerBundle\Schema\ImportedSchema::merge($web->toArray(),$page->schemaImportedData);
+            foreach($merged as $property=>$value)if($property!=='@context')$web->setProperty($property,$value);
+        }
         // Preserve the core page's accumulated properties when choosing a subtype.
         $type=in_array($page->schemaPageType,self::PAGE_TYPES,true)?$page->schemaPageType:'WebPage';
         if($type!=='WebPage'){
@@ -98,6 +102,9 @@ final class PageMetadataListener
         if($site->schemaSiteAlternateName){$node['alternateName']=$site->schemaSiteAlternateName;}
         $publisher=$this->connection->fetchOne("SELECT entityId FROM tl_schema_entity WHERE id=? AND published='1'",[$site->schemaPublisher]);
         if($publisher){$node['publisher']=['@id'=>$publisher];}
+        if($site->schemaImportedActive)$node=\VHUG\SchemaManagerBundle\Schema\ImportedSchema::merge($node,$site->schemaImportedData);
+        // The editable root identity is authoritative, including after legacy import.
+        $node['@id']=$site->schemaWebsiteId;
         $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->set($manager->createSchemaOrgTypeFromArray($node),$site->schemaWebsiteId);
         $web->setProperty('isPartOf',['@id'=>$site->schemaWebsiteId]);
     }

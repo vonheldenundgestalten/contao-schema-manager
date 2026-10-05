@@ -11,3 +11,5 @@ $GLOBALS['TL_LANG']['tl_page']['schemaWebsiteHome'] = ['Website homepage overrid
 $GLOBALS['TL_LANG']['tl_page']['schemaPageType'] = ['Page purpose', 'Describes this page; the article, service or person remains its own linked entity.'];
 
 $GLOBALS['TL_LANG']['tl_page']['schemaLocationOverview'] = ['Location overview with contact details', 'Enable only when this page visibly lists the emitted offices and their contact details. Retains address, phone and email in office references.'];
+
+$GLOBALS['TL_LANG']['tl_page']['schemaImportedData'] = ['Preserved imported properties', 'Original IDs and properties without a native editor field. Native fields take precedence.'];
