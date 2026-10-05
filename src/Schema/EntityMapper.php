@@ -8,7 +8,7 @@ final class EntityMapper
     public function map(array $entity, ?array $translation, ?string $url, ?array $organization = null): array
     {
         $type = $entity['entityType'];
-        $name = in_array($type, ['Service', 'Product', 'Event'], true)
+        $name = in_array($type, ['Service', 'Product', 'SoftwareApplication', 'Event'], true)
             ? ($translation['name'] ?? '') ?: $entity['name']
             : $entity['name'];
         $node = [
@@ -60,15 +60,19 @@ final class EntityMapper
         if ($organization && $type !== 'Product') {
             $property = match ($type) {
                 'Person' => 'worksFor', 'Service' => 'provider',
-                'Event' => 'organizer', default => 'parentOrganization',
+                'Event' => 'organizer', 'SoftwareApplication' => 'publisher', default => 'parentOrganization',
             };
             $node[$property] = ['@id' => $organization['entityId']];
+        }
+        if ($type === 'SoftwareApplication') {
+            foreach (['applicationCategory', 'operatingSystem', 'softwareVersion', 'runtimePlatform'] as $key) { $node[$key] = $entity[$key] ?? null; }
+            foreach (['softwareRequirements', 'featureList'] as $key) { $node[$key] = $translation[$key] ?? null; }
         }
         if ($type === 'Product') {
             foreach (['sku', 'mpn'] as $key) { $node[$key] = $entity[$key] ?? null; }
             if (!empty($entity['brand'])) { $node['brand'] = ['@type' => 'Brand', 'name' => $entity['brand']]; }
         }
-        if (in_array($type, ['Product', 'Service'], true) && $translation && $url) {
+        if (in_array($type, ['Product', 'Service', 'SoftwareApplication'], true) && $translation && $url) {
             $mode = $translation['offerMode'] ?? '';
             if (in_array($mode, ['exact', 'from', 'quote'], true)) {
                 $offer = ['@type' => 'Offer', '@id' => $entity['entityId'].'/offer',

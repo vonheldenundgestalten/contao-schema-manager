@@ -33,7 +33,7 @@ final class RelationshipMap
         foreach ($entities as $row) {
             $id = (int)$row['id']; $type = $row['entityType']; $org = in_array($type, ['Organization','LocalBusiness'], true);
             if (!empty($row['organization'])) {
-                $property = match ($type) { 'Person'=>'worksFor', 'Service'=>'provider', 'Event'=>'organizer', 'Product'=>'offers.seller', default=>'parentOrganization' };
+                $property = match ($type) { 'Person'=>'worksFor', 'Service'=>'provider', 'Event'=>'organizer', 'Product'=>'offers.seller', 'SoftwareApplication'=>'publisher', default=>'parentOrganization' };
                 $connect($id, (int)$row['organization'], $property);
                 if ($org && isset($nodes['entity-'.$row['organization']]) && !$nodes['entity-'.$row['organization']]['data']['missing']) {
                     $connect((int)$row['organization'], $id, $type === 'LocalBusiness' ? 'location' : 'subOrganization');

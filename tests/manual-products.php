@@ -21,3 +21,10 @@ $check(!isset($mapper->map($entity,$home,null)['offers']),'No localized home mea
 $entity['entityType']='Service';$home['offerPrice']='10';$node=$mapper->map($entity,$home,'https://example.org/service',$org);
 $check($node['provider']['@id']===$org['entityId'] && !isset($node['sku']),'Manual Service offers supported without Product facts');
 echo "PASS: 10 manual Product/Service offer checks.\n";
+
+$entity['entityType']='SoftwareApplication';$entity['softwareVersion']='1.2';$entity['runtimePlatform']='Contao 5.7';
+$home['softwareRequirements']='PHP 8.3';$home['featureList']='Labels';
+$node=$mapper->map($entity,$home,'https://example.org/software',$org);
+$check($node['@type']==='SoftwareApplication' && $node['publisher']['@id']===$org['entityId'] && !isset($node['parentOrganization'],$node['sku']),'Software publisher and type-specific fields');
+$check($node['name']==='Produkt' && $node['softwareRequirements']==='PHP 8.3' && $node['softwareVersion']==='1.2' && $node['offers']['seller']['@id']===$org['entityId'],'Localized software with shared version and manual offers');
+echo "PASS: SoftwareApplication mapping and offers.\n";

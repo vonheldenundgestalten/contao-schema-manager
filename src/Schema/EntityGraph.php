@@ -90,7 +90,7 @@ final class EntityGraph
         if ($full) {
             $relations = [];
             if ($isOrganization || $entity['entityType'] === 'Person') {
-                $relations['knowsAbout'] = [\Contao\StringUtil::deserialize($entity['knowledgeTopics'] ?? null, true), ['Organization','LocalBusiness','Person','Service','Product','Event']];
+                $relations['knowsAbout'] = [\Contao\StringUtil::deserialize($entity['knowledgeTopics'] ?? null, true), ['Organization','LocalBusiness','Person','Service','Product','SoftwareApplication','Event']];
                 $relations['memberOf'] = [\Contao\StringUtil::deserialize($entity['memberOf'] ?? null, true), ['Organization', 'LocalBusiness']];
             }
             if ($entity['entityType'] === 'Person') {
