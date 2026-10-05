@@ -16,4 +16,5 @@ $run['proposals'][0]=$p('set','entity:7@5','jobTitle','Editor');$run['inventory'
 $check(ProposalQueue::plan($run,[0])['order']===[0],'Existing language record resolves composite target');
 $run['proposals'][0]=$p('set','new:missing@5','jobTitle','Editor');$plan=ProposalQueue::plan($run,[0]);
 $check(!$plan['order']&&isset($plan['blocked'][0]),'Missing prerequisites remain pending without retries or writes');
+$check(!str_contains($plan['blocked'][0],'new:missing@5')&&str_contains($plan['blocked'][0],'omitted the language-home creation'),'Missing home explains the editorial problem instead of exposing a dependency key');
 echo "PASS: dependency closure, ordering, blocked items, applied prerequisites and existing translations.\n";
