@@ -211,11 +211,11 @@ final class ProposalEngine
     /** Caller holds the run row lock and a DB transaction. All selected changes are atomic. */
     public function apply(array &$run,array $selected,BackendUser $user): int
     {
-        $indices=array_values(array_unique(array_map('intval',$selected)));$versions=[];$count=0;
-        usort($indices,fn($a,$b)=>(['create'=>0,'home'=>1,'set'=>2,'add'=>3,'remove'=>4][$run['proposals'][$a]['action'] ?? 'set'])<=>(['create'=>0,'home'=>1,'set'=>2,'add'=>3,'remove'=>4][$run['proposals'][$b]['action'] ?? 'set']));
+        $plan=ProposalQueue::plan($run,$selected);$indices=$plan['order'];$run['applyBlocked']=$plan['blocked'];$versions=[];$count=0;
         foreach ($indices as $index) {
             $p=$run['proposals'][$index] ?? null;
             if (!$p || $p['status']!=='pending') { throw new \RuntimeException('A selection has already changed. Reload the review.'); }
+            try {
             if($p['action']==='remove'){
                 $record=(new MissingRelations($this->db))->apply($p,$run,$user);
                 $run['proposals'][$index]['status']='applied';$run['proposals'][$index]['appliedAt']=time();$run['proposals'][$index]['record']=$record;++$count;continue;
@@ -275,6 +275,7 @@ final class ProposalEngine
             $versionKey=$table.':'.$id;
             if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.(in_array($table,['tl_news','tl_news_archive'],true)?'news':(in_array($table,['tl_calendar','tl_calendar_events'],true)?'calendar':($table==='tl_user'?'user':($table==='tl_page'?'page':'schema_manager')))).'&table='.$table.'&act=edit&id='.$id);$versions[$versionKey]=$v; }
             $run['proposals'][$index]['status']='applied';$run['proposals'][$index]['appliedAt']=time();$run['proposals'][$index]['record']=$versionKey;$count++;
+            } catch (\Throwable $e) { throw new \RuntimeException(ProposalQueue::label($p,$run).': '.$e->getMessage(),0,$e); }
         }
         if(!empty($run['configuration'])){
             $settings=new \VHUG\SchemaManagerBundle\EventListener\SourceSettingsListener($this->db);

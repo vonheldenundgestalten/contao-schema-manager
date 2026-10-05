@@ -275,3 +275,5 @@ $GLOBALS['TL_LANG']['schema_ai']['storedRelationship'] = 'Stored relationship';
 
 
 $GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'No new legacy entities to import. Check any scan warnings, then continue. Existing handwritten schema must be disabled manually in its content element when you are ready.';
+
+$GLOBALS['TL_LANG']['schema_ai']['applyHelp'] = 'Required pending entity and language-home creations are included automatically. Unresolved suggestions remain pending with an explanation; independent changes can still be applied.';

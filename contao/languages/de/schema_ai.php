@@ -275,3 +275,5 @@ $GLOBALS['TL_LANG']['schema_ai']['storedRelationship'] = 'Gespeicherte Beziehung
 
 
 $GLOBALS['TL_LANG']['schema_ai']['importEmpty'] = 'Keine neuen Einträge zum Importieren. Beachten Sie die Scan-Hinweise und fahren Sie fort. Bisheriges manuelles Schema deaktivieren Sie bei Bedarf selbst im Inhaltselement.';
+
+$GLOBALS['TL_LANG']['schema_ai']['applyHelp'] = 'Benötigte ausstehende Entitäten und Sprachversionen werden automatisch zuerst angelegt. Nicht auflösbare Vorschläge bleiben mit Hinweis offen; unabhängige Änderungen können übernommen werden.';
