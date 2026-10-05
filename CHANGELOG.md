@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.2.1 — 2026-10-05
 
 - Preserve literal fragments in editable website IDs through Contao input handling. Decode already-stored HTML entities when editing and emitting the website node and its references.
+
+Upgrade from 1.2.0: update the package and rebuild the Contao application cache; clear cached frontend pages. No database migration is needed for this fix. Previously encoded website IDs are corrected on output without resaving; saving the root stores the decoded ID.
 
 ## 1.2.0 — 2026-10-05
 
