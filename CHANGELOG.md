@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.0 — 2026-10-05
+
+- Optional Contao Calendar integration enriches core Event nodes with calendar defaults, organiser, attendance/status, speakers and related topics. Core dates, content and recurrence remain authoritative.
+- Calendar events appear in the relationship graph and optional AI setup/content workflows.
+- Reusable Place venues with address, manual coordinates and map links; existing LocalBusiness entities are available as event venues.
+- Standalone and calendar events choose an existing or custom location, with conditional online/hybrid fields and preserved hidden data. Explicit selections avoid mixing venue facts with old custom/calendar addresses.
+- Calendar remains optional even when its database tables are retained after uninstalling. Fresh scans/setup skip it; stale calendar proposals cannot alter leftover records.
+
+Upgrade from 1.2.x: update the package, apply the new extension fields through the normal Contao database update, install assets and rebuild the cache. Calendar itself is optional and must match your Contao version. Removing Calendar does not require deleting its tables. Existing manual event addresses and identities remain supported.
+
+Validation: real Calendar uninstall/reinstall on dev with scripts disabled and no database update; unchanged table definitions and calendar records; read-only frontend/backend and optional-bundle integration checks.
+
 ## 1.2.1 — 2026-10-05
 
 - Preserve literal fragments in editable website IDs through Contao input handling. Decode already-stored HTML entities when editing and emitting the website node and its references.

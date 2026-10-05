@@ -17,6 +17,7 @@ final class SchemaImport
         $known=array_merge($known,$this->db->fetchFirstColumn("SELECT schemaWebsiteId FROM tl_page WHERE schemaWebsiteId<>''"));
         // Reader output belongs to its native record, not a new standalone entity.
         foreach(['tl_news','tl_calendar_events'] as $nativeTable){
+            if($nativeTable==='tl_calendar_events'&&!class_exists(\Contao\CalendarEventsModel::class))continue;
             $schema=$this->db->createSchemaManager();if(!$schema->tablesExist([$nativeTable]))continue;
             if($schema->introspectTable($nativeTable)->hasColumn('schemaIdentity'))$known=array_merge($known,$this->db->fetchFirstColumn("SELECT schemaIdentity FROM ".$nativeTable." WHERE schemaIdentity<>''"));
         }

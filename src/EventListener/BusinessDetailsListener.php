@@ -67,11 +67,7 @@ final class BusinessDetailsListener
     public function longitude(mixed $value): string { return $this->coordinate($value, 180); }
     private function coordinate(mixed $value, int $limit): string
     {
-        $value = str_replace(',', '.', trim((string) $value));
-        if ($value !== '' && (!preg_match('/^-?[0-9]+(?:\.[0-9]+)?$/D', $value) || abs((float) $value) > $limit)) {
-            throw new \InvalidArgumentException('Enter a decimal coordinate between -'.$limit.' and '.$limit.'.');
-        }
-        return $value;
+        return \VHUG\SchemaManagerBundle\Schema\LocationData::coordinate($value,$limit);
     }
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.numberOfEmployees.save')]
     public function employees(mixed $value): string

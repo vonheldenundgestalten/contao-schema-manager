@@ -160,6 +160,12 @@ $GLOBALS['TL_LANG']['schema_ai']['parentSummary'] = 'Configuration review · no 
 $GLOBALS['TL_LANG']['schema_ai']['parentSelectionHelp'] = 'Check each website and archive. Change the settings you need, then select those fields and apply. Already-correct settings can be left unchecked.';
 $GLOBALS['TL_LANG']['schema_ai']['parentApplyHelp'] = 'Selected settings take effect on existing and future content. Publisher drafts remain unpublished. Archive types are editorial choices, not AI guesses.';
 $GLOBALS['TL_LANG']['schema_ai']['foundationDraftWarning'] = 'Publish the reviewed organisation and its localized homes before content enrichment. Existing drafts are reserved against duplication, but are not used as active content.';
+$GLOBALS['TL_LANG']['schema_ai']['calendarGroup'] = 'Calendar settings';
+$GLOBALS['TL_LANG']['schema_ai']['enrichEvents'] = 'Enrich Event schema';
+$GLOBALS['TL_LANG']['schema_ai']['calendarImpact'] = 'Calendar defaults affect all its events. Event fields override these defaults. Core dates and content remain authoritative; no calendar entity is created.';
+$GLOBALS['TL_LANG']['schema_ai']['coreEventType'] = 'Contao default (Event)';
+
+$GLOBALS['TL_LANG']['schema_ai']['authorGroup'] = 'Author mapping';
 
 $GLOBALS['TL_LANG']['schema_ai']['authorGroup'] = 'Author mapping';
 

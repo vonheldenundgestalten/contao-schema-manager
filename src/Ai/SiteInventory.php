@@ -69,6 +69,12 @@ final class SiteInventory
             $key='news:'.$post['id'];$sources[$key]=$this->source($key,$post['headline'],$reader['language'],$post['url'],$post['headline'].$authorText.' '.($post['teaser'] ?? '').' '.$this->elements('tl_news',(int)$post['id']),(int)$reader['id']);
             if (in_array($post['_mode'],['','Article','NewsArticle','BlogPosting'],true)) { $post['_mode']=$post['_mode'] ?: 'NewsArticle';$records[$key]=$post; }
         }
+        foreach($data['events'] ?? [] as $event){
+            $reader=$pages[$event['_reader']]??null;
+            if(!$reader||!$this->visible($event)||!empty($event['_protected'])||!in_array($event['source']??'', ['','default'],true)||preg_match('/(?:^|[,\s])noindex(?:$|[,\s])/i',$event['robots']??''))continue;
+            $key='event:'.$event['id'];$sources[$key]=$this->source($key,$event['title'],$reader['language'],$event['url'],$event['title'].' '.($event['teaser']??'').' '.$this->elements('tl_calendar_events',(int)$event['id']),(int)$reader['id']);
+            if($event['_mode']!=='suppress')$records[$key]=$event;
+        }
         foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_entity ORDER BY id') as $row) { if($this->visible($row))$records['entity:'.$row['id']]=$row; }
         foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_translation ORDER BY id') as $row) {
             if(!$this->visible($row) || !isset($records['entity:'.$row['pid']]) || !isset($pages[$row['page']]))continue;
@@ -78,9 +84,9 @@ final class SiteInventory
         // Keep only schema-editable text/relations and routing metadata. Binary UUIDs,
         // backend configuration and unrelated custom fields must not enter prompts/history.
         foreach ($records as $key=>&$record) {
-            $kind=strstr($key,':',true);$table=match($kind){'entity'=>'tl_schema_entity','translation'=>'tl_schema_translation','news'=>'tl_news','author'=>'tl_user',default=>'tl_page'};
+            $kind=strstr($key,':',true);$table=match($kind){'entity'=>'tl_schema_entity','translation'=>'tl_schema_translation','news'=>'tl_news','event'=>'tl_calendar_events','author'=>'tl_user',default=>'tl_page'};
             $type=$record['entityType'] ?? ($kind==='translation'?($records['entity:'.$record['pid']]['entityType'] ?? ''):'');
-            $allowed=array_merge(FieldPolicy::fields($table,$type),array_keys(FieldPolicy::links($table,$type)),['id','pid','name','title','headline','entityType','entityId','identityBase','page','language','published','_mode','_authorTarget','_author']);
+            $allowed=array_merge(FieldPolicy::fields($table,$type),array_keys(FieldPolicy::links($table,$type)),['id','pid','name','title','headline','entityType','entityId','identityBase','page','language','published','_mode','_organizer','_authorTarget','_author']);
             $record=array_intersect_key($record,array_flip($allowed));
         }
         unset($record);

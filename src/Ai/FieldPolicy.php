@@ -9,6 +9,8 @@ final class FieldPolicy
     public const TYPES=['Organization','LocalBusiness','Person','Service','Product','SoftwareApplication','Event'];
     public static function fields(string $table,string $type): array
     {
+        if($table==='tl_calendar')return array_merge(['schemaMode'],array_keys(\VHUG\SchemaManagerBundle\Schema\CalendarEventFields::defaults()));
+        if($table==='tl_calendar_events')return array_values(array_diff(array_keys(\VHUG\SchemaManagerBundle\Schema\CalendarEventFields::defaults()),['schemaOrganizer']));
         $org=in_array($type,['Organization','LocalBusiness'],true);
         if ($table==='tl_schema_entity') {
             $fields=$org?['name']:['name','sameAs'];
@@ -34,6 +36,7 @@ final class FieldPolicy
     }
     public static function links(string $table,string $type): array
     {
+        if($table==='tl_calendar_events')return ['schemaOrganizer'=>['Organization','LocalBusiness'],'schemaPerformer'=>['Person','Organization','LocalBusiness'],'schemaAbout'=>self::TYPES];
         if($table==='tl_user')return ['schemaPerson'=>['Person']];
         if ($table==='tl_news') { return ['schemaAbout'=>self::TYPES,'schemaMentions'=>self::TYPES]; }
         if ($table==='tl_page') { return ['schemaEntities'=>self::TYPES]; }
@@ -50,6 +53,12 @@ final class FieldPolicy
     {
         if (!in_array($field,self::fields($table,$type),true)) { throw new \InvalidArgumentException('Unsupported field.'); }
         $value=trim($value);
+        if($table==='tl_calendar'&&$value==='')return '';
+        if($field==='schemaMode'){if(!in_array($value,['','enrich','suppress'],true))throw new \InvalidArgumentException('Invalid calendar mode.');return $value;}
+        if($field==='schemaEventStatus'&&!in_array($value,['EventScheduled','EventCancelled','EventPostponed','EventRescheduled','EventMovedOnline'],true))throw new \InvalidArgumentException('Invalid event status.');
+        if($field==='schemaAttendanceMode'&&!in_array($value,['OfflineEventAttendanceMode','OnlineEventAttendanceMode','MixedEventAttendanceMode'],true))throw new \InvalidArgumentException('Invalid attendance mode.');
+        if($field==='schemaAddressCountry'&&!\Symfony\Component\Intl\Countries::exists($value))throw new \InvalidArgumentException('Use an ISO country code.');
+        if($field==='schemaEventUrl')return $this->business->url($value);
         if($field==='areaServedWorldwide') {
             if(!in_array($value,['','0','1'],true))throw new \InvalidArgumentException('Use 1 for evidenced worldwide coverage, or 0 to disable.');
             return $value==='1'?'1':'';
@@ -60,7 +69,7 @@ final class FieldPolicy
             $nodes=\VHUG\SchemaManagerBundle\Schema\BusinessFacts::registrations($rows);
             return json_encode(array_map(static fn($node)=>['key'=>$node['name'],'value'=>$node['value']],$nodes),JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
         }
-        if($field==='schemaPublisher'){
+        if($field==='schemaPublisher'||$field==='schemaOrganizer'){
             if(!ctype_digit($value))throw new \InvalidArgumentException('Choose an organization.');
             return $value;
         }

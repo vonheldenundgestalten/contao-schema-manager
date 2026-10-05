@@ -69,7 +69,7 @@
     }
     const cy = window.cytoscape({container:q('[data-sg-canvas]'),elements:visibleElements(), minZoom:.12,maxZoom:2.5,wheelSensitivity:.25,
       style:[{selector:'node',style:{label:'','background-image':'data(card)','background-fit':'contain','background-color':'data(color)',shape:'round-rectangle',width:190,height:'data(cardHeight)','text-wrap':'wrap','text-max-width':174,'font-size':17,'line-height':1.35,color:'#14253b','text-valign':'center','border-width':1,'border-color':'#8597aa'}},
-        {selector:'node[kind = "news"], node[kind = "page"]',style:{width:230,'text-max-width':212}},
+        {selector:'node[kind = "news"], node[kind = "event"], node[kind = "page"]',style:{width:230,'text-max-width':212}},
         {selector:'node[!published]',style:{'border-style':'dashed','border-width':2}},
         {selector:'node[?missing]',style:{'border-color':'#b42318','border-width':3}},
         {selector:'edge',style:{width:1.6,'curve-style':'bezier','target-arrow-shape':'triangle','line-color':'#9baabd','target-arrow-color':'#9baabd'}},
@@ -133,8 +133,8 @@
       if(n.degree()===0)add(details,'p',l.unconnected);
       if(!n.data('missing') && n.data('kind')!=='coreAuthor'){
         const kind=n.data('kind')||'entity', record=n.data('record');
-        const a=add(details,'a',kind==='news'?l.editNews:kind==='page'?l.editPage:l.edit,'sg-edit');
-        a.href=kind==='news'?`?do=news&table=tl_news&act=edit&id=${record}`:kind==='page'?`?do=page&act=edit&id=${record}`:`?do=schema_manager&act=edit&id=${record}`;a.dataset.turbo='false';
+        const a=add(details,'a',kind==='event'?(l.editEvent||'Edit event'):kind==='news'?l.editNews:kind==='page'?l.editPage:l.edit,'sg-edit');
+        a.href=kind==='event'?`?do=calendar&table=tl_calendar_events&act=edit&id=${record}`:kind==='news'?`?do=news&table=tl_news&act=edit&id=${record}`:kind==='page'?`?do=page&act=edit&id=${record}`:`?do=schema_manager&act=edit&id=${record}`;a.dataset.turbo='false';
       }
       (n.data('warnings')||[]).forEach(w=>add(details,'p',l[w]||w,'sg-status'));
       if(n.data('needsService'))add(details,'p',l.noService);

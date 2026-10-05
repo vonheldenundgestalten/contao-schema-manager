@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/../src/Schema/LocationData.php';
 require __DIR__.'/../src/Schema/JobFields.php';
 require __DIR__.'/../src/Schema/JobMapper.php';
 require __DIR__.'/../src/Schema/EntityMapper.php';

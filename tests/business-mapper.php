@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__.'/../src/Schema/EntityMapper.php';
 require __DIR__.'/../src/Schema/EntityIdentity.php';
+require_once __DIR__.'/../src/Schema/LocationData.php';
 use VHUG\SchemaManagerBundle\Schema\EntityIdentity;
 $m=new VHUG\SchemaManagerBundle\Schema\EntityMapper();
 $check=static function(bool $ok,string $label):void{if(!$ok){throw new RuntimeException($label);}};

@@ -5,7 +5,7 @@ namespace VHUG\SchemaManagerBundle\Schema;
 /** Adds permission-filtered content records to the editorial graph. No frontend requests or writes. */
 final class ContentRelationshipMap
 {
-    public function extend(array $map, array $pages, array $news, array $translations): array
+    public function extend(array $map, array $pages, array $news, array $translations,array $events=[]): array
     {
         $excluded = [];
         foreach ($pages as $page) {
@@ -114,10 +114,23 @@ final class ContentRelationshipMap
                 $link('news-'.$post['id'],'news-'.$post['languageMain'],'translationOfWork');
             }
         }
+        foreach($events as $event){
+            if(isset($excluded[(int)$event['_reader']]))continue;
+            $key='event-'.$event['id'];$reader=$byPage[$event['_reader']]??null;
+            $add($key,'Event',$event['title'],(int)$event['id'],'event',['identity'=>$event['schemaIdentity']??'','detail'=>$reader['language']??'','published'=>(bool)$event['published'],'warnings'=>$event['_mode']==='suppress'?['suppressed']:[]]);
+            if($event['_mode']==='suppress')continue;
+            $link($key,'entity-'.$event['_organizer'],'organizer');
+            if(!empty($event['_venue']))$link($key,'entity-'.$event['_venue'],'location');
+            foreach(['schemaAbout'=>'about','schemaPerformer'=>'performer'] as $field=>$property)foreach($event[$field]??[] as $id)$link($key,'entity-'.$id,$property);
+            if($reader&&!empty($event['url'])){
+                $detail='event-reader-'.$event['id'];$add($detail,'ItemPage',$event['title'],(int)$reader['id'],'page',['identity'=>$event['url'].'#webpage','detail'=>$reader['language']??'','published'=>(bool)$event['published']]);
+                $link($key,$detail,'mainEntityOfPage');$link($detail,$key,'mainEntity');if($siteId=$siteFor[$reader['id']]??null)$link($detail,'site-'.$siteId,'isPartOf');
+            }
+        }
         // Topic diagnostics intentionally ignore structural website/publisher/author relationships.
         foreach ($nodes as &$node) {
             $d=&$node['data']; $d['kind'] ??= 'entity';
-            $d['language']=in_array($d['kind'],['page','news'],true) && $d['type']!=='WebSite' ? $d['detail'] : '';
+            $d['language']=in_array($d['kind'],['page','news','event'],true) && $d['type']!=='WebSite' ? $d['detail'] : '';
             $d['languages'] ??= [];
             if ($d['kind']==='news' && in_array($d['type'],['BlogPosting','Article','NewsArticle'],true) && !in_array('suppressed',$d['warnings'],true)) {
                 $d['needsService']=true;

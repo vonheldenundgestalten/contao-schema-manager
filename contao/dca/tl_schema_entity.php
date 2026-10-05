@@ -33,7 +33,7 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
         'tstamp' => ['sql' => 'int unsigned NOT NULL default 0'],
         'name' => $text(true) + ['search' => true],
         'entityType' => [
-            'inputType' => 'select', 'options' => ['Organization', 'LocalBusiness', 'Person', 'Service', 'Product', 'SoftwareApplication', 'Event'],
+            'inputType' => 'select', 'options' => ['Organization', 'LocalBusiness', 'Place', 'Person', 'Service', 'Product', 'SoftwareApplication', 'Event'],
             'eval' => ['mandatory' => true, 'submitOnChange' => true, 'tl_class' => 'w50'], 'filter' => true,
             'sql' => "varchar(32) NOT NULL default 'Organization'",
         ],
@@ -115,3 +115,13 @@ foreach (['Organization','LocalBusiness'] as $type) {
 foreach (['Organization','LocalBusiness'] as $type) {
     $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type] = str_replace('sameAs,', '', $GLOBALS['TL_DCA']['tl_schema_entity']['palettes'][$type]);
 }
+
+// Reusable physical venues share the existing address and manually entered geo fields.
+$palettes['Place']='{identity_legend},name,entityType,identityBase,entityId;{location_legend},streetAddress,postalCode,addressLocality,addressRegion,addressCountry,latitude,longitude,hasMap;{links_legend},sameAs,image;{publish_legend},published';
+$fields['eventLocationMode']=['inputType'=>'select','options'=>['','existing'],'reference'=>&$GLOBALS['TL_LANG']['tl_schema_entity']['locationModes'],'eval'=>['submitOnChange'=>true,'tl_class'=>'w50'],'sql'=>"varchar(16) NOT NULL default ''"];
+$fields['eventPlace']=['inputType'=>'select','options_callback'=>[VHUG\SchemaManagerBundle\EventListener\EventLocationListener::class,'places'],'save_callback'=>[[VHUG\SchemaManagerBundle\EventListener\EventLocationListener::class,'validatePlace']],'eval'=>['includeBlankOption'=>true,'chosen'=>true,'tl_class'=>'clr'],'sql'=>'int unsigned NOT NULL default 0'];
+$fields['eventAttendanceMode']['eval']['submitOnChange']=true;
+$fields['hasMap']['eval']['decodeEntities']=true;
+$fields['eventUrl']['eval']['decodeEntities']=true;
+$palettes['Event']=str_replace('eventAttendanceMode,locationName','eventAttendanceMode,eventLocationMode,eventPlace,locationName',$palettes['Event']);
+$palettes['Event']=str_replace('addressCountry,eventUrl','addressCountry,latitude,longitude,hasMap,eventUrl',$palettes['Event']);

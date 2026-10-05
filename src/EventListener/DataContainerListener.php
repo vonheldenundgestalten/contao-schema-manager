@@ -138,7 +138,7 @@ final class DataContainerListener
             'Organization', 'LocalBusiness' => 'description,slogan,knowsAbout,catalogName,sameAs,registrationNames',
             'Service' => 'name,description,serviceType,audienceType,catalogName',
             'SoftwareApplication' => 'name,description,softwareRequirements,featureList',
-            'Product', 'Event' => 'name,description',
+            'Product', 'Event', 'Place' => 'name,description',
             default => 'description',
         };
         $GLOBALS['TL_DCA']['tl_schema_translation']['palettes']['default'] =

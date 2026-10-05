@@ -10,7 +10,7 @@ final class RelationshipMap
         $nodes = []; $edges = [];
         foreach ($entities as $row) {
             $id = 'entity-'.$row['id'];
-            $detail = $row['entityType'] === 'LocalBusiness'
+            $detail = in_array($row['entityType'], ['LocalBusiness','Place'], true)
                 ? implode(', ', array_filter([$row['streetAddress'] ?? '', trim(($row['postalCode'] ?? '').' '.($row['addressLocality'] ?? ''))])) : '';
             $nodes[$id] = ['data' => ['id'=>$id, 'record'=>(int)$row['id'], 'name'=>$row['name'], 'type'=>$row['entityType'],
                 'detail'=>$detail, 'identity'=>$row['entityId'] ?? '', 'published'=>$row['published'] === '1', 'missing'=>false, 'homes'=>[]]];
@@ -32,6 +32,7 @@ final class RelationshipMap
         };
         foreach ($entities as $row) {
             $id = (int)$row['id']; $type = $row['entityType']; $org = in_array($type, ['Organization','LocalBusiness'], true);
+            if($type==='Event' && ($row['eventAttendanceMode']??'')!=='OnlineEventAttendanceMode' && ($row['eventLocationMode']??'')==='existing')$connect($id,(int)($row['eventPlace']??0),'location');
             if (!empty($row['organization'])) {
                 $property = match ($type) { 'Person'=>'worksFor', 'Service'=>'provider', 'Event'=>'organizer', 'Product'=>'offers.seller', 'SoftwareApplication'=>'publisher', default=>'parentOrganization' };
                 $connect($id, (int)$row['organization'], $property);

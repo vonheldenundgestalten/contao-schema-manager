@@ -116,3 +116,10 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['operatingSystem'] = ['Betriebssystem', 
 $GLOBALS['TL_LANG']['tl_schema_entity']['softwareVersion'] = ['Softwareversion', 'Die aktuelle Version, sofern relevant.'];
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['runtimePlatform'] = ['Laufzeitumgebung', 'Zum Beispiel Contao 5.7 und PHP 8.3.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['eventLocationMode'] = ['Veranstaltungsort', 'Bestehenden Ort wählen oder die eigene Adresse verwenden.'];
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['eventPlace'] = ['Bestehender Ort', 'Nur veröffentlichte Places und LocalBusiness-Einträge werden ausgegeben. Verborgene eigene Adressfelder bleiben gespeichert.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['locationModes'][''] = 'Eigene Adresse';
+$GLOBALS['TL_LANG']['tl_schema_entity']['locationModes']['existing'] = 'Bestehender Ort';
+$GLOBALS['TL_LANG']['MSC']['schemaLocationDraft'] = 'unveröffentlicht';

@@ -12,11 +12,12 @@ $name=static function($key)use($run){
 $fieldLabel=static function($p)use($l){
     if($p['action']==='create')return $p['field'];
     if($p['action']==='home')return $l['home'];
-    $table=match(true){str_starts_with($p['target'],'author:')=>'tl_user',str_starts_with($p['target'],'archive:')=>'tl_news_archive',str_starts_with($p['target'],'root:')||str_starts_with($p['target'],'page:')=>'tl_page',str_contains($p['target'],'@')||str_starts_with($p['target'],'translation:')=>'tl_schema_translation',str_starts_with($p['target'],'news:')=>'tl_news',default=>'tl_schema_entity'};
+    $table=match(true){str_starts_with($p['target'],'author:')=>'tl_user',str_starts_with($p['target'],'archive:')=>'tl_news_archive',str_starts_with($p['target'],'calendar:')=>'tl_calendar',str_starts_with($p['target'],'event:')=>'tl_calendar_events',str_starts_with($p['target'],'root:')||str_starts_with($p['target'],'page:')=>'tl_page',str_contains($p['target'],'@')||str_starts_with($p['target'],'translation:')=>'tl_schema_translation',str_starts_with($p['target'],'news:')=>'tl_news',default=>'tl_schema_entity'};
     return $GLOBALS['TL_LANG'][$table][$p['field']][0] ?? $p['field'];
 };
 $display=static function($value,$p)use($name,$run,$l){
-    if($p['field']==='schemaPublisher')return $run['organizations'][(int)$value]['name'] ?? ((int)$value?'#'.$value:$l['noPublisher']);
+    if(in_array($p['field'],['schemaPublisher','schemaOrganizer'],true))return $run['organizations'][(int)$value]['name'] ?? ((int)$value?'#'.$value:$l['noPublisher']);
+    if($p['field']==='schemaMode')return $value ?: $l['coreEventType'];
     if($p['field']==='schemaType')return $value ?: $l['coreType'];
     if($p['action']==='home'){return $run['inventory']['pages'][(int)$value]['title'] ?? $value;}
     if($p['action']==='remove'){if($value===$p['value'])return $l['removeLinkAction'].' #'.substr($value,7);$ids=\Contao\StringUtil::deserialize($value,true);return implode(', ',array_map(static fn($id)=>$name('entity:'.$id),$ids));}
@@ -93,6 +94,8 @@ $groupType=match(strstr($groupKey,':',true)) {
  'author'=>$l['authorGroup'],
  'root'=>'WebSite',
  'archive'=>$l['archiveGroup'],
+ 'calendar'=>$l['calendarGroup'],
+ 'event'=>'Event',
  'news'=>$groupRecord['_mode'] ?? 'Article',
  'page'=>($groupRecord['schemaPageType'] ?? '') ?: 'WebPage',
  default=>$groupRecord['entityType'] ?? 'Thing',
@@ -124,10 +127,10 @@ $actionLabel=$p['action']==='remove'?$l['removeLinkAction']:($configuration?$l['
 <?php if($p['action']==='create'): ?><p class="sai-hint"><?= $e($l['draftHint']) ?></p><?php elseif($p['action']==='home'): ?><p class="sai-hint"><?= $e($l['homeHint']) ?></p><?php endif ?>
 <p><strong><?= $e($l[$configuration?'effect':'reason']) ?>:</strong> <?= $e($configuration?($l[$p['reason']] ?? $p['reason']):$p['reason']) ?></p>
 <?php if(!$configuration): ?><details><summary><?= $e(!empty($p['databaseEvidence'])?$l['storedRelationship']:$l['evidence'].': '.($source['title'] ?? $p['source'])) ?></summary><blockquote><?= $e($p['quote']) ?></blockquote><p><?= $e($source['url'] ?? '') ?></p></details><?php endif ?>
-<?php if($configuration&&$p['status']==='pending'&&in_array($p['field'],['schemaPublisher','schemaType'],true)): ?>
+<?php if($configuration&&$p['status']==='pending'&&in_array($p['field'],['schemaPublisher','schemaOrganizer','schemaType','schemaMode','schemaEventStatus','schemaAttendanceMode'],true)): ?>
 <label><?= $e($l['proposed']) ?><select name="value[<?= (int)$i ?>]" data-sai-edit="<?= (int)$i ?>">
-<?php if($p['field']==='schemaPublisher'): ?><option value="0"><?= $e($l['noPublisher']) ?></option><?php foreach($run['organizations'] as $org): ?><option value="<?= (int)$org['id'] ?>" <?= (int)$p['value']===(int)$org['id']?'selected':'' ?>><?= $e($org['name'].(empty($org['published'])?' · '.$l['draftState']:'')) ?></option><?php endforeach ?>
-<?php else: foreach([''=>$l['coreType'],'Article'=>'Article','NewsArticle'=>'NewsArticle','BlogPosting'=>'BlogPosting','JobPosting'=>'JobPosting','suppress'=>$l['suppressType']] as $value=>$label): ?><option value="<?= $e($value) ?>" <?= $p['value']===$value?'selected':'' ?>><?= $e($label) ?></option><?php endforeach; endif ?></select></label>
+<?php if(in_array($p['field'],['schemaPublisher','schemaOrganizer'],true)): ?><option value="0"><?= $e($l['noPublisher']) ?></option><?php foreach($run['organizations'] as $org): ?><option value="<?= (int)$org['id'] ?>" <?= (int)$p['value']===(int)$org['id']?'selected':'' ?>><?= $e($org['name'].(empty($org['published'])?' · '.$l['draftState']:'')) ?></option><?php endforeach ?>
+<?php else: $options=match($p['field']){'schemaMode'=>[''=>$l['coreEventType'],'enrich'=>$l['enrichEvents'],'suppress'=>$l['suppressType']],'schemaEventStatus'=>array_combine(['','EventScheduled','EventCancelled','EventPostponed','EventRescheduled','EventMovedOnline'],['—','EventScheduled','EventCancelled','EventPostponed','EventRescheduled','EventMovedOnline']),'schemaAttendanceMode'=>array_combine(['','OfflineEventAttendanceMode','OnlineEventAttendanceMode','MixedEventAttendanceMode'],['—','OfflineEventAttendanceMode','OnlineEventAttendanceMode','MixedEventAttendanceMode']),default=>[''=>$l['coreType'],'Article'=>'Article','NewsArticle'=>'NewsArticle','BlogPosting'=>'BlogPosting','JobPosting'=>'JobPosting','suppress'=>$l['suppressType']]};foreach($options as $value=>$label): ?><option value="<?= $e($value) ?>" <?= $p['value']===$value?'selected':'' ?>><?= $e($label) ?></option><?php endforeach; endif ?></select></label>
 <?php elseif($p['status']==='pending' && $p['action']==='set'): ?><details><summary><?= $e($l['editSuggestion']) ?></summary><label><?= $e($l['proposed']) ?><textarea name="value[<?= (int)$i ?>]" data-sai-edit="<?= (int)$i ?>"><?= $e($p['value']) ?></textarea></label></details><?php endif ?>
 <?php if($p['error']): ?><p class="tl_error"><?= $e($p['error']) ?></p><?php endif ?>
 </div></article>

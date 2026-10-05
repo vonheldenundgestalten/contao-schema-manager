@@ -54,3 +54,15 @@ $check(isset($filteredNodes['page-11'],$filteredNodes['news-32'],$filteredNodes[
 $check($nodes['news-32']['language']==='en' && $nodes['page-11']['language']==='de' && $nodes['entity-3']['language']==='','Content has language, business entities remain shared');
 $check($nodes['site-10']['languages']===['de','en'],'Shared website spans both languages');
 echo "PASS: website/page/blog graph, translated roots, author fallback, topics, per-post reader identity and permission-filtered references.\n";
+
+$events=[['id'=>41,'_reader'=>12,'_mode'=>'enrich','_organizer'=>1,'title'=>'Workshop','published'=>'1','url'=>'https://example.org/de/workshop','schemaAbout'=>[3],'schemaPerformer'=>[2]]];
+$eventMap=(new ContentRelationshipMap())->extend((new RelationshipMap())->build($entities,$translations),$requiredPages,[],$translations,$events);
+$eventNodes=array_column(array_column($eventMap['nodes'],'data'),null,'id');
+$eventEdges=array_column($eventMap['edges'],'data');
+$check($eventNodes['event-41']['language']==='de','Event participates in language filtering');
+$check(isset($eventNodes['event-reader-41'])&&!isset($eventNodes['page-12']),'Event detail retained without reader container');
+foreach(['organizer'=>'entity-1','performer'=>'entity-2','about'=>'entity-3'] as $property=>$target){$check(count(array_filter($eventEdges,fn($e)=>$e['source']==='event-41'&&$e['target']===$target&&$e['label']===$property))===1,'Event '.$property.' connection');}
+$hidden=(new ContentRelationshipMap())->extend((new RelationshipMap())->build($entities,$translations),$noindexPages,[],$translations,$events);
+$hiddenNodes=array_column(array_column($hidden['nodes'],'data'),null,'id');
+$check(!isset($hiddenNodes['event-41'],$hiddenNodes['event-reader-41']),'Noindex event reader excluded');
+echo "PASS: event graph relationships, reader containers and language/noindex filters.\n";

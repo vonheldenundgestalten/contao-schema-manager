@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once dirname(__DIR__).'/src/Schema/EntityMapper.php';
+require_once __DIR__.'/../src/Schema/LocationData.php';
 use VHUG\SchemaManagerBundle\Schema\EntityMapper;
 $mapper = new EntityMapper();
 $check = static function (bool $ok, string $message): void {

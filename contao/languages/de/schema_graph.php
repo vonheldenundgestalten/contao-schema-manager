@@ -57,3 +57,5 @@ $GLOBALS['TL_LANG']['schema_graph']['byRelationships'] = 'Nach Beziehungen';
 $GLOBALS['TL_LANG']['schema_graph']['byType'] = 'Nach Typ gruppiert';
 
 $GLOBALS['TL_LANG']['schema_graph']['scope'] = 'Noindex-Seiten und reine Container mit „Element erforderlich“ sind ausgeblendet. Tatsächliche Detailseiten bleiben sichtbar. Zähler und Beziehungen beziehen sich auf die gewählte Sprache.';
+
+$GLOBALS['TL_LANG']['schema_graph']['editEvent'] = 'Termin bearbeiten';

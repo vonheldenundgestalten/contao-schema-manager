@@ -1,0 +1,30 @@
+<?php
+declare(strict_types=1);
+require_once __DIR__.'/../src/Schema/LocationData.php';
+require_once __DIR__.'/../src/Schema/EntityMapper.php';
+use VHUG\SchemaManagerBundle\Schema\LocationData;
+use VHUG\SchemaManagerBundle\Schema\EntityMapper;
+$check=static function(bool $ok,string $message):void{if(!$ok)throw new RuntimeException($message);};
+$calendar=['schemaLocationMode'=>'existing','schemaPlace'=>7,'schemaStreetAddress'=>'Old street','schemaLatitude'=>'48','schemaLongitude'=>'9'];
+$check(LocationData::calendar([],$calendar)['id']===7,'Default venue inherited');
+$own=LocationData::calendar(['schemaLocationMode'=>'custom','schemaStreetAddress'=>'Own street'],$calendar);
+$check($own['facts']['streetAddress']==='Own street'&&$own['facts']['latitude']==='','Explicit custom location never borrows calendar coordinates');
+$check(LocationData::calendar(['schemaLocationMode'=>'existing','schemaPlace'=>8,'schemaStreetAddress'=>'Stale'],$calendar)['id']===8,'Explicit venue beats stale fields');
+$check(LocationData::calendar(['schemaStreetAddress'=>'Legacy'],$calendar)['mode']==='custom','Existing per-event custom addresses survive');
+$legacy=LocationData::calendar(['schemaStreetAddress'=>'Legacy'],$calendar)['facts'];
+$check($legacy['latitude']==='' && $legacy['longitude']==='','Calendar-selected venue never supplies stale custom facts to legacy event address');
+$pair=LocationData::calendar(['schemaLatitude'=>'0'],$calendar)['facts'];
+$check(!isset(LocationData::physical($pair)['geo']),'Partial pair never borrows calendar longitude');
+$place=LocationData::physical(['locationName'=>'Hall','streetAddress'=>'Main 1','latitude'=>'0','longitude'=>'0','hasMap'=>'https://example.org/map']);
+$check($place['geo']['latitude']===0.0,'Zero coordinates retained');
+$check(LocationData::combine('OnlineEventAttendanceMode',$place,'https://example.org/live')['@type']==='VirtualLocation','Online suppresses physical venue');
+$check(LocationData::combine('OnlineEventAttendanceMode',$place,'')===[],'Missing online URL does not expose stale physical address');
+$check(count(LocationData::combine('MixedEventAttendanceMode',$place,'https://example.org/live'))===2,'Hybrid contains both locations');
+$check(LocationData::combine('OfflineEventAttendanceMode',$place,'https://example.org/live')===$place,'Physical ignores stale online URL');
+$check(LocationData::coordinate('48,5',90)==='48.5','Consistent decimal validation');
+foreach(['91','NaN','1e2'] as $bad){try{LocationData::coordinate($bad,90);throw new LogicException('Bad latitude accepted');}catch(InvalidArgumentException){}}
+$m=new EntityMapper();$node=$m->map(['entityType'=>'Place','entityId'=>'https://example.org/#hall','name'=>'Halle','streetAddress'=>'Main 1','latitude'=>'48','longitude'=>'9'],['name'=>'Hall'],'https://example.org/hall');
+$check($node['@type']==='Place'&&$node['name']==='Hall'&&isset($node['address'],$node['geo']),'Localized reusable Place output');
+$event=$m->map(['entityType'=>'Event','entityId'=>'https://example.org/#event','name'=>'Event','eventStatus'=>'EventScheduled','eventLocationMode'=>'existing','locationName'=>'Stale','streetAddress'=>'Old'],null,null);
+$check(!isset($event['location']),'Selected venue resolved by graph, not old custom fields');
+echo "PASS: reusable/custom selection, legacy defaults, coordinate pairs, Place mapping, online and hybrid output.\n";
