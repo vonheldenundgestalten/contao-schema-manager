@@ -1,4 +1,4 @@
-# Contao Schema Manager 1.1
+# Contao Schema Manager 1.2
 
 **Describe your company, people, products and services once. Connect them to your Contao content in every language.**
 
@@ -10,9 +10,9 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Real examples from the bilingual VHUG Technologies pilot. Screenshots show the English Contao backend; German labels are also included. Product, contact, service-catalogue, job, office, qualification and event screenshots use unpublished documentation examples.*
 
-> **Release 1.1.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. The extension focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Release 1.2.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News bundle is optional. The extension focuses on manually managed entities, localized homes and news enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
-> **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.1.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
+> **Versioning:** package versions follow semantic versioning independently of Contao. Version 1.2.0 requires Contao `^5.7` and PHP `^8.3`. The earlier 5.7.0 package release/tag has been withdrawn; existing users must change the package constraint to `^1.0` and run the Contao database update. See [versioning and migration](docs/versioning.md).
 
 ## Entity relationships
 
@@ -38,6 +38,7 @@ See [scope, library choice and development notes](docs/relationship-map.md). Aft
 ## In this guide
 
 - [Install](#install)
+- [Optional AI helper](#optional-ai-helper)
 - [Understand entities, identities and translations](#understand-entities-identities-and-translations)
 - [Initial setup](#initial-setup)
 - [Manage services and solutions](#manage-services-and-solutions)
@@ -60,10 +61,39 @@ Register the repository and require the current release:
 
 ```sh
 composer config repositories.schema-manager vcs https://github.com/vonheldenundgestalten/contao-schema-manager.git
-composer require vonheldenundgestalten/contao-schema-manager:^1.1
+composer require vonheldenundgestalten/contao-schema-manager:^1.2
 ```
 
 The Git tag supplies the package version; there is no separate Packagist publication assumed here. If the repository requires authentication, configure Composer's normal GitHub access separately.
+
+### Optional AI helper
+
+Available in **1.2.0**, alongside ordinary manual editing. No API key is required unless you use AI analysis or feedback. To move an installation from the former AI development branch to the released package, run:
+
+```sh
+composer require "vonheldenundgestalten/contao-schema-manager:^1.2" --with-all-dependencies
+```
+
+Complete the cache, database and asset setup below. As an administrator, open **Structured data → AI helper** and save a dedicated OpenAI key, or configure `SCHEMA_AI_API_KEY` in the application's `.env.local`. Installing the package does not copy entities or configuration from another site.
+
+The helper separates initial setup into four stages:
+
+1. **Existing structured data:** scan hand-written JSON-LD before creating new entities. Review the import groups, preserve established IDs and import supported fields and remaining data. No API call is needed. Review and publish the imported records, then manually disable their original HTML schema elements to avoid duplicates. Automatic comparison and disabling are not included. See [existing schema import](#import-hand-written-schema-before-using-ai).
+2. **Organisation:** discover the website operator or improve its existing record. Homepage, legal and contact evidence is supplied together. Suggestions are restricted to organisations, localized homes and representative page links; services, products and individual news updates wait for content enrichment. Apply the desired proposals, then review and publish the new organisation and its localized homes in Contao.
+3. **Websites and archives:** prepare a configuration review without an API call. Review each language root's publisher and public site name, then each accessible news archive's type and publisher. Existing types are preserved; choose BlogPosting, NewsArticle, Article, JobPosting or suppression explicitly when appropriate. A sole existing organisation is offered as a publisher, never silently applied. Draft publishers are labelled and can be assigned without publishing them. Selected changes use Contao versions, stale-value protection, identity backfills and cache invalidation. These settings affect child output; they do not create archive schema entities.
+4. **Content enrichment:** discover new subjects or improve existing services, people, products and news using the reviewed foundation. Existing installations can open this stage directly. The helper recommends a starting stage from existing organisation and selected-root publisher settings; it does not certify every archive as complete.
+
+Calendars with a public reader in the selected website are listed in parent review, but **calendar-event enrichment and calendar schema defaults are not implemented**. Standalone Event entities remain available. Parent review deliberately does not write unsupported calendar settings.
+
+Prepare a website/language inventory, then explicitly start analysis. Review grouped proposals before applying them; new entities and localized page assignments remain unpublished. Feedback can produce a separate revised review while preserving the original. Analysis and feedback send public source text and schema context to OpenAI and incur API usage. No API call is needed for ordinary schema management.
+
+The AI helper is administrator-only. By default it includes published language roots on the same domain and uses Contao page translation links (`languageMain`) to propose missing localized entries for one shared entity. Existing translations are preserved by the localization pass; missing or ambiguous page links require manual review. Some schema fields and software-specific relationships are not yet supported. Multilingual runs scan all included sources to retain the translation context; disable **Include the other languages of this website** for a single-language incremental scan. For a complete first single-language scan, uncheck **Only new or changed content**. See [the AI implementation plan and pilot limitations](docs/schema-ai-plan.md).
+
+Only currently active public Contao records enter analysis: publication dates, website-root publication, inherited access protection, protected news archives, articles and content elements are respected. As in Contao, an unpublished intermediate navigation page does not exclude its published children. Draft schema entities and inactive homes are excluded from evidence and editing. A separate name/type identity reservation list prevents discovery from recreating existing entities, including unpublished drafts; it contains no descriptions or other draft content. Each batch refreshes this inventory; cached frontend HTML is not used to replace the filtered content. Custom content available only through rendered modules may therefore need manual input. Start a new analysis to discard suggestions from an older inventory.
+
+Analysis processes sources in small batches and automatically continues through the queue. Keep the analysis page open. If another request is already processing a batch, the helper waits for saved progress; it also checks saved progress after an interrupted response. A failed or expired batch pauses for an explicit retry. **Stop after current batch** keeps completed work for later continuation.
+
+Run `python3 tests/ai-browser.py` with Playwright/Chromium for offline batch UI regressions. Run `tests/ai-integration.php` from an installed Contao application root for mocked-provider/database checks; fixture writes roll back. These tests make no paid API calls.
 
 ### Option B: develop with a local package folder
 
@@ -259,7 +289,7 @@ This changes the existing page node's type while preserving its other properties
 
 ![Contact page linked to the company and assigned ContactPage purpose](docs/images/page.png)
 
-Release 1.0.0 leaves image selection and Open Graph/Twitter tags to Contao, your theme or your existing extension. Core ImageObject nodes and news article images are preserved. You can still assign a logo/portrait/product image directly to a managed entity; that is separate from page/social image selection.
+The extension leaves image selection and Open Graph/Twitter tags to Contao, your theme or your existing extension. Core ImageObject nodes and news article images are preserved. You can still assign a logo/portrait/product image directly to a managed entity; that is separate from page/social image selection.
 
 ## Manage news and blog posts
 
@@ -404,17 +434,17 @@ Preserve generated IDs when migrating or importing records. Removing and recreat
 ### Troubleshooting
 
 - **No localized output:** check parent publication, child publication, page publication/access and the page's derived language.
-- **News fields are missing:** enable a supported enrichment type on the archive and save it first.
-- **News keeps the old output:** confirm archive publisher and generated article IDs; save the archive to fill missing IDs.
-- **Preview seems stale:** save first, then reopen the preview. Manual values are the source in this release.
+- **News fields are missing:** the default Contao mode and Article/NewsArticle/BlogPosting archives support author, about and mentions fields. Suppressed archives do not offer article enrichment; JobPosting uses its own fields.
+- **News keeps the old output:** default Contao mode preserves the core type and identity while enriching configured relationships. For explicit article types, confirm archive publisher and generated article IDs; save the archive to fill missing IDs.
+- **Preview seems stale:** save first, then reopen the preview. Only saved values appear in the preview.
 - **Duplicate schema or social tags:** check old HTML elements, theme templates and other extensions. The manager does not automatically remove handcrafted scripts or FAQ microdata.
 - **Fields/module missing after an update:** review database updates, rebuild the application cache and check backend permissions.
 
 ## Current scope and limitations
 
-Available in **1.0.0**: Organization, LocalBusiness, Person, Product, Service and standalone Event with physical/online venues; manual offers; localized homes; compact supporting organizations; page purposes; website publisher/identity; public news authors; archive-controlled article enrichment and JobPosting; saved previews; English/German labels.
+Available in **1.2.0**: Organization, LocalBusiness, Person, Product, SoftwareApplication, Service and standalone Event with physical/online venues; manual offers; localized homes; compact supporting organizations; page purposes; website publisher/identity; public news authors; archive-controlled article enrichment and JobPosting; saved previews; the visual relationship map; optional AI-assisted setup and enrichment; English/German labels.
 
-Not included: smart/automatic page images, social-tag generation, pricing-source hooks, Product variants/inventory/reviews, full Event rich-result fields, FAQ adapters or a visual relationship overview. A valid Product or Event node does not by itself guarantee eligibility for Google's feature-specific rich results.
+Not included: smart/automatic page images, social-tag generation, pricing-source hooks, Product variants/inventory/reviews, full Event rich-result fields, FAQ adapters or a Calendar-record adapter. A valid Product or Event node does not by itself guarantee eligibility for Google's feature-specific rich results.
 
 The [roadmap](docs/roadmap.md) links the separate ongoing feature branches. See [release notes](CHANGELOG.md) for the pilot-to-release transition.
 
@@ -447,6 +477,25 @@ See [development notes](docs/development.md) for the pilot's setup and verificat
 
 People and organizations can select **Linked knowledge topics** on the entity record (for example, an existing SEO service). These shared `knowsAbout` references appear in the relationship graph and complement the localized **Expertise** text in each translation. Only published targets are emitted in frontend JSON-LD. Knowledge links do not imply that the person provides or manages the service.
 
+The AI content stage can suggest Persons for named authors of published news and connect them through the existing backend-user Person mapping. Author mapping requires an administrator. Only the author name, record reference and existing Person mapping enter the analysis, never account contact or login details. Disabled logins remain eligible when their articles are published. Existing mappings and per-news author overrides are preserved; drafts prevent duplicate Persons. Members are not scanned. Start a fresh discovery analysis to include author evidence in previously scanned articles.
+
+### Import hand-written schema before using AI
+
+For a site with existing JSON-LD, start with **1 · Import existing schema**. Keep the original markup enabled during the scan. This step reads public pages without an API key or AI charges and groups repeated entity definitions, including linked language versions. Ordinary Contao-generated page, article and image nodes are not presented as entities to import.
+
+1. Select the website and languages, prepare the scan, then scan the pages.
+2. Review each entity's original IDs, home pages, mapped fields and retained properties. Conflicting identities or existing field values block that entity instead of being overwritten. Resolve these in the source/editor and rescan.
+3. Import selected entities as drafts. Supported values become normal editable fields; other properties remain available as retained structured data. Page and website changes are staged in the review and take effect only when published.
+4. Review the drafts, then publish the selected imports **and their localized homes**. Original public IDs are preserved, including different legacy IDs for localized homes. New native values take precedence over retained properties; replacing a list replaces the whole list.
+5. Review the published output and disable the old handwritten schema manually in its Contao content element when ready. The comparison and automatic disabling feature is postponed.
+6. Continue with organisation completion, website/archive settings, and finally content discovery or improvement. Imported drafts reserve their identities against duplicate creation; publish reviewed imports before enrichment so their fields can be used as active context.
+
+For example, an existing `https://example.org/#organization` remains that same ID. Import does not generate a replacement UUID for it. Repeated descriptions are grouped around the linked home page; unsupported nested properties remain visible in the review rather than silently disappearing.
+
+This first importer handles Organization, LocalBusiness, Person, Service, Product and standalone Event entities, together with legacy WebSite and supported WebPage types found in their markup. An entity needs a matching eligible local home. Relative IDs, ambiguous homes and other schema types need manual review. Retained properties are preserved data, not fully editable native relationships; inspect complex catalogues before retiring their source.
+
+If restarting an AI trial, back up first and reset only the trial Schema Manager records you intend to replace. Leave the hand-written source intact. Existing imports and unrelated Contao content are never automatically deleted.
+
 ### Shared company awards
 
 Awards for Organization and LocalBusiness are edited on the main entity and apply to every language. Use the official award name, one per line. After updating, run the Contao database migrations: existing company awards from all translations are combined, exact duplicates removed, and existing shared values preserved. Different translated wordings are retained for editorial review. Person awards remain on the localized record.
@@ -459,8 +508,15 @@ On a company or location, **Registration identifiers** provides repeatable regis
 
 Company and LocalBusiness `sameAs` links are edited per language on their localized homes. Existing shared links remain a fallback until the localized field is saved; saving it empty explicitly removes those links for that language. Registration numbers remain shared. Each home can translate register names by matching its existing registration number; the shared register name is the fallback. Run the database update after upgrading.
 
+**Broken relationships in improvement runs:** Content → Check schema for improvements also detects stored links to deleted Schema Manager records. Review the “Remove broken link” suggestions and apply the ones you want, individually or with Select all suggestions. This uses database evidence, adds no API call, never deletes entities, and leaves draft/unpublished targets and external JSON-LD references alone. Applying rechecks that the target is still absent and removes only that reference, preserving other links. Contao versions record the change. Start a fresh improvement run to get this check.
+
 ### Software applications
 
 Choose **SoftwareApplication** for software, including Contao extensions. Shared fields cover application category (e.g. `BusinessApplication`), operating system, software version and runtime platform (e.g. `Contao 5.7`). Related organization is the **publisher**. Each language home has its own name, description, requirements, feature list and optional manual offer. The same entity can be linked from pages, news and people's knowledge topics and appears in the relationship graph.
 
 Run the Contao database update after installing this addition. Fields are optional; enter only supported facts. Software markup alone does not guarantee a Google rich result.
+
+
+Content analyses now include a deterministic author coverage check in both new-entry and improvement mode. Named, unmapped authors of eligible published news get a reviewed Person creation/link suggestion, even if the model omits them. Existing Persons are reused; draft or ambiguous matches and generic account names require review. No account email/login data or invented biography is included. New Persons remain drafts: publish after review and add suitable localized homes for richer details. Start a fresh content run to receive these suggestions.
+
+Applying AI suggestions now builds a dependency queue: required pending entity/home creations are included first, then fields and relationships. Rejected or invalid prerequisites are never revived. Suggestions without a resolvable prerequisite stay pending with their entity, field and missing dependency named; independent changes can apply. Other validation/concurrency failures still roll back the batch and identify the affected suggestion.

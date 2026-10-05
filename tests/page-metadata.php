@@ -16,6 +16,9 @@ foreach($db->fetchFirstColumn("SELECT id FROM tl_page WHERE type='regular' AND p
 }
 if(!$page){throw new RuntimeException('A public regular page is required');}
 $page->schemaPageType='ContactPage';
+$root=Contao\PageModel::findById($page->rootId);$savedRoot=$root->row();
+$root->schemaWebsiteRoot=0;$root->schemaWebsiteHome=$page->id;$root->schemaWebsiteId='https://example.test/#manually-restored';
+$root->schemaImportedActive='1';$root->schemaImportedData=json_encode(['@type'=>'WebSite','@id'=>'https://example.test/#outdated-import']);
 $request=Symfony\Component\HttpFoundation\Request::create(getenv('SCHEMA_TEST_ORIGIN') ?: 'https://example.test/');
 $request->attributes->set('pageModel',$page);
 $context=new Contao\CoreBundle\Routing\ResponseContext\ResponseContext();
@@ -37,5 +40,7 @@ try{
  if($p['name']!=='Page title' || $p['description']!=='Description' || $p['url']!=='https://example.test/contact'){throw new RuntimeException('Head metadata lost');}
  if($p['about']['@id']!=='https://example.test/#company' || $p['primaryImageOfPage']['@id']!=='https://example.test/#core-image'){throw new RuntimeException('Existing relationships overwritten');}
  if(count(array_filter($nodes,static fn($n)=>$n['@type']==='ImageObject'))!==1 || !isset($p['breadcrumb']['@id'])){throw new RuntimeException('Core image/breadcrumb not preserved');}
+ $sites=array_values(array_filter($nodes,static fn($n)=>$n['@type']==='WebSite'));
+ if(count($sites)!==1||$sites[0]['@id']!=='https://example.test/#manually-restored'||$p['isPartOf']['@id']!==$sites[0]['@id'])throw new RuntimeException('Imported data overrode the corrected website ID or references');
  echo "PASS: core page type, canonical metadata, existing image and breadcrumb preserved; no database writes.\n";
-}finally{$stack->pop();}
+}finally{foreach($savedRoot as $field=>$value)$root->$field=$value;$stack->pop();}

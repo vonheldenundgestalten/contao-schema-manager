@@ -12,3 +12,9 @@ The feature branches retain their historical baseline and have not been updated 
 ## Relationship map — released in 1.1.0
 
 The relationship map is now part of main and the 1.1.0 release. It connects business entities, websites, pages and News records, with language filters, grouping and relationship diagnostics. News subjects/mentions and linked knowledge topics also enrich frontend output. See [scope and use](relationship-map.md). The separate image and product-hook branches remain unchanged.
+
+## AI helper — released in 1.2.0
+
+The optional AI helper, schema import and multilingual review workflow are now included in main. The AI branch is closed after merge. Editorial review remains required; ordinary editing needs no API key.
+
+Calendar-record integration remains on `codex/feature-calendar-events`. The larger entity expansion is documented on `codex/feature-entity-expansion` pending real project examples. Smart images/social metadata and product/pricing hooks remain on their existing separate branches; none is included in 1.2.0.

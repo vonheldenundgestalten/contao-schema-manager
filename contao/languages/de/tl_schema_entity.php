@@ -95,6 +95,8 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['relationships'] = ['Beziehungen der Ent
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['knowledgeTopics'] = ['Verknüpfte Wissensgebiete', 'Themen auswählen, mit denen sich diese Person oder Organisation auskennt, z. B. Leistungen oder Produkte. Die sprachübergreifenden Verknüpfungen ergänzen die Freitext-Themen in den Übersetzungen. Sie bedeuten keine Leistungserbringung oder Zuständigkeit.'];
 
+$GLOBALS['TL_LANG']['tl_schema_entity']['ai'] = ['KI-Assistent', 'KI-Assistent'];
+
 $GLOBALS['TL_LANG']['tl_schema_entity']['award'] = ['Auszeichnungen', 'Eine öffentliche Auszeichnung pro Zeile, bei Bedarf mit Jahr. Für alle Sprachen gemeinsam; den offiziellen Namen verwenden.'];
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['areaServedWorldwide'] = ["Weltweit tätig", "Gibt Worldwide anstelle der ausgewählten Länder aus. Gilt für alle Sprachen."];

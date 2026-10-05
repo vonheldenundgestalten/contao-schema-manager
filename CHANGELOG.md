@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.2.0 — 2026-10-05
+
+- Optional administrator-only AI helper with a dedicated OpenAI key, source evidence, reviewable proposals, feedback refinement and resumable analysis batches.
+- Guided setup: import existing hand-written schema, establish the organization, configure website/news-archive defaults, then discover or improve content.
+- Imports preserve established identities, group translations and retain unmapped JSON-LD. Imported and AI-created entities/homes start unpublished. Original HTML schema must be disabled manually after review.
+- Multilingual suggestions follow Contao page translations. Discovery reserves existing identities, including drafts, and scans only eligible active public content.
+- Person suggestions from public news bylines, author assignments, and reviewed removal of links to deleted managed entities during improvement runs.
+- Dependency-aware application queues create required entities/homes first, recover mappings to existing translations, and explain blocked suggestions. Contao versions and stale-value checks protect edits.
+- SoftwareApplication entities with localized requirements/features and manual offers; localized organization profile links and commercial-register labels; editable shared website identities.
+- The manual editor and relationship map remain usable without an API key. Calendar adapters, smart images/social metadata, pricing-source hooks and the larger entity expansion remain separate feature work.
+
+Upgrade from 1.1.x or the AI development branch: require `^1.2`, run the Contao database update, install bundle assets and rebuild the application cache. Keep the existing database, entity identities and `.env.local` key. No destructive data reset is required. PHP ^8.3 and Contao ^5.7 requirements are unchanged. AI output remains a proposal requiring editorial review; it does not guarantee factual completeness or search rich-result eligibility.
+
+## 1.1.1 — 2026-10-05
+
+- Shared company awards with a migration preserving existing localized values.
+- Worldwide service coverage and named commercial-register identifiers, separate from tax IDs.
+
+
 ## 1.1.0 — 2026-10-04
 
 - Interactive backend relationship map connecting managed entities, websites, pages and News articles, with locally bundled Cytoscape.js/fCoSE.

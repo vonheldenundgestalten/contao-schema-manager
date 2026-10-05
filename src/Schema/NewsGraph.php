@@ -31,7 +31,12 @@ final class NewsGraph
             $record = $item['record'];
             $archive = $this->connection->fetchAssociative('SELECT * FROM tl_news_archive WHERE id = ?', [$record['pid']]);
             $mode = $archive['schemaType'] ?? '';
-            if (!$mode) { continue; }
+            $core=$mode==='';
+            if($core){
+                // Default archives may enrich core news without changing its type or identity.
+                if(empty($record['schemaAuthor']) && empty($record['schemaAbout']) && empty($record['schemaMentions']) && empty($record['schemaDateModified']) && empty($archive['schemaPublisher']))continue;
+                $mode='NewsArticle';
+            }
             $this->tags->tagWithModelClass(NewsArchiveModel::class);
             $this->tags->tagWithModelClass(NewsModel::class);
             $this->tags->tagWithModelClass(\Contao\UserModel::class);
@@ -62,11 +67,11 @@ final class NewsGraph
             $model = NewsModel::findById($record['id']);
             if (!$model || !$record['published'] || ($record['start'] && $record['start'] > time())
                 || ($record['stop'] && $record['stop'] <= time())) { continue; }
-            if (empty($record['schemaIdentity'])) { continue; } // IDs are persisted by editorial save/backfill.
+            if (!$core && empty($record['schemaIdentity'])) { continue; } // IDs are persisted by editorial save/backfill.
             $node = $graph->has(NewsArticle::class, $key) ? $graph->get(NewsArticle::class, $key)->toArray() : News::getSchemaOrgData($model);
-            unset($node['@context'], $node['identifier']);
-            $node['@type'] = $mode;
-            $node['@id'] = $record['schemaIdentity'];
+            unset($node['@context']);
+            if(!$core){unset($node['identifier']);$node['@type']=$mode;$node['@id']=$record['schemaIdentity'];}
+            else {$node['@id'] ??= $key;}
             $node['inLanguage'] = $language;
             $node['url'] = $this->urls->generate($model, [], UrlGeneratorInterface::ABSOLUTE_URL);
             $node['mainEntityOfPage'] = ['@id' => $node['url'].'#webpage'];
@@ -102,9 +107,9 @@ final class NewsGraph
                 $original = $this->connection->fetchOne('SELECT schemaIdentity FROM tl_news WHERE id = ? AND published = ?', [$record['languageMain'], '1']);
                 if ($original) { $node['translationOfWork'] = ['@id' => $original]; }
             }
-            $graph->hide(NewsArticle::class, $key);
-            $graph->set($manager->createSchemaOrgTypeFromArray($node), $record['schemaIdentity']);
-            if ($item['detail']) { $subjects[] = ['@id' => $record['schemaIdentity']]; }
+            if(!$core)$graph->hide(NewsArticle::class, $key);
+            $graph->set($manager->createSchemaOrgTypeFromArray($node), $core?$key:$record['schemaIdentity']);
+            if ($item['detail']) { $subjects[] = ['@id' => $node['@id']]; }
         }
         return $subjects;
     }
