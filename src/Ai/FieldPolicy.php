@@ -43,6 +43,7 @@ final class FieldPolicy
         if ($table!=='tl_schema_entity') { return []; }
         $links=['organization'=>['Organization','LocalBusiness']];
         if (in_array($type,['Person','Organization','LocalBusiness'],true)) { $links+=['knowledgeTopics'=>self::TYPES,'memberOf'=>['Organization','LocalBusiness']]; }
+        if ($type==='SoftwareApplication') { $links['requiredSoftware']=['SoftwareApplication']; }
         if ($type==='Person') { $links['workLocation']=['LocalBusiness']; }
         if (in_array($type,['Organization','LocalBusiness'],true)) { $links['locations']=['LocalBusiness']; }
         // Catalogues require their existing cycle validator; defer them to the regular editor.

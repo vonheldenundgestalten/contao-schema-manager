@@ -18,6 +18,9 @@ foreach(['knowsAbout','worksFor','provider','offers.seller','workLocation','memb
 $check(count(array_filter($edges,fn($e)=>in_array('entity-7',[$e['source'],$e['target']],true)))===0,'A homepage must not hide an isolated entity');
 $check(count($nodes['entity-7']['homes'])===1,'Localized home is available in details');
 $check(count(array_filter($edges,fn($e)=>$e['source']==='entity-4'&&$e['target']==='entity-5'))===1,'Cycles remain visible without traversal recursion');
+$softwareMap=(new RelationshipMap())->build([entity(10,'SoftwareApplication',['requiredSoftware'=>[11,11]]),entity(11,'SoftwareApplication',['published'=>''])],[]);
+$softwareEdges=array_column($softwareMap['edges'],'data');
+$check(count($softwareEdges)===1 && $softwareEdges[0]['source']==='entity-10' && $softwareEdges[0]['target']==='entity-11' && $softwareEdges[0]['label']==='softwareRequirements','Required software links point from extension to dependency, deduplicate, and retain drafts for editorial review');
 $check((new RelationshipMap())->build([],[])===['nodes'=>[],'edges'=>[]],'Empty installation');
 $payload=json_encode($result,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_THROW_ON_ERROR);
 $check(!str_contains($payload,'</script>'),'Safe script data embedding');

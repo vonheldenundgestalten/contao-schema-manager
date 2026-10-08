@@ -10,7 +10,7 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Screenshots show the English Contao backend; German labels are also included.*
 
-> **Release 1.3.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension focuses on manually managed entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Release 1.3.2:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension focuses on manually managed entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
 > **Versioning:** package versions follow semantic versioning independently of Contao. See [versioning and migration](docs/versioning.md) for upgrade guidance.
 
@@ -54,16 +54,19 @@ After updating a path installation, install bundle assets with `php vendor/bin/c
 
 Run Composer commands from your **Contao application root**, not from this package's directory. Back up the database before applying schema changes.
 
-### Option A: install directly from GitHub
+The extension is available on [Packagist](https://packagist.org/packages/vonheldenundgestalten/contao-schema-manager) and can be installed with Composer or Contao Manager.
 
-Register the repository and require the current release:
+### Install with Composer
+
+Require the package from your Contao application root:
 
 ```sh
-composer config repositories.schema-manager vcs https://github.com/vonheldenundgestalten/contao-schema-manager.git
 composer require vonheldenundgestalten/contao-schema-manager:^1.3
 ```
 
-The Git tag supplies the package version; there is no separate Packagist publication assumed here. If the repository requires authentication, configure Composer's normal GitHub access separately.
+### Install with Contao Manager
+
+Open Contao Manager, search for `vonheldenundgestalten/contao-schema-manager` in the package search, and add the package. Apply the package changes, then complete the Contao setup below.
 
 ### Optional AI helper
 
@@ -109,7 +112,7 @@ For example, an existing `https://example.org/#organization` remains that same I
 
 The importer supports Organization, LocalBusiness, Person, Service, Product and standalone Event entities, together with legacy WebSite and supported WebPage types found in their markup. An entity needs a matching eligible local home. Relative IDs, ambiguous homes and other schema types need manual review. Retained properties are preserved data, not fully editable native relationships; inspect complex catalogues before retiring their source.
 
-### Option B: install from a local package folder
+### Development: install from a local package folder
 
 To use a Composer path repository, put a checkout or copy of this repository at:
 
@@ -145,7 +148,7 @@ Then run:
 composer require vonheldenundgestalten/contao-schema-manager:dev-main
 ```
 
-Use either the path repository or the GitHub repository for this package. A path installation uses the local files; pushing to GitHub alone does not deploy changes to it.
+Use a path repository only when developing with a local checkout instead of the published package. A path installation uses the local files; pushing to GitHub alone does not deploy changes to it.
 
 ### Complete the Contao setup
 
@@ -284,6 +287,8 @@ Amounts can use a decimal point or comma but no thousands separators; saving nor
 ### Software applications
 
 Choose **SoftwareApplication** for software, including Contao extensions. Shared fields cover application category (e.g. `BusinessApplication`), operating system, software version and runtime platform (e.g. `Contao 5.7`). Related organization is the **publisher**. Each language home has its own name, description, requirements, feature list and optional manual offer. The same entity can be linked from pages, news and people's knowledge topics and appears in the relationship graph.
+
+Use **Required software** on a SoftwareApplication to link dependencies such as Contao CMS. The shared selection outputs `softwareRequirements` references alongside the localized requirements text, where you can retain version constraints such as `Contao ^5.7; PHP ^8.3`. Only published SoftwareApplication targets are emitted; referenced applications follow the normal lean-output rules. Dependencies also appear in the entity relationship map.
 
 Run the Contao database update after installing this addition. Fields are optional; enter only supported facts. Software markup alone does not guarantee a Google rich result.
 

@@ -107,6 +107,19 @@ final class BusinessDetailsListener
     {
         return $this->relationships($value, $dc, ['Organization','LocalBusiness','Person','Service','Product','SoftwareApplication','Event']);
     }
+    public function softwareOptions(DataContainer $dc): array
+    {
+        $options = [];
+        foreach ($this->connection->fetchAllAssociative("SELECT id,name,published FROM tl_schema_entity WHERE entityType='SoftwareApplication' AND id<>? ORDER BY name", [(int) $dc->id]) as $row) {
+            $options[$row['id']] = $row['name'].($row['published'] === '1' ? '' : ' [draft]');
+        }
+        return $options;
+    }
+    #[AsCallback(table: 'tl_schema_entity', target: 'fields.requiredSoftware.save')]
+    public function requiredSoftware(mixed $value, DataContainer $dc): mixed
+    {
+        return $this->relationships($value, $dc, ['SoftwareApplication']);
+    }
     private function relationships(mixed $value, DataContainer $dc, array $types): mixed
     {
         foreach (StringUtil::deserialize($value, true) as $id) {

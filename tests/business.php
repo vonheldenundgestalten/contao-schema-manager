@@ -58,7 +58,36 @@ try {
             return array_column($nodes,null,'@id');
         }finally{$c->get('request_stack')->pop();}
     };
+    $core=$make('SoftwareApplication','cms');
+    $extension=$make('SoftwareApplication','extension',['requiredSoftware'=>serialize([$core,$core,$service,2147483000])]);
+    $add('tl_schema_translation',['pid'=>$extension,'page'=>(int)$pages['en']->id,'language'=>'en','softwareRequirements'=>'Contao ^5.7; PHP ^8.3','published'=>'1']);
+    $previewSoftware=static function()use($entities,$extension):array {
+        $manager=new Contao\CoreBundle\Routing\ResponseContext\JsonLd\JsonLdManager(new Contao\CoreBundle\Routing\ResponseContext\ResponseContext());
+        $emitted=[];$entities->preview($extension,'en',$manager,$emitted);
+        return array_column($manager->getGraphForSchema($manager::SCHEMA_ORG)->toArray()['@graph'],null,'@id');
+    };
     $ids=$db->fetchAllKeyValue('SELECT id,entityId FROM tl_schema_entity');
+    $db->update('tl_schema_entity',['requiredSoftware'=>serialize([$extension])],['id'=>$core]);
+    $homeSoftware=$render($extension,$pages['en'],'en');
+    $check($homeSoftware[$ids[$extension]]['softwareRequirements']===['Contao ^5.7; PHP ^8.3',['@id'=>$ids[$core]]],'Frontend home includes both requirements text and software references');
+    $software=$previewSoftware();
+    $check($software[$ids[$extension]]['softwareRequirements']===['Contao ^5.7; PHP ^8.3',['@id'=>$ids[$core]]],'Requirements retain text and deduplicate valid software references; wrong types and missing targets are omitted');
+    $check(array_keys($software[$ids[$core]])===['@type','@id','name'],'Required software stays lean in the backend preview');
+    $db->update('tl_schema_entity',['published'=>''],['id'=>$core]);
+    $software=$previewSoftware();
+    $check($software[$ids[$extension]]['softwareRequirements']==='Contao ^5.7; PHP ^8.3' && !isset($software[$ids[$core]]),'Unpublished dependency is omitted while requirements text is preserved');
+    $db->update('tl_schema_entity',['published'=>'1'],['id'=>$core]);
+    $leanSoftware=$render($extension,clone $pages['de'],'en');
+    $check(!isset($leanSoftware[$ids[$extension]]['softwareRequirements']) && count($leanSoftware)===1,'An extension referenced away from home does not expand dependencies');
+    $db->update('tl_schema_translation',['softwareRequirements'=>''],['pid'=>$extension,'language'=>'en']);
+    $software=$previewSoftware();
+    $check($software[$ids[$extension]]['softwareRequirements']===[['@id'=>$ids[$core]]],'Dependency references also work without requirements text');
+    $validator=new VHUG\SchemaManagerBundle\EventListener\BusinessDetailsListener($db);
+    $dc=new class($extension) extends Contao\DataContainer { public function __construct(int $id){$this->intId=$id;} public function getPalette(){return '';} protected function save($value){} };
+    $validator->requiredSoftware(serialize([$core]),$dc);
+    foreach ([$extension,$service,2147483000] as $invalid) {
+        try{$validator->requiredSoftware(serialize([$invalid]),$dc);throw new LogicException('Invalid software dependency accepted');}catch(InvalidArgumentException $expected){}
+    }
     $nodes=$render($company,$pages['de'],'de');
     $check($nodes[$ids[$company]]['location']===[['@id'=>$ids[$office]]],'Company infers offices from parent relation');
     $check($nodes[$ids[$company]]['memberOf']===[['@id'=>$ids[$external]]] && $nodes[$ids[$external]]['url']==='https://external.example/','External network reference');

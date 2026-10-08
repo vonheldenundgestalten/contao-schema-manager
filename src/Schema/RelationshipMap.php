@@ -41,7 +41,7 @@ final class RelationshipMap
                 }
             }
             foreach (['knowledgeTopics'=>[$org || $type === 'Person','knowsAbout'], 'memberOf'=>[$org || $type === 'Person','memberOf'], 'workLocation'=>[$type === 'Person','workLocation'],
-                'locations'=>[$org,'location'], 'subservices'=>[$org || $type === 'Service','hasOfferCatalog.itemOffered']] as $field=>[$enabled,$property]) {
+                'requiredSoftware'=>[$type === 'SoftwareApplication','softwareRequirements'], 'locations'=>[$org,'location'], 'subservices'=>[$org || $type === 'Service','hasOfferCatalog.itemOffered']] as $field=>[$enabled,$property]) {
                 if ($enabled) { foreach (array_unique($row[$field] ?? []) as $target) { $connect($id, (int)$target, $property); } }
             }
         }

@@ -19,7 +19,7 @@ final class RelationshipMapModule
         System::loadLanguageFile('schema_graph');
         $rows = $this->connection->fetchAllAssociative('SELECT * FROM tl_schema_entity ORDER BY name,id');
         foreach ($rows as &$row) {
-            foreach (['memberOf','workLocation','locations','subservices','knowledgeTopics'] as $field) { $row[$field] = StringUtil::deserialize($row[$field] ?? null, true); }
+            foreach (['memberOf','workLocation','locations','subservices','knowledgeTopics','requiredSoftware'] as $field) { $row[$field] = StringUtil::deserialize($row[$field] ?? null, true); }
         }
         unset($row);
         // Content source applies Contao page/archive permissions before exposing content nodes.

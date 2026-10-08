@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+## 1.3.2 — 2026-10-08
+
+- SoftwareApplication entries can select required software (e.g. Contao CMS). Published dependencies are linked through `softwareRequirements` alongside localized requirements text and shown in the relationship map. Apply the Contao database update for the new shared selection field.
+
+Upgrade from 1.3.1: update the package, apply the additive `tl_schema_entity.requiredSoftware` field through the Contao database update, and rebuild the application cache. Existing localized requirements text and entity identities are preserved.
+
+Validation: dev backend multi-selection/save/reload, saved JSON-LD preview, frontend JSON-LD, draft exclusion, relationship-map links and rollback-based integration tests.
+
+## 1.3.1 — 2026-10-08
 
 - Entities are now fully output only on their localized home page. Everywhere else (author, publisher, provider, about/mentions, relations) they are lean reference nodes with `@id`, `@type`, `name` and `url` (companies also `logo`) and no relations, so referenced entities are no longer expanded recursively into the graph. Applies to all entity types, not only companies; event venues and offices on a location-overview page keep their contact facts. The backend JSON-LD preview shows the entity's home output with lean references.
 

@@ -115,6 +115,7 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['operatingSystem'] = ['Operating system'
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['softwareVersion'] = ['Software version', 'The current version, if relevant.'];
 
+$GLOBALS['TL_LANG']['tl_schema_entity']['requiredSoftware'] = ['Required software', 'Select applications this software needs to run, e.g. Contao CMS. Shared across languages. Unpublished applications are omitted from public output. Keep version constraints in the localized software requirements text.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['runtimePlatform'] = ['Runtime platform', 'For example Contao 5.7 and PHP 8.3.'];
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['eventLocationMode'] = ['Event location', 'Choose an existing venue or use a custom address.'];

@@ -131,6 +131,9 @@ final class EntityGraph
             $relations['knowsAbout'] = [\Contao\StringUtil::deserialize($entity['knowledgeTopics'] ?? null, true), ['Organization','LocalBusiness','Person','Service','Product','SoftwareApplication','Event']];
             $relations['memberOf'] = [\Contao\StringUtil::deserialize($entity['memberOf'] ?? null, true), ['Organization', 'LocalBusiness']];
         }
+        if ($entity['entityType'] === 'SoftwareApplication') {
+            $relations['softwareRequirements'] = [\Contao\StringUtil::deserialize($entity['requiredSoftware'] ?? null, true), ['SoftwareApplication']];
+        }
         if ($entity['entityType'] === 'Person') {
             $relations['workLocation'] = [\Contao\StringUtil::deserialize($entity['workLocation'] ?? null, true), ['LocalBusiness']];
         }
@@ -147,7 +150,11 @@ final class EntityGraph
                 if (!$related || !in_array($related['entityType'], $types, true)) { continue; }
                 if ($ref = $this->emit((int) $relatedId, $language, $manager, $emitted)) { $refs[] = ['@id' => $ref['@id']]; }
             }
-            if ($refs) { $node[$property] = array_merge($node[$property] ?? [], $refs); }
+            if ($refs) {
+                $existing = $node[$property] ?? [];
+                if (!is_array($existing) || !array_is_list($existing)) { $existing = [$existing]; }
+                $node[$property] = array_merge($existing, $refs);
+            }
         }
         if ($isOrganization) {
             try { $identifiers = BusinessFacts::registrations(\Contao\StringUtil::deserialize($entity['registrationIdentifiers'] ?? null, true), \Contao\StringUtil::deserialize($translation['registrationNames'] ?? null, true)); }
