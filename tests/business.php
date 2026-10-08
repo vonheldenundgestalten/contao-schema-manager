@@ -71,7 +71,11 @@ try {
     $check($dePerson[$ids[$person]]['knowsAbout'][0]==='Knowledge de', 'Knowledge text localizes while linked identities remain stable');
     $other=clone $pages['en'];$other->id=2147483000;
     $compact=$render($office,$other,'en');
-    $check(!isset($compact[$ids[$office]]['address']) && count($compact)===2,'Unrelated page contains compact office/company only, not catalogue/network');
+    $check(!isset($compact[$ids[$office]]['address']) && !isset($compact[$ids[$office]]['parentOrganization']) && count($compact)===1,'Unrelated page contains the lean office only, not company, catalogue or network');
+    $leanPerson=$render($person,$other,'en');
+    $check(count($leanPerson)===1 && array_keys($leanPerson[$ids[$person]])===['@type','@id','name','url'],'Person away from its home is a lean node: no knowsAbout, worksFor, credentials; referenced services are not pulled in');
+    $leanService=$render($service,$other,'en');
+    $check(count($leanService)===1 && array_keys($leanService[$ids[$service]])===['@type','@id','name','url'],'Service away from its home is lean and does not pull in its provider');
     $other->schemaLocationOverview='1';$overview=$render($office,$other,'en');
     $check($overview[$ids[$office]]['address']['addressLocality']==='Stuttgart' && $overview[$ids[$office]]['telephone']==='+49 123','Location overview keeps NAP');
     $db->update('tl_schema_entity',['published'=>''],['id'=>$office]);

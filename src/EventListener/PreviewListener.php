@@ -31,7 +31,7 @@ final class PreviewListener
         if (!$row || !$row['language']) { return ''; }
         $manager=new JsonLdManager(new ResponseContext());
         $emitted=[];
-        $this->entities->emit((int)$row['pid'],$row['language'],$manager,$emitted);
+        $this->entities->preview((int)$row["pid"],$row["language"],$manager,$emitted);
         return json_encode($manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->toArray(),JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
     }
 }

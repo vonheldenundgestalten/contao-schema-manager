@@ -6,7 +6,7 @@ Organization and LocalBusiness records emit their complete available data on the
 
 This selection happens while the manager builds its own entity nodes, before later graph listeners. It does not sweep the final graph or strip unrelated extensions' organization nodes. Other integrations can still enrich the result afterwards. A complete supporting-company preview remains available in the backend: the saved entity preview is not a full frontend-page preview.
 
-The change applies to Organization and LocalBusiness only. Services, people and events retain their existing representation.
+The same rule now applies to every entity type (services, people, products, events): complete on the localized home, lean reference elsewhere, with no recursive expansion. See the README section "Output rules".
 
 An explicit **Location overview with contact details** page setting retains address, telephone, email and parentOrganization on supporting LocalBusiness nodes when the page visibly lists those offices. Full organization relationships (locations, subsidiaries, networks and service catalogues) are followed only on the localized home or in a backend preview, avoiding unrelated catalogue trees on every page.
 

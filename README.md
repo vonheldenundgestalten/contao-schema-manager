@@ -467,6 +467,12 @@ Check the rendered frontend too:
 
 A password-protected development URL cannot be fetched by public validators. Use their code input to test copied JSON/HTML, then validate the public deployment separately. Structured data must reflect the visible content; valid markup does not guarantee a particular search appearance. See [Google's structured-data guidelines](https://developers.google.com/search/docs/appearance/structured-data/sd-policies).
 
+### Output rules
+
+**An entity is output completely only on its own localized home page** (and in its saved backend preview, which shows exactly that home output). On every other page it is a lean reference node with `@id`, `@type`, `name` and, when it has a home in the current language, `url`; companies also keep their `logo`. A lean node carries no relations (`knowsAbout`, `offers`, `hasOfferCatalog`, `worksFor`, `provider`, `sameAs`, address, identifiers) and nothing it points to is added to the graph. A blog post therefore lists its author, publisher and related services as short nodes instead of pulling in whole catalogues.
+
+Exceptions: offices on a page with **Location overview with contact details** keep address, telephone, email and parent link; an event's venue keeps its address, coordinates and map link because they are part of the event page's content. Articles, jobs, calendar events and the page's own WebPage/WebSite nodes are page content and are not affected. Several entities may share one home page; each is complete there. An entity without a published home in the current language is always lean, without `url`.
+
 ### Full organization or a compact reference?
 
 **Current behavior:** Organization and LocalBusiness records emit their full details on their published localized home. On other pages, they emit a compact node containing `@type`, `@id`, `name`, the localized home `url` when available, and `logo` when configured. Publisher/provider relationships still reference the same permanent identity. Saved entity previews remain complete.

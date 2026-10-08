@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Entities are now fully output only on their localized home page. Everywhere else (author, publisher, provider, about/mentions, relations) they are lean reference nodes with `@id`, `@type`, `name` and `url` (companies also `logo`) and no relations, so referenced entities are no longer expanded recursively into the graph. Applies to all entity types, not only companies; event venues and offices on a location-overview page keep their contact facts. The backend JSON-LD preview shows the entity's home output with lean references.
+
 ## 1.3.0 — 2026-10-05
 
 - Optional Contao Calendar integration enriches core Event nodes with calendar defaults, organiser, attendance/status, speakers and related topics. Core dates, content and recurrence remain authoritative.
