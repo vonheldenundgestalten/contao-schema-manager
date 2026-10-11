@@ -74,7 +74,8 @@ final class EntityGraph
             }
             if ($home && $home->published && !$home->protected && !$home->requireItem && $home->language === $language
                 && (!$home->start || $home->start <= time()) && (!$home->stop || $home->stop > time())) {
-                $url = $this->urls->generate($home, [], UrlGeneratorInterface::ABSOLUTE_URL);
+                try { $url = $this->urls->generate($home, [], UrlGeneratorInterface::ABSOLUTE_URL); }
+                catch (\Symfony\Component\Routing\Exception\RoutingException) { $translation = null; } // Not routable: lean reference only.
             } else { $translation = null; }
         }
         // Preserve localized legacy identities even when resolving a relationship cycle.

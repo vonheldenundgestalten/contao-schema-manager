@@ -13,6 +13,7 @@ use Spatie\SchemaOrg\WebSite;
 use Spatie\SchemaOrg\BreadcrumbList;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Exception\RoutingException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsEventListener(priority: -200)]
@@ -30,6 +31,8 @@ final class PageMetadataListener
         $page=$request?->attributes->get('pageModel');
         $context=$event->getResponseContext();
         if(!$page instanceof PageModel || !$context->has(JsonLdManager::class)){return;}
+        // Error pages (error_401/403/404 ...) have no route: ContentUrlGenerator would throw and turn the error into a 500.
+        if(str_starts_with((string)$page->type,'error_')){return;}
         $page->loadDetails();
         $root=PageModel::findById($page->rootId);
         $manager=$context->get(JsonLdManager::class);
@@ -41,7 +44,12 @@ final class PageMetadataListener
             if($head->getMetaDescription() !== ''){$web->setProperty('description',$head->getMetaDescription());}
             $url=$head->getCanonicalUriForRequest($request);
         }else{
-            $url=$this->urls->generate($page,['parameters'=>$request->attributes->get('parameters','')],UrlGeneratorInterface::ABSOLUTE_URL);
+            try{
+                $url=$this->urls->generate($page,['parameters'=>$request->attributes->get('parameters','')],UrlGeneratorInterface::ABSOLUTE_URL);
+            }catch(RoutingException){
+                // Not routable: skip all URL-derived output instead of emitting an invalid URL.
+                return;
+            }
         }
         foreach($request->attributes->get('_schema_manager_news',[]) as $item){
             if(empty($item['reader']) || empty($item['record']['schemaIdentity'])){continue;}
@@ -93,7 +101,12 @@ final class PageMetadataListener
         if(!$home || $home->requireItem){return;}
         $home->loadDetails();$this->tags->tagWithModelInstance($home);
         if(!$home->published || $home->protected){return;}
-        $homeUrl=$this->urls->generate($home,[],UrlGeneratorInterface::ABSOLUTE_URL);
+        try{
+            $homeUrl=$this->urls->generate($home,[],UrlGeneratorInterface::ABSOLUTE_URL);
+        }catch(RoutingException){
+            // Home page not routable: leave the WebSite node out.
+            return;
+        }
         if(!$site->schemaWebsiteHome){
             $parts=parse_url($homeUrl);
             $homeUrl=$parts['scheme'].'://'.$parts['host'].(isset($parts['port'])?':'.$parts['port']:'').($this->requests->getMainRequest()?->getBasePath() ?? '').'/';

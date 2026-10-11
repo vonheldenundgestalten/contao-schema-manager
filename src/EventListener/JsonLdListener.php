@@ -11,6 +11,7 @@ use Doctrine\DBAL\Connection;
 use Spatie\SchemaOrg\WebPage;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Exception\RoutingException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use VHUG\SchemaManagerBundle\Model\EntityModel;
 use VHUG\SchemaManagerBundle\Model\TranslationModel;
@@ -35,6 +36,8 @@ final class JsonLdListener
         $page = $request?->attributes->get('pageModel');
         $context = $event->getResponseContext();
         if (!$page instanceof PageModel || !$context->has(JsonLdManager::class)) { return; }
+        // Error pages (error_401/403/404 ...) have no route: ContentUrlGenerator would throw and turn the error into a 500.
+        if (str_starts_with((string) $page->type, 'error_')) { return; }
         $page->loadDetails();
         $language = $page->language;
         $this->cacheTags->tagWithModelClass(EntityModel::class);
@@ -77,16 +80,23 @@ final class JsonLdListener
             $request->attributes->set('_schema_job_expires', min($expiry, $request->attributes->get('_schema_job_expires', PHP_INT_MAX)));
         }
         if ($emitted || $newsSubjects) {
-            $url = $this->urls->generate($page, ['parameters' => $request->attributes->get('parameters', '')], UrlGeneratorInterface::ABSOLUTE_URL);
+            try {
+                $url = $this->urls->generate($page, ['parameters' => $request->attributes->get('parameters', '')], UrlGeneratorInterface::ABSOLUTE_URL);
+            } catch (RoutingException) {
+                // Not routable: skip the URL-derived WebPage properties rather than emit an invalid URL.
+                $url = '';
+            }
             // Reader URLs include the record alias, unlike the bare reader-page route.
             if ($newsSubjects) {
                 foreach ($graph->toArray()['@graph'] ?? [] as $node) {
                     if (($node['@id'] ?? '') === $newsSubjects[0]['@id']) { $url = $node['url']; break; }
                 }
             }
-            $webPage->setProperty('@id', $url.'#webpage');
-            $webPage->setProperty('url', $url);
-            $webPage->setProperty('inLanguage', $language);
+            if ($url !== '') {
+                $webPage->setProperty('@id', $url.'#webpage');
+                $webPage->setProperty('url', $url);
+                $webPage->setProperty('inLanguage', $language);
+            }
         }
         if ($main) { $webPage->setProperty('mainEntity', count($main) === 1 ? reset($main) : array_values($main)); }
         if ($about) { $webPage->setProperty('about', array_values($about)); }
