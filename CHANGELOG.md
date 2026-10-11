@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.3 — 2026-10-11
+
+- Fix: error pages (`error_401`, `error_403`, `error_404`, ...) no longer turn into HTTP 500. They are not routable, so `ContentUrlGenerator::generate()` threw `RouteNotFoundException` in the JSON-LD listeners. These pages are now skipped, and every page/home URL generation is guarded against routing exceptions, omitting URL-derived properties instead of emitting invalid JSON-LD.
+
+Upgrade from 1.3.2: update the package and rebuild the application cache. No database changes.
+
 ## 1.3.2 — 2026-10-08
 
 - SoftwareApplication entries can select required software (e.g. Contao CMS). Published dependencies are linked through `softwareRequirements` alongside localized requirements text and shown in the relationship map. Apply the Contao database update for the new shared selection field.
