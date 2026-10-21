@@ -8,6 +8,16 @@ Package versions follow [Semantic Versioning 2.0.0](https://semver.org/), indepe
 
 The supported PHP/Contao ranges are declared in composer.json. The 1.0.0 baseline requires PHP ^8.3 and Contao ^5.7. Tags are immutable once released; the withdrawal of the earlier 5.7.0 pilot tag is a one-time version-number correction. Future releases will not reuse, move or renumber published tags.
 
+## 1.4 beta installations
+
+The generic extension API starts with **1.4.0-beta.1**, a non-final minor release. Install the explicit version with:
+
+```sh
+composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.1 --with-all-dependencies
+```
+
+Apply the additive Contao database updates and rebuild the application cache. Project adapters remain separate; OKAL integration stays deferred until installation on OKAL dev. No application-wide minimum-stability change is needed.
+
 ## Existing 5.7.0 installations
 
 The earlier release/tag was withdrawn at the maintainer’s request. Its commit history remains intact. It does not mean this extension now targets Contao 1.0.

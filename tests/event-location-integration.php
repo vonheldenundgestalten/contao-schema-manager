@@ -18,6 +18,8 @@ try{
  $ids=[];
  foreach(['Place','LocalBusiness'] as $type){$db->insert('tl_schema_entity',['entityType'=>$type,'name'=>'Location regression '.$type,'entityId'=>'https://example.test/#location-regression-'.strtolower($type),'identityBase'=>'https://example.test','published'=>'1','streetAddress'=>'Test street 1','addressLocality'=>'Test city','latitude'=>'48.5','longitude'=>'9.2']);$ids[$type]=(int)$db->lastInsertId();}
  $db->insert('tl_schema_entity',['entityType'=>'Event','name'=>'Regression event','entityId'=>'https://example.test/#location-regression-event','identityBase'=>'https://example.test','published'=>'1','eventLocationMode'=>'existing','eventAttendanceMode'=>'OfflineEventAttendanceMode','eventPlace'=>$ids['Place'],'locationName'=>'Stale venue','streetAddress'=>'Wrong street']);$eventId=(int)$db->lastInsertId();
+ // A standalone entity is complete on its localized home, not an unrelated page.
+ $db->insert('tl_schema_translation',['pid'=>$eventId,'page'=>(int)$page->id,'language'=>$page->language,'published'=>'1']);
  foreach($ids as $type=>$id){
   $db->update('tl_schema_entity',['eventPlace'=>$id],['id'=>$eventId]);$manager=$newManager();$emitted=[];$node=$entities->emit($eventId,$page->language,$manager,$emitted);
   $check($node['location']['@type']===$type && $node['location']['address']['streetAddress']==='Test street 1' && isset($node['location']['geo']),'Standalone reusable '.$type.' includes address and geo');

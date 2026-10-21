@@ -29,6 +29,9 @@ try{
  $check(count(array_filter($nodes,fn($node)=>($node['@type']??'')==='Event'))===2,'Only exact core event replaced');
 
  foreach(['tl_calendar','tl_calendar_events'] as $table){$check(!in_array('schemaLatitude',VHUG\SchemaManagerBundle\Ai\FieldPolicy::fields($table,''),true)&&!in_array('schemaLongitude',VHUG\SchemaManagerBundle\Ai\FieldPolicy::fields($table,''),true),'Coordinates excluded from AI policy');}
+ // Coordinate inheritance is a custom-venue scenario, independent of the installed demo's current venue choice.
+ $db->update('tl_calendar',['schemaLocationMode'=>'custom','schemaPlace'=>0],['id'=>$calendar]);
+ $db->update('tl_calendar_events',['schemaLocationMode'=>'','schemaPlace'=>0,'schemaAttendanceMode'=>'OfflineEventAttendanceMode'],['id'=>$id]);
  $db->update('tl_calendar',['schemaLatitude'=>'48.7758','schemaLongitude'=>'9.1829'],['id'=>$calendar]);
  $db->update('tl_calendar_events',['schemaLatitude'=>'','schemaLongitude'=>''],['id'=>$id]);
  $eventNode=function()use($render,$record){[$nodes]=$render();return array_values(array_filter($nodes,fn($n)=>($n['@id']??'')===$record['schemaIdentity']))[0];};

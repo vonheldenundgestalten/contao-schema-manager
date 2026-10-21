@@ -23,3 +23,11 @@ Calendar-record integration and reusable Place venues are released in **1.3.0**;
 ## Calendar and reusable venues — released in 1.3.0
 
 Optional Calendar enrichment, calendar defaults, event relationships, AI source support and reusable Place/LocalBusiness venues are included. Physical, online and hybrid schema controls preserve existing custom fields. Calendar uninstall was tested with retained tables; standalone Event/Place editing remains available. The larger entity expansion stays in planning and is not included.
+
+## Extension API planning update - 20 October 2026
+
+The [expansion plan](entity-expansion-plan.md) now specifies a proposed [v1 adapter, type and relationship API](entity-expansion/extension-api.md). All OKAL-specific integration belongs in okal-bundle, requiring the eventual compatible release. [OKAL implementation notes](entity-expansion/okal-bundle-handover.md) are deferred until the API-enabled extension is installed and verified on OKAL dev. No runtime implementation, release or deployment accompanies this planning update.
+
+## Generic extension API implemented on dev — 20 October 2026
+
+The [v1 developer API](extension-api/README.md) now supports independent source/type/relationship providers, stable draft bindings, typed supplementary editing, guarded graph emission, preview, lifecycle invalidation, explicit payload migration and opt-in AI improvements. The generic example is synthetic equipment. Broad industry types and all OKAL bundle work remain deferred; install the API-enabled build on OKAL dev before integration there. The generic API prerelease is 1.4.0-beta.1.

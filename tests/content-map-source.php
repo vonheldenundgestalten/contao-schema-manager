@@ -27,7 +27,7 @@ $deny = new class implements Symfony\Component\Security\Core\Authorization\Autho
 };
 $source=new VHUG\SchemaManagerBundle\Backend\ContentMapSource($db,$c->get('contao.routing.content_url_generator'),$deny);
 $result=$source->load($user);
-if ($result!==['pages'=>[],'news'=>[]] || !$deny->calls) { throw new RuntimeException('Denied records must not enter the graph source'); }
+if ($result!==['pages'=>[],'news'=>[],'events'=>[]] || !$deny->calls) { throw new RuntimeException('Denied records must not enter the graph source'); }
 $pageId=(int)$db->fetchOne("SELECT id FROM tl_page WHERE type='regular' ORDER BY id LIMIT 1");
 $newsId=class_exists(Contao\NewsModel::class)?(int)$db->fetchOne('SELECT id FROM tl_news ORDER BY id LIMIT 1'):0;
 $allow=new class($pageId,$newsId) implements Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface {

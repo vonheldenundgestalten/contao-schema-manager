@@ -1,0 +1,8 @@
+# Import only in a development application after adding SchemaManagerExample PSR-4 autoloading.
+services:
+    SchemaManagerExample\ExampleProvider:
+        autoconfigure: true
+    SchemaManagerExample\ExampleSourceAdapter:
+        autoconfigure: true
+        arguments:
+            $stateFile: '%kernel.project_dir%/var/schema-example-source.json'

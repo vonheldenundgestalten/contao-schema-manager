@@ -1,11 +1,39 @@
+parameters:
+    schema_manager.extension.allow_pending: false
+    schema_manager.extension.approved_roots: {}
 services:
     _defaults:
         autowire: true
         autoconfigure: true
     VHUG\SchemaManagerBundle\:
         resource: ../src/
-        exclude: ../src/{ContaoManager,Model,SchemaManagerBundle.php}
+        exclude: ../src/{ContaoManager,Model,SchemaManagerBundle.php,Extension/V1,DependencyInjection}
     VHUG\SchemaManagerBundle\Backend\RelationshipMapModule:
         public: true
     VHUG\SchemaManagerBundle\Backend\AiHelperModule:
         public: true
+
+    VHUG\SchemaManagerBundle\Extension\Internal\Registry:
+        arguments:
+            $typeProviders: !tagged_iterator schema_manager.type_provider
+            $relationshipProviders: !tagged_iterator schema_manager.relationship_provider
+            $adapters: !tagged_iterator schema_manager.source_adapter
+            $mappers: !tagged_iterator { tag: schema_manager.type_mapper, index_by: id }
+            $validators: !tagged_iterator { tag: schema_manager.type_validator, index_by: id }
+    VHUG\SchemaManagerBundle\Extension\V1\BindingManagerInterface: '@VHUG\SchemaManagerBundle\Extension\Internal\BindingManager'
+    VHUG\SchemaManagerBundle\Extension\V1\SourceInvalidatorInterface: '@VHUG\SchemaManagerBundle\Extension\Internal\SourceInvalidator'
+    VHUG\SchemaManagerBundle\Extension\V1\EntityEditorInterface: '@VHUG\SchemaManagerBundle\Extension\Internal\EntityEditor'
+    VHUG\SchemaManagerBundle\Backend\ExtensionModule:
+        public: true
+
+    VHUG\SchemaManagerBundle\Extension\Internal\Runtime:
+        arguments:
+            $allowPending: "%schema_manager.extension.allow_pending%"
+
+    VHUG\SchemaManagerBundle\Extension\Internal\PayloadMigrator:
+        arguments:
+            $migrations: !tagged_iterator schema_manager.payload_migration
+
+    VHUG\SchemaManagerBundle\Extension\Internal\SiteScope:
+        arguments:
+            $approvedRoots: "%schema_manager.extension.approved_roots%"

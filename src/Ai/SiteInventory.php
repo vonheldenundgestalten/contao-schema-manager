@@ -7,7 +7,7 @@ use Doctrine\DBAL\Connection;
 use VHUG\SchemaManagerBundle\Backend\ContentMapSource;
 final class SiteInventory
 {
-    public function __construct(private readonly Connection $db,private readonly ContentMapSource $content) {}
+    public function __construct(private readonly Connection $db,private readonly ContentMapSource $content,private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\AiBridge $extensions=null) {}
     public function roots(): array
     {
         $roots=[];foreach($this->db->fetchAllAssociative("SELECT * FROM tl_page WHERE type='root' ORDER BY sorting,id") as $row){if($this->visible($row))$roots[(int)$row['id']]=$row['title'];}return $roots;
@@ -75,7 +75,7 @@ final class SiteInventory
             $key='event:'.$event['id'];$sources[$key]=$this->source($key,$event['title'],$reader['language'],$event['url'],$event['title'].' '.($event['teaser']??'').' '.$this->elements('tl_calendar_events',(int)$event['id']),(int)$reader['id']);
             if($event['_mode']!=='suppress')$records[$key]=$event;
         }
-        foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_entity ORDER BY id') as $row) { if($this->visible($row))$records['entity:'.$row['id']]=$row; }
+        foreach ($this->db->fetchAllAssociative("SELECT e.* FROM tl_schema_entity e WHERE NOT EXISTS (SELECT 1 FROM tl_schema_extension_binding b WHERE b.entity=e.id) AND e.entityType NOT LIKE '%.%' ORDER BY id") as $row) { if($this->visible($row))$records['entity:'.$row['id']]=$row; }
         foreach ($this->db->fetchAllAssociative('SELECT * FROM tl_schema_translation ORDER BY id') as $row) {
             if(!$this->visible($row) || !isset($records['entity:'.$row['pid']]) || !isset($pages[$row['page']]))continue;
             // Only active homes on eligible public pages enter the analysis.
@@ -101,8 +101,10 @@ final class SiteInventory
         // Keep linked page translations adjacent, so discovery sees them together.
         uasort($sources,static fn($a,$b)=>($pages[$a['page']]['languageFamily'] ?? $a['page'])<=>($pages[$b['page']]['languageFamily'] ?? $b['page']));
         // Identity reservations are a duplicate-prevention list, never editable records or evidence.
-        $identities=$this->db->fetchAllAssociative('SELECT id,entityType,name,legalName FROM tl_schema_entity ORDER BY id');
-        return ['identities'=>$identities,'sources'=>$sources,'records'=>$records,'pages'=>$pages,'roots'=>$roots,'multilingual'=>$multilingual];
+        $identities=$this->db->fetchAllAssociative("SELECT e.id,e.entityType,e.name,e.legalName FROM tl_schema_entity e WHERE NOT EXISTS (SELECT 1 FROM tl_schema_extension_binding b WHERE b.entity=e.id) AND e.entityType NOT LIKE '%.%' ORDER BY e.id");
+        $extensions=$this->extensions?->context($roots,(string)($user->language?:'en'),(int)$user->id)??[];
+        foreach($extensions as $key=>$metadata)$records[$key]=array_intersect_key($metadata,array_flip(['id','entityType','name']))+['published'=>'1'];
+        return ['extensions'=>$extensions,'identities'=>$identities,'sources'=>$sources,'records'=>$records,'pages'=>$pages,'roots'=>$roots,'multilingual'=>$multilingual];
     }
     private function elements(string $table,int $id): string
     {

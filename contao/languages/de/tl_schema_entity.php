@@ -124,3 +124,5 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['eventPlace'] = ['Bestehender Ort', 'Nur
 $GLOBALS['TL_LANG']['tl_schema_entity']['locationModes'][''] = 'Eigene Adresse';
 $GLOBALS['TL_LANG']['tl_schema_entity']['locationModes']['existing'] = 'Bestehender Ort';
 $GLOBALS['TL_LANG']['MSC']['schemaLocationDraft'] = 'unveröffentlicht';
+
+$GLOBALS['TL_LANG']['tl_schema_entity']['extension_legend'] = 'Erweiterungsdaten';

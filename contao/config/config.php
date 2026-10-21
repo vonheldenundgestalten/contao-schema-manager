@@ -9,3 +9,4 @@ $GLOBALS['TL_MODELS']['tl_schema_contact'] = VHUG\SchemaManagerBundle\Model\Cont
 $GLOBALS['BE_MOD']['content']['schema_manager']['relationships'] = [VHUG\SchemaManagerBundle\Backend\RelationshipMapModule::class, 'generate'];
 
 $GLOBALS['BE_MOD']['content']['schema_manager']['ai'] = [VHUG\SchemaManagerBundle\Backend\AiHelperModule::class, 'generate'];
+$GLOBALS['BE_MOD']['content']['schema_manager']['extensions'] = [VHUG\SchemaManagerBundle\Backend\ExtensionModule::class, 'generate'];

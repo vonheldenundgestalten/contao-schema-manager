@@ -46,6 +46,7 @@ final class JsonLdListener
         $manager = $context->get(JsonLdManager::class);
         $graph = $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG);
         $webPage = $graph->getOrCreate(WebPage::class);
+        $this->cacheTags->tagWith(\VHUG\SchemaManagerBundle\Extension\Internal\SourceInvalidator::TAG);
         $emitted = [];
         $main = [];
         $about = [];

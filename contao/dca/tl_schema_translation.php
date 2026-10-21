@@ -80,3 +80,7 @@ $GLOBALS['TL_DCA']['tl_schema_translation']['fields']['registrationNames'] = ['i
 foreach (['softwareRequirements', 'featureList'] as $field) {
     $GLOBALS['TL_DCA']['tl_schema_translation']['fields'][$field] = ['inputType'=>'textarea', 'eval'=>['tl_class'=>'clr'], 'sql'=>'text NULL'];
 }
+
+$GLOBALS['TL_DCA']['tl_schema_translation']['fields']['schemaExtensionData'] = ['sql'=>'text NULL'];
+
+$GLOBALS['TL_DCA']['tl_schema_translation']['fields']['schemaExtensionEditor'] = ['eval'=>['doNotSave'=>true]];

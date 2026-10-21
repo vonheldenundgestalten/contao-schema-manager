@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Contao\CoreBundle\Cache\CacheTagManager;
 final class ProposalEngine
 {
-    public function __construct(private readonly Connection $db,private readonly FieldPolicy $policy,private readonly CacheTagManager $tags) {}
+    public function __construct(private readonly Connection $db,private readonly FieldPolicy $policy,private readonly CacheTagManager $tags,private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\AiBridge $extensions=null,private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\Store $extensionStore=null) {}
     public function context(array $run,array $sources): array
     {
         $records=[];
@@ -34,7 +34,7 @@ final class ProposalEngine
         }unset($record);
         $fields=[];
         foreach (FieldPolicy::TYPES as $type) { $fields[$type]=['entity'=>FieldPolicy::fields('tl_schema_entity',$type),'translation'=>FieldPolicy::fields('tl_schema_translation',$type),'links'=>FieldPolicy::links('tl_schema_entity',$type)]; }
-        return ['stage'=>$run['stage'] ?? 'content','reservedIdentities'=>$run['inventory']['identities'] ?? [],'editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,
+        return ['extensions'=>$run['inventory']['extensions']??[],'stage'=>$run['stage'] ?? 'content','reservedIdentities'=>$run['inventory']['identities'] ?? [],'editorLanguage'=>$run['editorLanguage'] ?? 'en','editorFeedback'=>$run['editorFeedback'] ?? '', 'conversation'=>$run['conversation'] ?? [],'previousSuggestions'=>$run['previousSuggestions'] ?? [],'mode'=>$run['mode'],'sources'=>array_values($sources),'records'=>$records,'eligibleHomes'=>array_values(array_map(static fn($p)=>array_intersect_key($p,array_flip(['id','title','language','url','languageFamily'])),$run['inventory']['pages'])),'allowed'=>$fields,
             'pending'=>array_map(static fn($p)=>array_intersect_key($p,array_flip(['action','target','field','value'])),array_values(array_filter($run['proposals'],static fn($p)=>$p['status']==='pending'))),
             'preserveExistingValues'=>true,'authorLinks'=>['schemaPerson'=>['Person']],'pageLinks'=>['schemaEntities'],'eventFields'=>FieldPolicy::fields('tl_calendar_events','Event'),'eventLinks'=>FieldPolicy::links('tl_calendar_events','Event'),'newsLinks'=>['schemaAbout','schemaMentions'],'pageFields'=>['schemaPageType']];
     }
@@ -163,7 +163,12 @@ final class ProposalEngine
                     $field=$p['action']==='set'&&preg_match('/^'.preg_quote($task['target'],'/').'@([0-9]+)$/D',$p['target'],$match)&&in_array((int)$match[1],$task['missingPages'],true);
                     if(!$home&&!$field)throw new \InvalidArgumentException('Translation phase can only add the requested localized homes and fields.');
                 }
-                if ($p['action']==='create') {
+                if (in_array($p['action'],['extension_set','extension_add'],true)) {
+                    if(!$this->extensions)throw new \InvalidArgumentException('Extension AI API unavailable.');
+                    [$extensionMetadata]=$this->extensions->validate($p,$run['inventory']);
+                    if(!empty($extensionMetadata['fields'][$p['field']]['localized']) && $source['language']!==$extensionMetadata['language'])throw new \InvalidArgumentException('Extension source and field language differ.');
+                    $p['bulk']=false;
+                } elseif ($p['action']==='create') {
                     if (!preg_match('/^new:[a-z0-9-]{1,64}$/D',$p['target']) || !in_array($p['field'],FieldPolicy::TYPES,true)) { throw new \InvalidArgumentException('Invalid new entity.'); }
                     $p['value']=$this->policy->validate('tl_schema_entity',$p['field'],'name',$p['value']);
                     if(self::matchingIdentity($run['inventory']['identities'] ?? [],$p['field'],$p['value']))throw new \InvalidArgumentException('This entity already exists, possibly as an unpublished draft. Review the existing entry instead.');
@@ -171,6 +176,8 @@ final class ProposalEngine
                     foreach ($run['proposals'] as $prior) { if ($prior['action']==='create' && $prior['target']===$p['target'] && $prior['status']!=='invalid') { throw new \InvalidArgumentException('Candidate already proposed.'); } }
                 } else {
                     [$table,,$type,$row]=$this->resolve($p['target'],$run);
+                    $entityId=$table==='tl_schema_entity'?(int)($row['id']??0):($table==='tl_schema_translation'?(int)($row['pid']??0):0);
+                    if(str_contains($type,'.') || ($entityId && $this->extensionStore?->binding($entityId)))throw new \InvalidArgumentException('Use the extension field/relationship API for this source-backed entity.');
                     if ($p['action']==='home') {
                         if ($table!=='tl_schema_entity' || $p['field']!=='page' || !ctype_digit($p['value']) || !isset($run['inventory']['pages'][(int)$p['value']])) { throw new \InvalidArgumentException('Choose an eligible page as home.'); }
                         foreach($run['proposals'] as $prior){if($prior['action']==='home'&&$prior['target']===$p['target']&&!in_array($prior['status'],['invalid','rejected'],true)&&($run['inventory']['pages'][(int)$prior['value']]['language']??'')===$run['inventory']['pages'][(int)$p['value']]['language'])throw new \InvalidArgumentException('A home is already proposed for this language.');}
@@ -231,6 +238,12 @@ final class ProposalEngine
                 $record=(new MissingRelations($this->db))->apply($p,$run,$user);
                 $run['proposals'][$index]['status']='applied';$run['proposals'][$index]['appliedAt']=time();$run['proposals'][$index]['record']=$record;++$count;continue;
             }
+            if(in_array($p['action'],['extension_set','extension_add'],true)){
+                if(!$this->extensions)throw new \RuntimeException('Extension AI API unavailable.');
+                $this->extensions->apply($p,$run['inventory'],(int)$user->id,$run['origin']);
+                $run['inventory']['extensions'][$p['target']]['revision']++;
+                $run['proposals'][$index]['status']='applied';$run['proposals'][$index]['appliedAt']=time();$run['proposals'][$index]['record']='tl_schema_entity:'.$run['inventory']['extensions'][$p['target']]['id'];++$count;continue;
+            }
             $field=$p['field'];$value=$p['value'];
             if ($p['action']==='create') {
                 if (self::matchingIdentity($this->db->fetchAllAssociative('SELECT id,entityType,name,legalName FROM tl_schema_entity'),$field,$value)) { throw new \RuntimeException('A matching entity now exists. Rescan before creating a duplicate.'); }
@@ -245,6 +258,8 @@ final class ProposalEngine
                 }
                 if (!$id) { throw new \RuntimeException('Select the dependent entity/home creation, or apply it first.'); }
                 $current=$this->db->fetchAssociative('SELECT * FROM '.$table.' WHERE id=? FOR UPDATE',[$id]);
+                $authorityId=$table==='tl_schema_entity'?$id:($table==='tl_schema_translation'?(int)($current['pid']??0):0);
+                if($authorityId && ($this->extensionStore?->binding($authorityId) || str_contains($type,'.')))throw new \RuntimeException('Source authority changed; rescan through extension API.');
                 if (!$current) { throw new \RuntimeException('A target record was removed. Rescan.'); }
                 if ($p['action']==='home') {
                     $page=\Contao\PageModel::findById((int)$value);$page?->loadDetails();

@@ -126,3 +126,10 @@ $fields['hasMap']['eval']['decodeEntities']=true;
 $fields['eventUrl']['eval']['decodeEntities']=true;
 $palettes['Event']=str_replace('eventAttendanceMode,locationName','eventAttendanceMode,eventLocationMode,eventPlace,locationName',$palettes['Event']);
 $palettes['Event']=str_replace('addressCountry,eventUrl','addressCountry,latitude,longitude,hasMap,eventUrl',$palettes['Event']);
+
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['schemaExtensionData'] = ['sql'=>'text NULL'];
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['schemaExtensionVersion'] = ['sql'=>"int unsigned NOT NULL default 0"];
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['schemaExtensionRevision'] = ['sql'=>"int unsigned NOT NULL default 0"];
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['entityType']['sql'] = "varchar(128) NOT NULL default 'Organization'";
+$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['schemaExtensionEditor'] = ['eval'=>['doNotSave'=>true]];
+$GLOBALS['TL_DCA']['tl_schema_entity']['list']['global_operations']['extensions'] = ['href'=>'key=extensions','primary'=>true,'icon'=>'edit.svg','label'=>['Extension data','Extension data']];

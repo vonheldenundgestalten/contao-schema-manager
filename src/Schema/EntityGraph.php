@@ -14,6 +14,8 @@ final class EntityGraph
 {
     /** Entity shown by the backend preview; only this entity is complete there. */
     private ?int $previewId = null;
+    /** Direct emissions, scoped to the actual graph lifetime, allow home nodes to upgrade compact dependencies. */
+    private ?\WeakMap $extensionDirect = null;
 
     public function __construct(
         private readonly Connection $connection,
@@ -21,6 +23,7 @@ final class EntityGraph
         private readonly CacheTagManager $tags,
         private readonly EntityMapper $mapper,
         private readonly RequestStack $requests,
+        private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\Runtime $extensions = null,
     ) {}
 
     public function record(int $id): ?array
@@ -58,14 +61,19 @@ final class EntityGraph
      */
     public function emit(int $id, string $language, JsonLdManager $manager, array &$emitted): ?array
     {
-        if (!$entity = $this->record($id)) { return null; }
-        if (isset($emitted[$entity['entityId']])) { return $emitted[$entity['entityId']]; }
+        $entity=$this->record($id);
+        if(!$entity && $this->previewId===$id && $this->extensions){$draft=$this->connection->fetchAssociative('SELECT * FROM tl_schema_entity WHERE id=?',[$id]);if($draft && $this->extensions->handles($draft))$entity=$draft;}
+        if(!$entity || (str_contains($entity['entityType'],'.') && !$this->extensions))return null;
+        $extensionHandled=$this->extensions?->handles($entity)??false;
+        $activeGraph=$manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG);
+        if (isset($emitted[$entity['entityId']]) && (!$extensionHandled || !empty(($this->extensionDirect[$activeGraph]??[])[$id]))) { return $emitted[$entity['entityId']]; }
 
         $translation = $this->connection->fetchAssociative(
             'SELECT * FROM tl_schema_translation WHERE pid = ? AND language = ? AND published = ? ORDER BY id',
             [$id, $language, '1']
         ) ?: null;
         $url = null;
+        $home = null;
         if ($translation) {
             $home = PageModel::findById($translation['page']);
             if ($home) {
@@ -78,9 +86,31 @@ final class EntityGraph
                 catch (\Symfony\Component\Routing\Exception\RoutingException) { $translation = null; } // Not routable: lean reference only.
             } else { $translation = null; }
         }
+        if ($extensionHandled) {
+            $page=$this->requests->getMainRequest()?->attributes->get('pageModel');
+            $site=(string)($page?->rootId ?: $home?->rootId ?: $entity['identityBase']);
+            $preview=$this->previewId===$id;
+            if ($preview && !$home?->rootId) $site=$this->extensions->scope($id,$site);
+            $actor=$preview?\Contao\BackendUser::getInstance():null;
+            if ($preview && (!$actor?->id || (!$actor->isAdmin && !$actor->hasAccess('schema_manager','modules')))) return null;
+            $read=new \VHUG\SchemaManagerBundle\Extension\V1\ReadContext($preview?'preview':'frontend',$site,$language,$preview?(int)$actor->id:null,$preview,time());
+            $this->tags->tagWith(\VHUG\SchemaManagerBundle\Extension\Internal\SourceInvalidator::TAG);
+            $result=$this->extensions->render($id,$read,$url,$this->isHome($entity,$translation,$page),false,$this->requests->getMainRequest()?->getUri());
+            $this->tags->tagWith($result['cacheTags']);
+            if ($result['expiry']!==null) $this->requests->getMainRequest()?->attributes->set('_schema_extension_expires',min($result['expiry'],$this->requests->getMainRequest()?->attributes->get('_schema_extension_expires',PHP_INT_MAX)??PHP_INT_MAX));
+            foreach ($result['nodes'] as $node) {
+                if (isset($emitted[$node['@id']]) && $node['@id']!==($result['node']['@id']??null)) continue;
+                $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->set(new \VHUG\SchemaManagerBundle\Extension\Internal\JsonLdType($node),$node['@id']);
+                $supportType=$this->connection->fetchOne('SELECT entityType FROM tl_schema_entity WHERE entityId=?',[$node['@id']]);
+                if($node['@id']===($result['node']['@id']??null) || str_contains((string)$supportType,'.'))$emitted[$node['@id']]=$node;
+            }
+            if($result['node']){$this->extensionDirect??=new \WeakMap();$direct=$this->extensionDirect[$activeGraph]??[];$direct[$id]=true;$this->extensionDirect[$activeGraph]=$direct;}
+            return $result['node'];
+        }
         // Preserve localized legacy identities even when resolving a relationship cycle.
         $publicId=ImportedSchema::identity($translation['schemaImportedData']??null)??$entity['entityId'];
         $emitted[$entity['entityId']]=['@id'=>$publicId];
+        if($activeGraph->has(\VHUG\SchemaManagerBundle\Extension\Internal\JsonLdType::class,$publicId))$activeGraph->hide(\VHUG\SchemaManagerBundle\Extension\Internal\JsonLdType::class,$publicId);
         $isOrganization = in_array($entity['entityType'], ['Organization', 'LocalBusiness'], true);
         if ($isOrganization && !$url && !empty($entity['externalUrl'])) { $url = $entity['externalUrl']; }
         $page = $this->requests->getMainRequest()?->attributes->get('pageModel');
@@ -186,6 +216,18 @@ final class EntityGraph
             } elseif($mode==='OnlineEventAttendanceMode') {
                 unset($node['location']);
                 if($locations=LocationData::combine($mode,null,(string)($entity['eventUrl']??'')))$node['location']=$locations;
+            }
+        }
+        if ($this->extensions) {
+            $scope=(string)($page?->rootId?:$entity['identityBase']);
+            $read=new \VHUG\SchemaManagerBundle\Extension\V1\ReadContext('frontend',$scope,$language,now:time());
+            $extra=$this->extensions->augment($node,$id,$read);$node=$extra['node'];
+            $this->tags->tagWith($extra['cacheTags']);
+            if($extra['expiry']!==null)$this->requests->getMainRequest()?->attributes->set('_schema_extension_expires',min($extra['expiry'],$this->requests->getMainRequest()?->attributes->get('_schema_extension_expires',PHP_INT_MAX)??PHP_INT_MAX));
+            foreach($extra['nodes'] as $target)if(!isset($emitted[$target['@id']])) {
+                $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->set(new \VHUG\SchemaManagerBundle\Extension\Internal\JsonLdType($target),$target['@id']);
+                $supportType=$this->connection->fetchOne('SELECT entityType FROM tl_schema_entity WHERE entityId=?',[$target['@id']]);
+                if(str_contains((string)$supportType,'.'))$emitted[$target['@id']]=$target;
             }
         }
         $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)

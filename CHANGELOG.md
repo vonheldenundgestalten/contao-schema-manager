@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.0-beta.1 — 2026-10-21
+
+Prerelease of the generic extension API v1 for integration testing; the final 1.4.0 release is pending.
+
+- Add versioned source, type, relationship, binding, supplementary editor, invalidation and payload-migration contracts with compile-time metadata validation.
+- Add source-owned read-only facts, explicit draft bindings, typed global/localized supplementary values, relationship selection and safe backend preview.
+- Integrate contributed entities and relationships with the existing JSON-LD and backend graph; omit unavailable/private sources and targets, preserve identities and bound traversal.
+- Add source-change cache invalidation, scheduled visibility deadlines, explicit dry-run/apply payload migrations and opt-in existing-entity AI proposals.
+- Include synthetic provider examples and developer documentation; all project adapters remain in their own bundles.
+
+Upgrade: apply the two new extension tables, supplementary columns and expanded entityType field through Contao database updates; rebuild the application cache. No automatic publication or destructive migration. Install the explicit beta version; project adapters and OKAL integration remain deferred.
+
 ## 1.3.3 — 2026-10-11
 
 - Fix: error pages (`error_401`, `error_403`, `error_404`, ...) no longer turn into HTTP 500. They are not routable, so `ContentUrlGenerator::generate()` threw `RouteNotFoundException` in the JSON-LD listeners. These pages are now skipped, and every page/home URL generation is guarded against routing exceptions, omitting URL-derived properties instead of emitting invalid JSON-LD.

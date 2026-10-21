@@ -71,3 +71,5 @@ $GLOBALS['TL_LANG']['tl_schema_translation']['registerName'] = "Register name in
 $GLOBALS['TL_LANG']['tl_schema_translation']['softwareRequirements'] = ['Software requirements', 'Requirements in this language.'];
 
 $GLOBALS['TL_LANG']['tl_schema_translation']['featureList'] = ['Features', 'Describe the main software features in this language.'];
+
+$GLOBALS['TL_LANG']['tl_schema_translation']['extension_legend'] = 'Extension data';

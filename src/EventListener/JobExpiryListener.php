@@ -9,7 +9,8 @@ final class JobExpiryListener
 {
     public function __invoke(ResponseEvent $event): void
     {
-        if (!$event->isMainRequest() || !$expiry = $event->getRequest()->attributes->get('_schema_job_expires')) { return; }
+        if (!$event->isMainRequest() || !$expiry = min($event->getRequest()->attributes->get('_schema_job_expires', PHP_INT_MAX), $event->getRequest()->attributes->get('_schema_extension_expires', PHP_INT_MAX))) { return; }
+        if ($expiry===PHP_INT_MAX) { return; }
         $headers = $event->getResponse()->headers;
         $ttl = max(0, (int) $expiry - time());
         // Clamp the final response without making a private response public.

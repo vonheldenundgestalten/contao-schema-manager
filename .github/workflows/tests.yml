@@ -16,5 +16,6 @@ jobs:
           tools: composer:v2
           coverage: none
       - run: composer validate --strict
-      - run: find src contao tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - run: composer install --no-interaction --no-plugins --no-scripts --prefer-dist
+      - run: find src contao tests examples/extension -name '*.php' -print0 | xargs -0 -n1 php -l
       - run: composer test
