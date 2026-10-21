@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0-beta.2 — 2026-10-21
+
+- Require a deliberately mapped, published and available Person for automatic backend-user authorship. Preserve explicit per-news Person overrides and mapped-user inheritance.
+- Remove unmanaged name-only author output from native pages and news, including default archives. Preserve unrelated schema properties and graph identities.
+- Omit unmapped backend users from the relationship map and AI author context; stop automatic Person creation/name matching from account names.
+- Add regression coverage for mapped/unmapped users, disabled logins, draft and wrong-type mappings, native page output and graph relationships.
+
+Upgrade from beta.1: update the package and rebuild the cache. No database changes. Existing user-to-Person mappings remain valid; unmapped editorial accounts no longer appear as public authors. Project-specific source adapters remain in their own bundles.
+
 ## 1.4.0-beta.1 — 2026-10-21
 
 Prerelease of the generic extension API v1 for integration testing; the final 1.4.0 release is pending.

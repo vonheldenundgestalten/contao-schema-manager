@@ -28,7 +28,7 @@ $check($has('page-11','entity-3','mainEntity')&&$has('entity-3','page-11','mainE
 $check($has('news-31','entity-2','author')&&$has('news-31','entity-1','publisher')&&$has('news-31','entity-3','about'),'Post connects author, publisher and service');
 $check($has('news-32','news-31','translationOfWork'),'News translation relation');
 $check($nodes['reader-31']['identity']!==$nodes['reader-33']['identity']&&$has('reader-31','news-31','mainEntity'),'Separate reader WebPages for distinct post URLs');
-$check($has('news-33','core-author-1','author')&&!empty($nodes['core-author-1']['warnings']),'Unmapped core author is visible and distinct');
+$check(!isset($nodes['core-author-1']) && !count(array_filter($edges,fn($e)=>$e['source']==='news-33'&&$e['label']==='author')),'Unmapped backend user is not a Person or author relationship');
 $check(!$nodes['news-31']['needsService']&&$nodes['news-32']['needsService'],'Author/publisher cannot hide missing service subject');
 $check(!isset($nodes['reader-35'],$nodes['page-999']),'Do not expose inaccessible reader pages');
 $check(!isset($nodes['reader-34'])&&in_array('suppressed',$nodes['news-34']['warnings'],true),'Suppressed archive state');

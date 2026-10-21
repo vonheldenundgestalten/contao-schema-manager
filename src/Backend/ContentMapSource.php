@@ -38,7 +38,7 @@ final class ContentMapSource
         }
         if (class_exists(NewsModel::class) && ($user->isAdmin || $user->hasAccess('news', 'modules'))) {
             $archives = $this->connection->fetchAllAssociativeIndexed('SELECT id, schemaType, schemaPublisher, jumpTo FROM tl_news_archive');
-            foreach ($this->connection->fetchAllAssociative('SELECT n.*, u.schemaPerson AS mapAuthor, u.name AS mapAuthorName FROM tl_news n LEFT JOIN tl_user u ON u.id=n.author ORDER BY n.date DESC,n.id') as $row) {
+            foreach ($this->connection->fetchAllAssociative('SELECT n.*, person.id AS mapAuthor, person.name AS mapAuthorName FROM tl_news n LEFT JOIN tl_user u ON u.id=n.author LEFT JOIN tl_schema_entity person ON person.id=u.schemaPerson AND person.entityType=? ORDER BY n.date DESC,n.id', ['Person']) as $row) {
                 if (!$user->isAdmin && !$this->security->isGranted(ContaoCorePermissions::DC_PREFIX.'tl_news', new ReadAction('tl_news',$row))) { continue; }
                 $archive = $archives[$row['pid']] ?? null;
                 if (!$archive) { continue; }

@@ -59,8 +59,8 @@ final class SiteInventory
             $reader=$pages[$post['_reader']] ?? null;
             if (!$reader || !isset($archives[$post['pid']]) || !empty($archives[$post['pid']]['protected']) || !$this->visible($post) || !in_array($post['source'] ?? '',['','default'],true)) { continue; }
             $authorText='';
-            // Only authors attached to eligible published news are candidates. Never include account contacts or login data.
-            if($user->isAdmin && in_array($post['_mode'],['','Article','NewsArticle','BlogPosting'],true) && (int)$post['author']>0 && trim((string)($post['mapAuthorName']??''))!==''){
+            // Backend authors enter schema analysis only after an explicit mapping to an existing Person.
+            if($user->isAdmin && (int)($post['mapAuthor']??0)>0 && $this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE id=? AND entityType='Person'", [(int)$post['mapAuthor']]) && in_array($post['_mode'],['','Article','NewsArticle','BlogPosting'],true) && (int)$post['author']>0 && trim((string)($post['mapAuthorName']??''))!==''){
                 $authorKey='author:'.$post['author'];
                 $records[$authorKey]=['id'=>(int)$post['author'],'name'=>$post['mapAuthorName'],'schemaPerson'=>(int)($post['mapAuthor']??0)];
                 $authorText=' Contao editorial author: '.$post['mapAuthorName'].'.';

@@ -34,7 +34,6 @@ final class NewsGraph
             $core=$mode==='';
             if($core){
                 // Default archives may enrich core news without changing its type or identity.
-                if(empty($record['schemaAuthor']) && empty($record['schemaAbout']) && empty($record['schemaMentions']) && empty($record['schemaDateModified']) && empty($archive['schemaPublisher']))continue;
                 $mode='NewsArticle';
             }
             $this->tags->tagWithModelClass(NewsArchiveModel::class);
@@ -69,7 +68,7 @@ final class NewsGraph
                 || ($record['stop'] && $record['stop'] <= time())) { continue; }
             if (!$core && empty($record['schemaIdentity'])) { continue; } // IDs are persisted by editorial save/backfill.
             $node = $graph->has(NewsArticle::class, $key) ? $graph->get(NewsArticle::class, $key)->toArray() : News::getSchemaOrgData($model);
-            unset($node['@context']);
+            unset($node['@context'], $node['author']);
             if(!$core){unset($node['identifier']);$node['@type']=$mode;$node['@id']=$record['schemaIdentity'];}
             else {$node['@id'] ??= $key;}
             $node['inLanguage'] = $language;
@@ -86,7 +85,8 @@ final class NewsGraph
             if (!$authorId) {
                 $authorId = (int) $this->connection->fetchOne('SELECT schemaPerson FROM tl_user WHERE id = ?', [$record['author']]);
             }
-            if ($author = $this->entities->emit($authorId, $language, $manager, $emitted)) {
+            $authorRecord = $this->entities->record($authorId);
+            if (($authorRecord['entityType'] ?? null) === 'Person' && ($author = $this->entities->emit($authorId, $language, $manager, $emitted))) {
                 $node['author'] = ['@id' => $author['@id']];
             }
             foreach (['schemaAbout'=>'about', 'schemaMentions'=>'mentions'] as $field=>$property) {

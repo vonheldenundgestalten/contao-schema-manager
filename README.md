@@ -10,13 +10,13 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Screenshots show the English Contao backend; German labels are also included.*
 
-> **Prerelease 1.4.0-beta.1:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension focuses on manually managed entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Prerelease 1.4.0-beta.2:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension focuses on manually managed entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
 > **Versioning:** package versions follow semantic versioning independently of Contao. See [versioning and migration](docs/versioning.md) for upgrade guidance.
 
 ## Developer integrations (1.4 beta)
 
-The [v1 extension API](docs/extension-api/README.md) lets bundles contribute source adapters, types and relationships without project-specific code in Schema Manager. It includes a synthetic example, typed supplementary editing, source authority, previews, cache invalidation and explicit migrations. Apply the additive Contao database update and rebuild the cache when installing this prerelease. Install explicitly with `composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.1 --with-all-dependencies`. The API is available for integration testing before the final 1.4.0 release.
+The [v1 extension API](docs/extension-api/README.md) lets bundles contribute source adapters, types and relationships without project-specific code in Schema Manager. It includes a synthetic example, typed supplementary editing, source authority, previews, cache invalidation and explicit migrations. Apply the additive Contao database update and rebuild the cache when installing this prerelease. Install explicitly with `composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.2 --with-all-dependencies`. The API is available for integration testing before the final 1.4.0 release.
 
 ## Entity relationships
 
@@ -91,11 +91,11 @@ The AI helper is administrator-only. By default it includes published language r
 
 Only currently active public Contao records enter analysis: publication dates, website-root publication, inherited access protection, protected news archives, articles and content elements are respected. As in Contao, an unpublished intermediate navigation page does not exclude its published children. Draft schema entities and inactive homes are excluded from evidence and editing. A separate name/type identity reservation list prevents discovery from recreating existing entities, including unpublished drafts; it contains no descriptions or other draft content. Each batch refreshes this inventory; cached frontend HTML is not used to replace the filtered content. Custom content available only through rendered modules may therefore need manual input. Start a new analysis to discard suggestions from an older inventory.
 
-The AI content stage can suggest Persons for named authors of published news and connect them through the existing backend-user Person mapping. Author mapping requires an administrator. Only the author name, record reference and existing Person mapping enter the analysis, never account contact or login details. Disabled logins remain eligible when their articles are published. Existing mappings and per-news author overrides are preserved; drafts prevent duplicate Persons. Members are not scanned.
+Backend accounts are not public Persons by default. Deliberately select an existing **Person** entity in the backend user’s schema settings; published, available Persons are then inherited automatically by that user’s news. An explicit per-news Person selection takes precedence. Unmapped users produce no author node or relationship, including Contao’s name-only fallback. Draft, unpublished, unavailable and wrong-type mappings produce no public author. Account login status does not control the mapped Person’s publication. The AI helper does not create or name-match Persons from backend account names; only existing Person mappings enter its author context. Members are not scanned by the generic helper.
 
 Analysis processes sources in small batches and automatically continues through the queue. Keep the analysis page open. If another request is already processing a batch, the helper waits for saved progress; it also checks saved progress after an interrupted response. A failed or expired batch pauses for an explicit retry. **Stop after current batch** keeps completed work for later continuation.
 
-Both new-entry and improvement analyses suggest Person entries for named authors of eligible published news who do not yet have a public author mapping. Existing Persons are reused; draft or ambiguous matches and generic account names require review. No account email/login data or invented biography is included. New Persons remain drafts: publish after review and add suitable localized homes for richer details. Start a fresh content run to receive these suggestions.
+Create and review public Person entries deliberately, then select them in backend user settings. The helper does not propose Persons or user mappings from backend account names. Start a fresh content run after changing mappings; previous saved proposals still require review.
 
 When applying AI suggestions, required pending entity/home creations are included first, then fields and relationships. Rejected or invalid prerequisites are never revived. Suggestions without a resolvable prerequisite stay pending with their entity, field and missing dependency named; independent changes can apply. Other validation/concurrency failures still roll back the batch and identify the affected suggestion.
 

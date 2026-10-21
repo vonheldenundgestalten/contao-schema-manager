@@ -81,12 +81,7 @@ final class ContentRelationshipMap
             } else {
                 if ($enriched) { $link($key,'entity-'.$post['_publisher'],'publisher'); }
                 $author='entity-'.$post['_author'];
-                if ($enriched && !empty($nodes[$author]) && !empty($nodes[$author]['data']['published']) && empty($nodes[$author]['data']['missing'])) {
-                    $link($key,$author,'author');
-                } elseif (!empty($post['mapAuthorName'])) {
-                    // Core embeds an unnamed-identity Person. Keep it distinct from managed people.
-                    $author='core-author-'.$post['author'];
-                    if (!isset($nodes[$author])) { $add($author,'Person',$post['mapAuthorName'],0,'coreAuthor',['warnings'=>['unmappedAuthor']]); }
+                if (!empty($nodes[$author]) && ($nodes[$author]['data']['type'] ?? '') === 'Person' && !empty($nodes[$author]['data']['published']) && empty($nodes[$author]['data']['missing'])) {
                     $link($key,$author,'author');
                 }
                 if ($enriched) {
