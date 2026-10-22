@@ -158,9 +158,7 @@ and publication remain manual in v1. Rendering makes no AI calls.
 
 Run composer test and the installed tests/extension-integration.php checks. Public v1
 contracts evolve through optional DTO fields/new interfaces; breaking changes need a
-new API namespace and migration guidance. This API does not ship the broad industry
-catalogue or project adapters. [OKAL handover](../entity-expansion/okal-bundle-handover.md)
-remains deferred.
+new API namespace and migration guidance.
 
 
 Core-type source adapters use the existing scalar fact mapper; unsupported native fields require a contributed type definition. SourceResolution may carry cache tags and nextVisibilityChange without facts, so future publication can expire a negative cached result. Supplementary reference payloads are encoded/decoded by the core; integrations never serialize them directly.

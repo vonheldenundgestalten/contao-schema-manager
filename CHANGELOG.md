@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.3 — 2026-10-22
+
+- Remove internal planning, client research, feedback and handover documents and their public references.
+- Clean internal verification notes from public documentation and update the README installation constraint to 1.4.
+
+Documentation-only release; no runtime or database changes.
+
 ## 1.4.2 — 2026-10-22
 
 - Preserve literal URI fragment/query characters in manually entered entity IDs. Contao’s default text input encoding could otherwise persist `#` as `&#35;` despite displaying the expected value in the editor.
@@ -25,7 +32,7 @@ Upgrade: update the package and rebuild the application cache. Existing IDs rema
 
 Upgrade from 1.3: apply the additive extension tables/fields through Contao's database update and rebuild the cache. Upgrade from beta.3: update the package and rebuild the cache; the generic changes add no database fields. Project integrations enabling automatic sources must run their own registered source-ID migration and reconcile their reference index. Existing non-automatic adapters keep their workflow. Pending vocabulary remains disabled unless explicitly approved.
 
-Validation: PHP 8.3/8.4 CI, generic extension integration and author/language checks, and OKAL dev verification covering 449 automatic sources, unchanged public IDs, 251 public source pages, 72 public news articles and 31 show-home relationship graphs.
+Validation: PHP 8.3/8.4 CI, generic extension integration and author/language checks.
 
 ## 1.4.0-beta.3 — 2026-10-22
 
@@ -54,7 +61,7 @@ Prerelease of the generic extension API v1 for integration testing; the final 1.
 - Add source-change cache invalidation, scheduled visibility deadlines, explicit dry-run/apply payload migrations and opt-in existing-entity AI proposals.
 - Include synthetic provider examples and developer documentation; all project adapters remain in their own bundles.
 
-Upgrade: apply the two new extension tables, supplementary columns and expanded entityType field through Contao database updates; rebuild the application cache. No automatic publication or destructive migration. Install the explicit beta version; project adapters and OKAL integration remain deferred.
+Upgrade: apply the two new extension tables, supplementary columns and expanded entityType field through Contao database updates; rebuild the application cache. No automatic publication or destructive migration. Install the explicit beta version; project adapters are supplied by their own bundles.
 
 ## 1.3.3 — 2026-10-11
 
@@ -142,10 +149,8 @@ First semantic-versioned release. Requires Contao ^5.7 and PHP ^8.3; package ver
 
 The earlier **5.7.0** GitHub release and tag were withdrawn at the maintainer’s request; commits remain in history. Existing consumers should change the package constraint from ^5.7 to ^1.0, run the additive database update and rebuild the cache. See [migration details](docs/versioning.md).
 
-### Deliberately deferred
+### Scope and migration
 
-Smart image/social metadata, source-record adapters and product/pricing hooks remain on their separate unchanged feature branches. Products/offers remain manual. No AccountingService subtype, shop variants/inventory, Calendar adapter or FAQ adapter is included. Existing Contao images and project social metadata remain in place.
+Products/offers in 1.0.0 are manual. No AccountingService subtype, shop variants/inventory, Calendar adapter or FAQ adapter is included. Existing Contao images and project social metadata remain in place.
 
-### Earlier pilot data
-
-The pilot’s 24 source-linked offers were previously copied to manual fields without changing their identities. Retired experimental database columns were retained for reversibility. Other early pilot installations must preserve any needed source-derived values and their existing social metadata provider before removing experimental code. Do not blindly accept database DROP suggestions.
+Installations upgrading from experimental source-linked offers must preserve any needed source-derived values and their existing social metadata provider before removing experimental code. Do not blindly accept database DROP suggestions.

@@ -1,10 +1,10 @@
-# Entity relationship map (feature branch)
+# Entity relationship map
 
 Available since **1.1.0**. Apply the normal Contao database update for the optional News fields (`schemaAbout`, `schemaMentions`) and entity field (`knowledgeTopics`). Existing content/output is unchanged until editors select topics or mentions.
 
 ## Library choice
 
-[Cytoscape.js](https://js.cytoscape.org/) provides graph analysis, directed edges, selectable nodes and disconnected components without a framework dependency. We use its [fCoSE layout plugin](https://github.com/iVis-at-Bilkent/cytoscape.js-fcose) for readable spacing. [vis-network](https://visjs.github.io/vis-network/docs/) was another suitable option; Cytoscape's graph traversal/connected-component API fits the missing-relationship workflow. [Sigma](https://www.sigmajs.org/docs/) targets large WebGL graphs and brings Graphology; that is unnecessary for an editorial entity map.
+[Cytoscape.js](https://js.cytoscape.org/) provides graph analysis, directed edges, selectable nodes and disconnected components without a framework dependency. We use its [fCoSE layout plugin](https://github.com/iVis-at-Bilkent/cytoscape.js-fcose) for readable spacing.
 
 The exact releases, MIT licenses and SHA-256 hashes are in `public/vendor/*/README.md`. Assets are served by Contao locally, with no runtime CDN, telemetry, or transfer of graph data to a third party. Updating the libraries is a deliberate vendor update followed by browser verification; Composer consumers do not need Node or an npm build.
 
@@ -38,8 +38,6 @@ Both are multi-select pickers for existing entities. They add stable @id referen
 
 ![A post connected to its author, publisher, reader page and selected service](images/post-relationships.png)
 
-The screenshots use an unpublished documentation example; the example is removed after verification.
-
 ## Language, visibility and layout
 
 Pages configured with `noindex` in Contao's robots field are excluded from this visualization, along with their reader-page instances and posts routed through those noindex readers. Other pages are evaluated individually; an indexed child is not hidden merely because its parent is noindex. Shared business entities remain visible even if their representative page is excluded. This filter does not change publication, robots settings or frontend JSON-LD.
@@ -60,7 +58,7 @@ The feature uses the existing Structured data module permission. Content sources
 
 Run `composer test` for mapping checks (cycles, directions, inferred/explicit deduplication, disconnected records, missing targets, location labels, empty datasets). With Playwright and Chromium installed, run `python3 tests/browser-relationship-map.py` for offline rendering, search, selection, draft/missing/orphan styling, hostile label handling, mobile width and Turbo lifecycle checks.
 
-Real backend testing on the pilot verifies the list action, local assets, authenticated rendering, entity selection and edit navigation. The temporary unpublished News fixture is removed after browser tests; existing records are not changed. `tests/news.php` also checks real about/mentions output, contribution preservation and unpublished-target suppression. `tests/content-map-source.php` verifies per-record authorization against an installed database. Layout spacing is checked on the full pilot graph.
+`tests/news.php` checks real about/mentions output, contribution preservation and unpublished-target suppression. `tests/content-map-source.php` verifies per-record authorization against an installed database.
 
 Cards emphasize the entity name, with a smaller type above it. LocalBusiness cards also show their location. Language stays in the filter, selection list and details rather than repeating on every card.
 

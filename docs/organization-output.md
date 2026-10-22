@@ -65,7 +65,3 @@ Use the same organization ID and shared name/legal facts in every language. Its 
 Do not change the ID to the current service-page URL. An entity's permanent identity and the URL of a page describing it remain separate.
 
 If no published home exists in the current language, omit the unavailable localized URL rather than inventing one. A configured External organization website is an explicit reference for external organizations, not an automatic cross-language fallback.
-
-## Verification
-
-Integration tests cover full DE/EN homes, compact supporting references, encounter-order independence, LocalBusiness type preservation, unpublished/missing homes and complete standalone previews. The live pilot was checked across 20 language, service and blog routes. The same organization ID and localized home URLs are retained.

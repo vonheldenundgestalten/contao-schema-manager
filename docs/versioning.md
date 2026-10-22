@@ -41,11 +41,3 @@ php vendor/bin/contao-console schema-manager:adopt-id 42 'https://example.org/#o
 ```
 
 Review the displayed mapping, then repeat with `--apply`. This changes the entity ID and invalidates entity cache tags. Relationships stored as record selections follow the change. Derived offer/catalogue/contact IDs also change with their parent prefix; the command does not rewrite hard-coded JSON, external references or third-party caches. Inventory those references before applying it. The normal editor uses the same HTTPS/origin and uniqueness rules; the identity origin stays fixed after first save.
-
-## Release checklist
-
-1. Update CHANGELOG and documentation with a semantic package version; retain the correct Contao compatibility range.
-2. Run Composer validation, PHP lint, mapper tests and the configured Contao integration suites.
-3. Verify a core-only installation, backend editing and frontend output on the pilot.
-4. Push main and wait for PHP 8.3/8.4 CI to pass for that exact commit.
-5. Create an annotated version tag and a GitHub release pointing to that commit. Verify a fresh Composer consumer can resolve the tagged version.
