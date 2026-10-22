@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.2 — 2026-10-22
+
+- Preserve literal URI fragment/query characters in manually entered entity IDs. Contao’s default text input encoding could otherwise persist `#` as `&#35;` despite displaying the expected value in the editor.
+- Add regression coverage through the actual Contao widget input path and verify raw stored values after backend saves. Existing IDs are not rewritten automatically; resave an affected custom ID after updating. No database schema updates.
+
 ## 1.4.1 — 2026-10-22
 
 - Fix custom entity IDs on first save by validating against the current form origin before Contao persists buffered fields.

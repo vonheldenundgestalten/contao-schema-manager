@@ -13,13 +13,22 @@ $dc=new class extends Contao\DC_Table {
 };
 $checks=0;$check=static function(bool $ok,string $why)use(&$checks):void{if(!$ok)throw new RuntimeException($why);++$checks;};
 $reject=static function(callable $action,string $why)use($check):void{try{$action();}catch(InvalidArgumentException){$check(true,$why);return;}$check(false,$why);};
+Contao\Controller::loadDataContainer('tl_schema_entity');
+$check(($GLOBALS['TL_DCA']['tl_schema_entity']['fields']['entityId']['eval']['decodeEntities']??false)===true,'The identity field preserves URI fragment and query characters instead of HTML-encoding them.');
+$postValue=static function(string $value)use($container):string {
+    $stack=$container->get('request_stack');$request=Symfony\Component\HttpFoundation\Request::create('https://example.org/contao','POST');$request->attributes->set('_scope','backend');$stack->push($request);
+    try {Contao\Input::setPost('entityId',$value);$widget=new Contao\TextField(['name'=>'entityId','decodeEntities'=>$GLOBALS['TL_DCA']['tl_schema_entity']['fields']['entityId']['eval']['decodeEntities']]);return (new ReflectionMethod($widget,'getPost'))->invoke($widget,'entityId');}
+    finally {$stack->pop();}
+};
+$check($postValue('https://www.okal.de/#organization')==='https://www.okal.de/#organization','The real Contao widget input path preserves a literal fragment marker.');
+$check($postValue('https://www.okal.de/entity?kind=company&lang=de#organization')==='https://www.okal.de/entity?kind=company&lang=de#organization','The real widget preserves query separators and fragments exactly.');
 $db->beginTransaction();
 try {
     $db->insert('tl_schema_entity',['name'=>'First-save identity regression','entityType'=>'Organization','identityBase'=>'','entityId'=>null,'published'=>'']);$dc->id=(int)$db->lastInsertId();
     $origin=$listener->identityBase('https://www.okal.de/',$dc);$dc->submitted=['identityBase'=>$origin];
     $check($origin==='https://www.okal.de','The submitted origin is normalized before identity validation.');
     $check($db->fetchOne('SELECT identityBase FROM tl_schema_entity WHERE id=?',[$dc->id])==='','Contao has not persisted the new origin during field validation.');
-    $check($listener->immutableId('https://www.okal.de/#organization',$dc)==='https://www.okal.de/#organization','The exact user-reported URL is accepted together with an unsaved origin.');
+    $check($listener->immutableId($postValue('https://www.okal.de/#organization'),$dc)==='https://www.okal.de/#organization','The exact user-reported URL is accepted together with an unsaved origin.');
     $reject(fn()=>$listener->immutableId('https://okal.de/#organization',$dc),'A mismatched www/non-www origin is still rejected.');
     $reject(fn()=>$listener->immutableId('http://www.okal.de/#organization',$dc),'Plain HTTP remains rejected.');
     $check($listener->immutableId('',$dc)===null,'An intentionally blank ID remains eligible for automatic generation.');
