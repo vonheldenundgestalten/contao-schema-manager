@@ -39,7 +39,7 @@ $GLOBALS['TL_DCA']['tl_schema_entity'] = [
         ],
         'identityBase' => $text(true),
         'entityId' => [
-            'inputType' => 'text', 'eval' => ['readonly' => true, 'doNotCopy' => true, 'tl_class' => 'clr long'],
+            'inputType' => 'text', 'eval' => ['unique' => true, 'doNotCopy' => true, 'tl_class' => 'clr long'],
             'sql' => 'varchar(255) DEFAULT NULL',
         ],
         'alternateName' => $text(), 'foundingDate' => $text(),

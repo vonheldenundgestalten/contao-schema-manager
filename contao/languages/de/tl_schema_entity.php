@@ -8,7 +8,7 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['content_legend'] = 'Übersetzte Inhalte
 $GLOBALS['TL_LANG']['tl_schema_entity']['name'] = ['Name', 'Gemeinsamer öffentlicher Name. Namen von Organisationen und Personen werden nicht übersetzt.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['entityType'] = ['Schema-Typ', 'Bestimmt die angezeigten Felder.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['identityBase'] = ['Domain der Identität', 'Dauerhafte öffentliche Domain, z. B. https://www.vhug.tech. Nicht die Domain des Abnahmeservers verwenden.'];
-$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Dauerhafte Entitäts-ID', 'Wird beim ersten Speichern erzeugt und bleibt bei Übersetzungen, Seitenumzügen und Typwechseln erhalten.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Dauerhafte Entitäts-ID', 'Eindeutige HTTPS-ID auf der Identitätsdomain eingeben oder beim ersten Speichern automatisch erzeugen lassen. Später änderbar. Datensatzauswahlen folgen der Änderung; externe Referenzen und festes JSON müssen angepasst werden. Abgeleitete Angebots- und Kontakt-IDs ändern sich ebenfalls.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['legalName'] = ['Rechtlicher Name', 'Verbindlicher rechtlicher Name für alle Sprachen.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['telephone'] = ['Telefon', 'Gemeinsame öffentliche Telefonnummer.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['email'] = ['E-Mail', 'Gemeinsame öffentliche Kontaktadresse.'];
@@ -85,7 +85,7 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['eventAttendanceMode'] = ['Teilnahmeform
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['subservices'] = ['Leistungskatalog', 'Wiederverwendbare Service-Entitäten mit veröffentlichten lokalisierten Heimatseiten.'];
 
-$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Permanente Entitäts-ID', 'Vor dem ersten Speichern optional vorhandene HTTPS-ID eintragen; leer erzeugt eine neue ID. Danach gesperrt.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Dauerhafte Entitäts-ID', 'Eindeutige HTTPS-ID auf der Identitätsdomain eingeben oder beim ersten Speichern automatisch erzeugen lassen. Später änderbar. Datensatzauswahlen folgen der Änderung; externe Referenzen und festes JSON müssen angepasst werden. Abgeleitete Angebots- und Kontakt-IDs ändern sich ebenfalls.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes'][''] = 'Nicht angegeben';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OfflineEventAttendanceMode'] = 'Vor Ort';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OnlineEventAttendanceMode'] = 'Online';

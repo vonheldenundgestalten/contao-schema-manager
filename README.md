@@ -10,7 +10,7 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Screenshots show the English Contao backend; German labels are also included.*
 
-> **Version 1.4.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension supports manually managed and automatic source entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Version 1.4.1:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension supports manually managed and automatic source entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
 > **Versioning:** package versions follow semantic versioning independently of Contao. See [versioning and migration](docs/versioning.md) for upgrade guidance.
 
@@ -182,7 +182,7 @@ An **entity** is a real thing: a company, person, product, service or event. A *
 | English representative page | `/en/hosting.html` | Home for the English service description. |
 | German representative page | `/de/hosting.html` | Home for the German service description. |
 
-The generated suffix is random; it does not depend on the database record ID or schema type. **Identity origin is fixed after the first save.** Use the public production domain even when editing on a staging server. Do not enter the staging domain or the service page URL.
+The generated suffix is random; it does not depend on the database record ID or schema type. You can enter a custom HTTPS ID together with its origin on first save, and edit the ID later. IDs must be unique and use the identity origin. Existing record selections follow an ID change, but hard-coded JSON and external references need updating; derived offer/catalogue/contact IDs also change. Clearing an existing ID is rejected. **Identity origin is fixed after the first save.** Use the public production domain even when editing on a staging server. Do not enter the staging domain or the service page URL.
 
 The manager uses Contao to resolve representative-page URLs. Staging previews can therefore contain staging page URLs while their permanent entity IDs retain the production origin. Check the actual output again after deployment.
 

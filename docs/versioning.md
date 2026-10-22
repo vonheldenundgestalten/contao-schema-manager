@@ -32,15 +32,15 @@ Review Composer’s proposed dependency changes, then run the normal Contao data
 
 ## Preserve established JSON-LD IDs
 
-For a new entity, optionally enter its existing HTTPS ID in **Permanent entity ID** before the first save. It must use the saved identity origin and be unique. Leave it blank to generate an ID. Once persisted, the ordinary editor cannot change it.
+For a new entity, optionally enter its existing HTTPS ID in **Permanent entity ID** before the first save. It must match the identity origin entered in the same form and be unique. Leave it blank on first save to generate an ID. The ordinary editor also permits later explicit ID changes, retaining HTTPS/origin and uniqueness checks. An existing ID cannot be cleared.
 
-For an already-created entity, use the explicit migration command from the Contao application root. It checks both the expected current ID and uniqueness. The default is a dry run:
+For a scripted change to an already-created entity, use the explicit migration command from the Contao application root. It checks both the expected current ID and uniqueness. The default is a dry run:
 
 ```sh
 php vendor/bin/contao-console schema-manager:adopt-id 42 'https://example.org/#organization' --expected-current-id='https://example.org/#entity-old'
 ```
 
-Review the displayed mapping, then repeat with `--apply`. This changes the entity ID and invalidates entity cache tags. Relationships stored as record selections follow the change. Derived offer/catalogue/contact IDs also change with their parent prefix; the command does not rewrite hard-coded JSON, external references or third-party caches. Inventory those references before applying it. The normal editor remains immutable after adoption.
+Review the displayed mapping, then repeat with `--apply`. This changes the entity ID and invalidates entity cache tags. Relationships stored as record selections follow the change. Derived offer/catalogue/contact IDs also change with their parent prefix; the command does not rewrite hard-coded JSON, external references or third-party caches. Inventory those references before applying it. The normal editor uses the same HTTPS/origin and uniqueness rules; the identity origin stays fixed after first save.
 
 ## Release checklist
 

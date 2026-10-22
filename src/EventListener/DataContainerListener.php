@@ -28,10 +28,15 @@ final class DataContainerListener
     public function immutableId(mixed $value, DataContainer $dc): ?string
     {
         $id = $this->connection->fetchOne('SELECT entityId FROM tl_schema_entity WHERE id = ?', [$dc->id]);
-        if ($id) { return $id; }
         $value = trim((string) $value);
-        if ($value === '') { return null; }
-        $origin = (string) $this->connection->fetchOne('SELECT identityBase FROM tl_schema_entity WHERE id=?', [$dc->id]);
+        if ($value === '') {
+            if ($id) { throw new \InvalidArgumentException('An existing public ID cannot be blank. Enter a unique HTTPS ID or keep its current value.'); }
+            return null;
+        }
+        // Contao buffers field saves until submit(); the origin may be validated
+        // on the current record without having reached the database on first save.
+        $current = $dc instanceof \Contao\DC_Table ? $dc->getActiveRecord() : null;
+        $origin = (string) ($current['identityBase'] ?? $this->connection->fetchOne('SELECT identityBase FROM tl_schema_entity WHERE id=?', [$dc->id]));
         $value = \VHUG\SchemaManagerBundle\Schema\EntityIdentity::validate($value, $origin);
         if ($this->connection->fetchOne('SELECT id FROM tl_schema_entity WHERE entityId=? AND id<>?', [$value,$dc->id])) {
             throw new \InvalidArgumentException('Another entity already uses this ID.');
@@ -43,8 +48,7 @@ final class DataContainerListener
     public function identityEditor(DataContainer $dc): void
     {
         if (!$dc->id) { return; }
-        $id = $this->connection->fetchOne('SELECT entityId FROM tl_schema_entity WHERE id=?', [$dc->id]);
-        $GLOBALS['TL_DCA']['tl_schema_entity']['fields']['entityId']['eval']['readonly'] = (bool) $id;
+        $GLOBALS['TL_DCA']['tl_schema_entity']['fields']['entityId']['eval']['readonly'] = false;
     }
 
     #[AsCallback(table: 'tl_schema_entity', target: 'config.onsubmit')]

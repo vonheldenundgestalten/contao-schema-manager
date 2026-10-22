@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.1 — 2026-10-22
+
+- Fix custom entity IDs on first save by validating against the current form origin before Contao persists buffered fields.
+- Keep manual entity IDs editable after creation, enforce HTTPS/origin and uniqueness checks, reject clearing an established ID, and explain reference/derived-ID implications in English and German field help.
+- Add installed-Contao regression coverage for new explicit IDs, duplicate rejection, later ID edits, blank-ID generation and fixed-origin protection. No database changes.
+
+Upgrade: update the package and rebuild the application cache. Existing IDs remain unchanged unless an editor explicitly changes them. Validation: 15 installed regression checks and real backend saves covering first-save custom IDs, later edits, duplicate rejection and replacement of generated IDs.
+
 ## 1.4.0 — 2026-10-22
 
 - Add opt-in automatic source ownership: original records persist public identities, while derived reference rows are hidden from entity editing and manual discovery/binding screens. Source graph navigation opens the original record.

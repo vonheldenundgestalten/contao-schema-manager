@@ -8,7 +8,7 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['content_legend'] = 'Localized content';
 $GLOBALS['TL_LANG']['tl_schema_entity']['name'] = ['Name', 'Shared public name. Organization and person names are not translated.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['entityType'] = ['Schema type', 'Controls the relevant fields.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['identityBase'] = ['Identity origin', 'Permanent public origin, e.g. https://www.vhug.tech. Never use the preview server hostname.'];
-$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Permanent entity ID', 'Generated on first save; retained across translations, page moves and type changes.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Permanent entity ID', 'Enter a unique HTTPS ID on the identity origin, or leave blank on first save to generate one. You can change it later. Existing record selections follow the change; external references and hard-coded JSON need updating, and derived offer/contact IDs change too.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['legalName'] = ['Legal name', 'Authoritative legal name shared across languages.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['telephone'] = ['Telephone', 'Shared public telephone number.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['email'] = ['Email', 'Shared public contact address.'];
@@ -85,7 +85,7 @@ $GLOBALS['TL_LANG']['tl_schema_entity']['eventAttendanceMode'] = ['Attendance mo
 
 $GLOBALS['TL_LANG']['tl_schema_entity']['subservices'] = ['Service catalogue', 'Reusable Service entities with published localized homes.'];
 
-$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Permanent entity ID', 'Before first save, optionally enter an established HTTPS ID; leave blank to generate one. Locked afterwards.'];
+$GLOBALS['TL_LANG']['tl_schema_entity']['entityId'] = ['Permanent entity ID', 'Enter a unique HTTPS ID on the identity origin, or leave blank on first save to generate one. You can change it later. Existing record selections follow the change; external references and hard-coded JSON need updating, and derived offer/contact IDs change too.'];
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes'][''] = 'Not specified';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OfflineEventAttendanceMode'] = 'In person';
 $GLOBALS['TL_LANG']['tl_schema_entity']['attendanceModes']['OnlineEventAttendanceMode'] = 'Online';
