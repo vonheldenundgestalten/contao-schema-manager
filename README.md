@@ -10,13 +10,13 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Screenshots show the English Contao backend; German labels are also included.*
 
-> **Prerelease 1.4.0-beta.2:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension focuses on manually managed entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Prerelease 1.4.0-beta.3:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension focuses on manually managed entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
 > **Versioning:** package versions follow semantic versioning independently of Contao. See [versioning and migration](docs/versioning.md) for upgrade guidance.
 
 ## Developer integrations (1.4 beta)
 
-The [v1 extension API](docs/extension-api/README.md) lets bundles contribute source adapters, types and relationships without project-specific code in Schema Manager. It includes a synthetic example, typed supplementary editing, source authority, previews, cache invalidation and explicit migrations. Apply the additive Contao database update and rebuild the cache when installing this prerelease. Install explicitly with `composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.2 --with-all-dependencies`. The API is available for integration testing before the final 1.4.0 release.
+The [v1 extension API](docs/extension-api/README.md) lets bundles contribute source adapters, types and relationships without project-specific code in Schema Manager. It includes a synthetic example, typed supplementary editing, source authority, previews, cache invalidation and explicit migrations. Apply the additive Contao database update and rebuild the cache when installing this prerelease. Install explicitly with `composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.3 --with-all-dependencies`. The API is available for integration testing before the final 1.4.0 release. In beta.3, the backend graph resolves root-scoped source relationships using the source root’s configured language, so changing the editor’s UI language does not hide those relationships. This does not create frontend translations.
 
 ## Entity relationships
 

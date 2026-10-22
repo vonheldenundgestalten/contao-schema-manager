@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0-beta.3 — 2026-10-22
+
+- Resolve root-scoped source entities and their relationships in the source root’s configured language when building the backend graph, independently of the editor’s UI language.
+- Keep graph labels in the editor’s language, preserve source authorization and leave frontend translation availability unchanged.
+- Add installed-application regression coverage for different editor/source languages and denied source access.
+
+Upgrade from beta.2: update the package and rebuild the application cache. No database changes. This release includes the previously tested generic graph fix; project-specific source adapters remain in their own bundles.
+
 ## 1.4.0-beta.2 — 2026-10-21
 
 - Require a deliberately mapped, published and available Person for automatic backend-user authorship. Preserve explicit per-news Person overrides and mapped-user inheritance.

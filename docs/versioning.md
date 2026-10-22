@@ -10,10 +10,10 @@ The supported PHP/Contao ranges are declared in composer.json. The 1.0.0 baselin
 
 ## 1.4 beta installations
 
-The generic extension API starts with **1.4.0-beta.1**. The current prerelease, **1.4.0-beta.2**, fixes managed-Person authorship. Install the explicit version with:
+The generic extension API starts with **1.4.0-beta.1**. The current prerelease, **1.4.0-beta.3**, includes managed-Person authorship and fixes backend source-graph language resolution. Install the explicit version with:
 
 ```sh
-composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.2 --with-all-dependencies
+composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.3 --with-all-dependencies
 ```
 
 Apply the additive Contao database updates and rebuild the application cache. Project adapters remain separate; OKAL integration stays deferred until installation on OKAL dev. No application-wide minimum-stability change is needed.
