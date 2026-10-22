@@ -8,15 +8,15 @@ Package versions follow [Semantic Versioning 2.0.0](https://semver.org/), indepe
 
 The supported PHP/Contao ranges are declared in composer.json. The 1.0.0 baseline requires PHP ^8.3 and Contao ^5.7. Tags are immutable once released; the withdrawal of the earlier 5.7.0 pilot tag is a one-time version-number correction. Future releases will not reuse, move or renumber published tags.
 
-## 1.4 beta installations
+## 1.4 installations and beta upgrades
 
-The generic extension API starts with **1.4.0-beta.1**. The current prerelease, **1.4.0-beta.3**, includes managed-Person authorship and fixes backend source-graph language resolution. Install the explicit version with:
+**1.4.0** is the stable release of extension API v1. It includes automatic source ownership, source-persisted public identities, multi-typed relationship validation, deliberate Person-based authorship and site-language backend source graphs.
 
 ```sh
-composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.3 --with-all-dependencies
+composer require vonheldenundgestalten/contao-schema-manager:^1.4 --with-all-dependencies
 ```
 
-Apply the additive Contao database updates and rebuild the application cache. Project adapters remain separate; OKAL integration stays deferred until installation on OKAL dev. No application-wide minimum-stability change is needed.
+From 1.3, apply the additive Contao database updates and rebuild the application cache. From beta.3, the generic changes require only an update and cache rebuild. An integration adopting automatic source ownership must also apply its own registered public-ID migration, preserving the IDs already established on that installation, and reconcile its source reference index. Project-specific adapters remain in their own bundles. No minimum-stability change is needed; published beta tags remain immutable.
 
 ## Existing 5.7.0 installations
 

@@ -13,7 +13,7 @@ final class GraphProjection
             if(!$adapter)return true;
             try { $result=$adapter->resolve($source,new Api\ReadContext('preview',$source->installationScope,$this->sourceLanguage($source,$language),$actor,true,time())); }
             catch(\Throwable){return false;}
-            return $result->status!=='forbidden';
+            return $result->status!=='forbidden' && (!$adapter->describe()->automatic || $result->snapshot!==null);
         }));
     }
     public function extend(array $map,array $rows,string $language,int $actor=0): array
@@ -23,7 +23,7 @@ final class GraphProjection
             $id=(int)$row['id'];$relations=$this->store->relations($id,$language);
             $source=$this->store->binding($id);
             if($source && $actor>0 && $adapter=$this->registry->adapter($source->adapterKey)){
-                try{$snapshot=$adapter->resolve($source,new Api\ReadContext('preview',$source->installationScope,$this->sourceLanguage($source,$language),$actor,true,time()))->snapshot;foreach($adapter->describe()->ownedRelationships as $key)$relations[$key]=$snapshot?->relationships[$key]??[];}catch(\Throwable){}
+                try{$snapshot=$adapter->resolve($source,new Api\ReadContext('preview',$source->installationScope,$this->sourceLanguage($source,$language),$actor,true,time()))->snapshot;if ($adapter->describe()->automatic && $snapshot) foreach ($map['nodes'] as &$sourceNode) { if (($sourceNode['data']['record']??0)===$id && str_starts_with($sourceNode['data']['id'],'entity-')) { $sourceNode['data']['name']=$snapshot->globalFields['name']??$sourceNode['data']['name']; $sourceNode['data']['editUrl']=$snapshot->editUrl && preg_match('~^(?:/contao(?:/|\?)|\?do=)~',$snapshot->editUrl)?$snapshot->editUrl:null; $sourceNode['data']['automatic']=true; $sourceNode['data']['published']=$adapter->resolve($source,new Api\ReadContext('frontend',$source->installationScope,$this->sourceLanguage($source,$language),now:time()))->snapshot!==null; } } unset($sourceNode); foreach($adapter->describe()->ownedRelationships as $key)$relations[$key]=$snapshot?->relationships[$key]??[];}catch(\Throwable){}
             }
             if($source && !$this->registry->adapter($source->adapterKey))foreach($map['nodes'] as &$node)if($node['data']['id']==='entity-'.$id)$node['data']['warnings'][]='sourceUnavailable';unset($node);
             foreach($relations as $key=>$values) {

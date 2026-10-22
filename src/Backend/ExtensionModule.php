@@ -23,6 +23,7 @@ final class ExtensionModule
         $entity=(int)($post?Input::post('entity'):Input::get('entity'));
         $row=$entity?$this->store->record($entity):null;
         $source=$row?$this->store->binding($entity):null;
+        if ($source && $this->registry->adapter($source->adapterKey)?->describe()->automatic) throw new \Symfony\Component\Security\Core\Exception\AccessDeniedException('Edit the original source record.');
         $roots=$this->connection->fetchAllAssociative("SELECT id,title,language,dns FROM tl_page WHERE type='root' ORDER BY id");
         $site=(string)($post?Input::post('site'):(Input::get('site')?:($roots[0]['id']??'')));
         $root=null;foreach($roots as $candidate)if((string)$candidate['id']===$site)$root=$candidate;
@@ -40,6 +41,7 @@ final class ExtensionModule
         try {
             if($post && Input::post('schemaExtensionAction')==='bind') {
                 $ref=new Api\SourceReference((string)Input::post('adapter'),$site,(string)Input::post('subject'));
+                if ($this->registry->adapter($ref->adapterKey)?->describe()->automatic) throw new \InvalidArgumentException('This source is indexed automatically when its original record is saved.');
                 $bound=$this->bindings->bind(new Api\BindRequest($ref,(string)Input::post('revision'),(string)Input::post('type')),$write);
                 $html.='<p class="tl_confirm">Created or reused draft entity #'.$bound->id.'.</p>';
             }
@@ -91,6 +93,7 @@ final class ExtensionModule
             $html.='<h3>Preview</h3><pre style="white-space:pre-wrap">'.$this->e(json_encode($inspection,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre>';
         } else {
             foreach($this->registry->adapters() as $key=>$adapter) {
+                if ($adapter->describe()->automatic) continue;
                 $html.='<h3>'.$this->e($key).'</h3>';
                 $query=new Api\CandidateQuery(new Api\ReadContext('discovery',$site,$language,(int)$user->id,true,time()),search:(string)Input::get('search'),cursor:Input::get('cursor'));
                 $page=$this->editor->discover($key,$query);

@@ -134,7 +134,7 @@
       if(!n.data('missing') && n.data('kind')!=='coreAuthor'){
         const kind=n.data('kind')||'entity', record=n.data('record');
         const a=add(details,'a',kind==='event'?(l.editEvent||'Edit event'):kind==='news'?l.editNews:kind==='page'?l.editPage:l.edit,'sg-edit');
-        a.href=kind==='event'?`?do=calendar&table=tl_calendar_events&act=edit&id=${record}`:kind==='news'?`?do=news&table=tl_news&act=edit&id=${record}`:kind==='page'?`?do=page&act=edit&id=${record}`:`?do=schema_manager&act=edit&id=${record}`;a.dataset.turbo='false';
+        a.href=n.data('editUrl')|| (kind==='event'?`?do=calendar&table=tl_calendar_events&act=edit&id=${record}`:kind==='news'?`?do=news&table=tl_news&act=edit&id=${record}`:kind==='page'?`?do=page&act=edit&id=${record}`:`?do=schema_manager&act=edit&id=${record}`);a.dataset.turbo='false';
       }
       (n.data('warnings')||[]).forEach(w=>add(details,'p',l[w]||w,'sg-status'));
       if(n.data('needsService'))add(details,'p',l.noService);

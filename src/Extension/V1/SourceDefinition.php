@@ -9,5 +9,7 @@ final readonly class SourceDefinition
         public array $ownedGlobalFields = [],
         public array $ownedLocalizedFields = [],
         public array $ownedRelationships = [],
+        /** Fully automatic source: no separate entity editor or publication workflow. */
+        public bool $automatic = false,
     ) {  }
 }

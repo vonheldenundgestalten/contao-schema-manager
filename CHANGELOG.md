@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.0 — 2026-10-22
+
+- Add opt-in automatic source ownership: original records persist public identities, while derived reference rows are hidden from entity editing and manual discovery/binding screens. Source graph navigation opens the original record.
+- Reject supplementary writes to automatic sources and ignore stored supplementary facts at runtime; exclude these sources from AI edit suggestions. Existing non-automatic adapters retain their editing workflow.
+- Add narrowly scoped approval of pending relationships without globally enabling pending vocabulary.
+- Correct Schema.org range validation for a node carrying multiple compatible types, such as House and Product sharing one identity.
+
+- Release the versioned extension API v1 for contributed source adapters, entity types and relationships, including typed fields, supplementary editing, previews, explicit migrations and source-change cache invalidation.
+- Include managed-Person authorship from beta.2 and site-language graph resolution from beta.3. Existing entity IDs and native news/event identities are retained.
+
+Upgrade from 1.3: apply the additive extension tables/fields through Contao's database update and rebuild the cache. Upgrade from beta.3: update the package and rebuild the cache; the generic changes add no database fields. Project integrations enabling automatic sources must run their own registered source-ID migration and reconcile their reference index. Existing non-automatic adapters keep their workflow. Pending vocabulary remains disabled unless explicitly approved.
+
+Validation: PHP 8.3/8.4 CI, generic extension integration and author/language checks, and OKAL dev verification covering 449 automatic sources, unchanged public IDs, 251 public source pages, 72 public news articles and 31 show-home relationship graphs.
+
 ## 1.4.0-beta.3 — 2026-10-22
 
 - Resolve root-scoped source entities and their relationships in the source root’s configured language when building the backend graph, independently of the editor’s UI language.

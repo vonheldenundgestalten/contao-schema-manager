@@ -20,11 +20,13 @@ final class BindingManager implements Api\BindingManagerInterface
         $type=$this->registry->type($request->typeKey);
         if ($type && !$type->sourceBindable) throw new \InvalidArgumentException('Type cannot be source bound.');
         $snapshot=$adapter->resolve($request->source,$context->read)->snapshot;
+        if ($adapter->describe()->automatic && (!$snapshot?->publicIdentity || !filter_var($snapshot->publicIdentity,FILTER_VALIDATE_URL) || !str_starts_with($snapshot->publicIdentity,$context->identityOrigin.'/#'))) throw new \InvalidArgumentException('Automatic sources require a persisted public identity in the site origin.');
         if (!$snapshot || $snapshot->source->key()!==$request->source->key() || $snapshot->revision!==$request->expectedRevision || $snapshot->typeKey!==$request->typeKey) throw new \InvalidArgumentException('Source unavailable, incompatible or changed; refresh before binding.');
         if ($request->source->installationScope!==$context->read->site) throw new \InvalidArgumentException('Source outside write scope.');
         try {
             $entity=$this->connection->transactional(function() use($request,$context,$snapshot,$type) {
                 if ($existing=$this->resolve($request->source)) {
+                    if ($snapshot->publicIdentity!==null && $this->connection->fetchOne('SELECT entityId FROM tl_schema_entity WHERE id=?',[$existing->id])!==$snapshot->publicIdentity) throw new \InvalidArgumentException('Source identity differs from its reference index.');
                     if ($request->existing && $request->existing->id!==$existing->id) throw new \InvalidArgumentException('Source already bound.');
                     return $existing;
                 }
@@ -34,7 +36,7 @@ final class BindingManager implements Api\BindingManagerInterface
                     if($this->connection->fetchOne("SELECT id FROM tl_schema_translation WHERE pid=? AND schemaImportedData IS NOT NULL AND schemaImportedData<>'' AND schemaImportedData<>'{}' LIMIT 1",[$request->existing->id]))throw new \InvalidArgumentException('Review and retire imported JSON-LD before switching this identity to source authority.');
                     $id=$request->existing->id;
                 } else {
-                    $this->connection->insert('tl_schema_entity',['tstamp'=>time(),'name'=>(string)($snapshot->globalFields['name']??$snapshot->localizedFields['name']??$request->source->subjectKey),'entityType'=>$request->typeKey,'identityBase'=>$context->identityOrigin,'entityId'=>$context->identityOrigin.'/#entity-'.bin2hex(random_bytes(16)),'schemaExtensionVersion'=>$type?->schemaVersion??0,'published'=>'']);
+                    $this->connection->insert('tl_schema_entity',['tstamp'=>time(),'name'=>(string)($snapshot->globalFields['name']??$snapshot->localizedFields['name']??$request->source->subjectKey),'entityType'=>$request->typeKey,'identityBase'=>$context->identityOrigin,'entityId'=>$snapshot->publicIdentity??($context->identityOrigin.'/#entity-'.bin2hex(random_bytes(16))),'schemaExtensionVersion'=>$type?->schemaVersion??0,'published'=>'']);
                     $id=(int)$this->connection->lastInsertId();
                 }
                 $this->connection->insert('tl_schema_extension_binding',['tstamp'=>time(),'sourceHash'=>$request->source->key(),'adapterKey'=>$request->source->adapterKey,'installationScope'=>$request->source->installationScope,'subjectKey'=>$request->source->subjectKey,'entity'=>$id]);

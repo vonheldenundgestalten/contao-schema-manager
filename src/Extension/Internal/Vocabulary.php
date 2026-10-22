@@ -20,7 +20,7 @@ final class Vocabulary
         if(!$definition || ($definition['pending'] && !$pending))throw new \LogicException('Unknown or unapproved pending property: '.$property);
         $valid=false;foreach($types as $type)foreach($definition['domain'] as $domain)if(self::is($type,$domain))$valid=true;
         if(!$valid)throw new \LogicException('Invalid domain for '.$property);
-        if($targets!==null)foreach($targets as $type){$valid=false;foreach($definition['range'] as $range)if(self::is($type,$range))$valid=true;if(!$valid)throw new \LogicException('Invalid range for '.$property);}
+        if($targets!==null){$valid=false;foreach($targets as $type)foreach($definition['range'] as $range)if(self::is($type,$range))$valid=true;if(!$valid)throw new \LogicException('Invalid range for '.$property);}
     }
     public static function node(array $types,array $properties,array $referenceTypes=[]): void
     {

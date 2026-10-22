@@ -1,5 +1,6 @@
 parameters:
     schema_manager.extension.allow_pending: false
+    schema_manager.extension.approved_pending_relationships: []
     schema_manager.extension.approved_roots: {}
 services:
     _defaults:
@@ -29,6 +30,7 @@ services:
     VHUG\SchemaManagerBundle\Extension\Internal\Runtime:
         arguments:
             $allowPending: "%schema_manager.extension.allow_pending%"
+            $approvedPendingRelationships: "%schema_manager.extension.approved_pending_relationships%"
 
     VHUG\SchemaManagerBundle\Extension\Internal\PayloadMigrator:
         arguments:

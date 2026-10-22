@@ -22,6 +22,7 @@ final class AiBridge
             }
             if(!$read || !$render)continue;
             $owned=$source?$this->registry->adapter($source->adapterKey)?->describe():null;
+            if ($owned?->automatic) continue;
             $snapshot=$source?$this->registry->adapter($source->adapterKey)?->resolve($source,$read)->snapshot:null;
             $fields=[];
             foreach($type->fields as $field)if($field->ai && !in_array($field->key,$field->localized?($owned?->ownedLocalizedFields??[]):($owned?->ownedGlobalFields??[]),true))$fields[$field->key]=['type'=>$field->type,'localized'=>$field->localized,'multiple'=>$field->multiple,'constraints'=>array_diff_key($field->constraints,['fields'=>true])];

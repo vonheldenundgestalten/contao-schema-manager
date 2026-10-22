@@ -1,8 +1,7 @@
 # Extension API v1
 
-The generic API is available in prerelease **1.4.0-beta.1** for integration testing.
-Install explicitly with `composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.1 --with-all-dependencies`; no application-wide minimum-stability change is needed. Deployments need Contao database updates
-and cache rebuild. All OKAL work remains deferred until installation on OKAL dev.
+The generic API v1 is available in stable **1.4.0**.
+Install with `composer require vonheldenundgestalten/contao-schema-manager:^1.4 --with-all-dependencies`; apply the additive Contao database updates and rebuild the cache. Automatic-source integrations additionally run their own source public-ID adoption migration.
 
 Public namespace: `VHUG\SchemaManagerBundle\Extension\V1`. Classes under Internal,
 existing models and emitters are implementation details. Consumers register Symfony
@@ -90,8 +89,7 @@ $entity = $bindings->bind(
 
 Binding is transactional/idempotent and creates a draft. Existing-identity linking
 requires explicit selection, never a name/URL merge. Each entity has one authoritative
-source. Source-owned fields stay read-only even when empty. Sources cannot own identity,
-publication, routing or storage-control fields. There is no write-back/override API.
+source. Source-owned fields stay read-only even when empty. Sources cannot declare identity, publication, routing or storage-control fields as ordinary editable facts. An automatic source explicitly supplies its persisted identity through `SourceSnapshot.publicIdentity`; its availability and canonical snapshot URL determine public output. There is no write-back/override API.
 
 EntityEditorInterface supports saveFields, saveRelationship, discover and inspect.
 Writes require the current entity revision and, for source-backed records, a WriteContext
@@ -174,3 +172,24 @@ Source-scope equality is always checked for rendering, binding, editing and disc
 For manual contributed types, a global name field reuses the existing managed entity name. It does not create a competing supplementary name. A source-owned name still comes exclusively from its source snapshot.
 
 Existing imported JSON-LD must be explicitly reviewed/retired before a record switches to source authority. Binding rejects this overlap instead of silently replacing imported identities or unsupported facts; existing unbound imports are unchanged.
+
+
+## Automatic source ownership
+
+Set `SourceDefinition(automatic: true)` when every fact and relationship belongs
+to the original source. Persist the public ID there and return it through
+`SourceSnapshot(publicIdentity: ...)`. Adopt existing IDs through an explicit
+integration migration; never allocate replacements for already published subjects.
+Generate fresh IDs for new subjects and copied records. On source saves/import
+completion, reconcile bindings through `BindingManagerInterface`; the application
+makes the reference index addressable while adapter availability controls output.
+
+Automatic rows are excluded from manual entity/discovery editors, supplementary
+writes and AI edit suggestions. Runtime ignores stored supplements for them. The
+backend graph retains the source nodes, follows source visibility and opens the
+snapshot's local Contao `editUrl`. No source writes occur while rendering. Existing
+adapters default to `automatic: false` and retain draft binding/supplementary editing.
+
+For reviewed pending properties, approve individual relationship keys through
+`schema_manager.extension.approved_pending_relationships`. All other pending
+relationships retain the global default of disabled.

@@ -43,4 +43,9 @@ $expanded=new Internal\Registry([$provider],[$provider,$capabilities],[],[get_cl
 $check($expanded->relationship('example.capability')->sourceTypes===['Product'] && in_array('LocalBusiness',$expanded->relationship('example.capability')->targetTypes,true),'Capability selectors expand and validate all concrete endpoints.');
 $requiredList=new Api\TypeDefinition('example.list','Required list',['ProductModel'],get_class($provider),fields:[new Api\FieldDefinition('items',multiple:true,required:true)]);
 $reject(fn()=>$fields->validate($requiredList,['items'=>[]],[]),'Required repeated fields reject empty lists.');
+Internal\Vocabulary::property(['ProductModel'],'displayLocation',['House','Product'],true);
+$check(true,'A multi-typed target satisfies a range when one of its types is a permitted subtype.');
+$reject(fn()=>Internal\Vocabulary::property(['ProductModel'],'displayLocation',['Person','Organization'],true),'Multi-typing cannot satisfy a range with unrelated types.');
+$check((new Api\SourceDefinition(['Person']))->automatic===false,'Existing adapters retain their supplementary editing workflow.');
+$check((new Api\SourceDefinition(['Person'],automatic:true))->automatic,'Automatic source ownership is an explicit adapter capability.');
 echo 'PASS: '.$checks." extension registry, ownership shapes, vocabulary and graph checks\n";

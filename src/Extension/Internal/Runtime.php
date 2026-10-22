@@ -5,7 +5,7 @@ use VHUG\SchemaManagerBundle\Extension\V1 as Api;
 use VHUG\SchemaManagerBundle\Schema\EntityMapper;
 final class Runtime
 {
-    public function __construct(private readonly Registry $registry,private readonly Store $store,private readonly FieldValidator $fields,private readonly Api\BindingManagerInterface $bindings,private readonly EntityMapper $nativeMapper,private readonly bool $allowPending=false,private readonly SiteScope $scopes=new SiteScope()) {}
+    public function __construct(private readonly Registry $registry,private readonly Store $store,private readonly FieldValidator $fields,private readonly Api\BindingManagerInterface $bindings,private readonly EntityMapper $nativeMapper,private readonly bool $allowPending=false,private readonly SiteScope $scopes=new SiteScope(), private readonly array $approvedPendingRelationships=[]) {}
     public function scope(int $id,string $fallback): string { return $this->store->binding($id)?->installationScope??$fallback; }
     public function handles(array $record): bool { return str_contains($record['entityType'],'.') || $this->store->binding((int)$record['id'])!==null; }
     public function render(int $id,Api\ReadContext $context,?string $manualUrl=null,bool $full=true,bool $pending=false,?string $currentUrl=null): array
@@ -38,6 +38,8 @@ final class Runtime
                 if (!$snapshot || $snapshot->source->key()!==$source->key() || $snapshot->typeKey!==$row['entityType']) { $diagnostics[]='source_'.$resolution->status; return null; }
                 if(!$type)NativeFacts::validate($snapshot);
                 $owned=$adapter->describe();
+                if ($owned->automatic && (!$snapshot->publicIdentity || $snapshot->publicIdentity!==$row['entityId'])) { $diagnostics[]='source_identity_mismatch'; return null; }
+                if ($owned->automatic) { $global=$type?[]:array_intersect_key($row,array_flip(['entityType','entityId'])); $localized=[]; $relations=[]; }
                 if (array_diff(array_keys($snapshot->globalFields),$owned->ownedGlobalFields) || array_diff(array_keys($snapshot->localizedFields),$owned->ownedLocalizedFields) || array_diff(array_keys($snapshot->relationships),$owned->ownedRelationships)) throw new \InvalidArgumentException('Adapter returned undeclared fields.');
                 foreach ($owned->ownedGlobalFields as $key) { unset($global[$key]); $global[$key]=$snapshot->globalFields[$key]??null;$provenance[$key]='source'; }
                 foreach ($owned->ownedLocalizedFields as $key) { unset($localized[$key]); $localized[$key]=$snapshot->localizedFields[$key]??null;$provenance[$key]='source'; }
@@ -73,7 +75,7 @@ final class Runtime
             $visiting[$entityId]=$node;
             if ($depth===0 && $complete) foreach ($relations as $key=>$targets) {
                 $definition=$this->registry->relationship($key);
-                if (!$definition || !in_array($row['entityType'],$definition->sourceTypes,true) || ($definition->pending && !$pending)) { $diagnostics[]='relationship_unavailable'; continue; }
+                if (!$definition || !in_array($row['entityType'],$definition->sourceTypes,true) || ($definition->pending && !$pending && !in_array($key,$this->approvedPendingRelationships,true))) { $diagnostics[]='relationship_unavailable'; continue; }
                 if ($definition->property===null) continue;
                 if (!$definition->multiple && count($targets)>1) throw new \InvalidArgumentException('Relationship cardinality exceeded.');
                 $refs=[];

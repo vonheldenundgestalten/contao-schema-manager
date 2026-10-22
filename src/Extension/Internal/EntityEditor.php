@@ -12,6 +12,7 @@ final class EntityEditor implements Api\EntityEditorInterface
         if (!$row || $row['identityBase']!==$context->identityOrigin) throw new \InvalidArgumentException('Entity outside write scope.');
         if ($source=$this->store->binding($entity->id)) {
             if ($source->installationScope!==$context->read->site || !$adapter=$this->registry->adapter($source->adapterKey)) throw new \InvalidArgumentException('Source unavailable.');
+            if ($adapter->describe()->automatic) throw new \InvalidArgumentException('Edit the original source record. Automatic sources have no supplementary entity editor.');
             $snapshot=$adapter->resolve($source,$context->read)->snapshot;
             if (!$snapshot || $snapshot->typeKey!==$row['entityType']) throw new \InvalidArgumentException('Source unavailable or changed type.');
             if ($context->expectedSourceRevision===null || $snapshot->revision!==$context->expectedSourceRevision) throw new \InvalidArgumentException('Source changed; refresh before editing supplementary data.');

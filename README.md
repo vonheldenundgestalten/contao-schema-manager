@@ -1,4 +1,4 @@
-# Contao Schema Manager 1.4 beta
+# Contao Schema Manager 1.4
 
 **Describe your company, people, products and services once. Connect them to your Contao content in every language.**
 
@@ -10,13 +10,19 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Screenshots show the English Contao backend; German labels are also included.*
 
-> **Prerelease 1.4.0-beta.3:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension focuses on manually managed entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Version 1.4.0:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension supports manually managed and automatic source entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
 > **Versioning:** package versions follow semantic versioning independently of Contao. See [versioning and migration](docs/versioning.md) for upgrade guidance.
 
-## Developer integrations (1.4 beta)
+## What changed in 1.4
 
-The [v1 extension API](docs/extension-api/README.md) lets bundles contribute source adapters, types and relationships without project-specific code in Schema Manager. It includes a synthetic example, typed supplementary editing, source authority, previews, cache invalidation and explicit migrations. Apply the additive Contao database update and rebuild the cache when installing this prerelease. Install explicitly with `composer require vonheldenundgestalten/contao-schema-manager:1.4.0-beta.3 --with-all-dependencies`. The API is available for integration testing before the final 1.4.0 release. In beta.3, the backend graph resolves root-scoped source relationships using the source root’s configured language, so changing the editor’s UI language does not hide those relationships. This does not create frontend translations.
+Version 1.4 connects Schema Manager to the data your site already maintains. Other bundles can register their own source records, entity types and relationships through the versioned extension API. Fully automatic sources keep permanent public IDs on their original records and follow their original publication rules, without creating a second editing or publishing workflow in Schema Manager. The relationship map opens the original record, while the same identities remain available to pages, news and events. Integrations can also give one real-world subject multiple Schema.org types and output valid relationships between them. Backend users become public authors only when deliberately linked to an available Person schema entry; account names alone no longer create authors. Source relationships use the site's language independently of the editor's UI language.
+
+## Developer integrations
+
+The [v1 extension API](docs/extension-api/README.md) lets bundles contribute source adapters, types and relationships without project-specific code in Schema Manager. Integrations can choose automatic source ownership or source-backed entities with typed supplementary editing. The API includes metadata validation, previews, cache invalidation, scheduled visibility and explicit migrations. Applications persist and migrate automatic source IDs and reconcile their reference index on source saves and import completion; rendering does not create source records.
+
+Install with `composer require vonheldenundgestalten/contao-schema-manager:^1.4 --with-all-dependencies`, apply the additive Contao database update and rebuild the cache. Upgrading an integration to automatic source ownership also requires that integration's migration, which must preserve existing public IDs.
 
 ## Entity relationships
 
@@ -521,3 +527,27 @@ Available in **1.3.0**: Organization, LocalBusiness, Place, Person, Product, Sof
 Not included: smart/automatic page images, social-tag generation, pricing-source hooks, Product variants/inventory/reviews, full Event rich-result fields, FAQ adapters. A valid Product or Event node does not by itself guarantee eligibility for Google's feature-specific rich results.
 
 See the [changelog](CHANGELOG.md) for release history.
+
+
+### Automatic source capability (1.4)
+
+`SourceDefinition(automatic: true)` opts an adapter into source-only editing.
+Its original records must persist stable public IDs and return them as
+`SourceSnapshot(publicIdentity: ...)`. The existing reference/binding index is
+retained for relationship compatibility; automatic rows are excluded from the
+entity editor and manual source binding console. Graph navigation uses the
+snapshot's local Contao `editUrl`. Supplementary API writes are rejected and
+stored supplementary facts do not participate in automatic-source output.
+
+Applications own their portable adoption migration and reconciliation lifecycle.
+Adopt existing public IDs without changing their values, generate new IDs for new
+subjects/copies, and use the binding API when sources are saved or imports finish.
+Reconciliation must make valid references addressable while the adapter's live
+availability checks control actual frontend output. No frontend write is needed.
+Existing adapters default to `automatic: false` and retain their prior workflow.
+
+`schema_manager.extension.approved_pending_relationships` accepts explicit
+relationship keys, leaving `schema_manager.extension.allow_pending` disabled for
+all other pending properties. Multi-typed nodes satisfy property ranges when one
+of their schema types is a permitted range subtype. These capabilities are available in 1.4.0. Applications upgrading from a beta
+need the stable release before enabling automatic source ownership.
