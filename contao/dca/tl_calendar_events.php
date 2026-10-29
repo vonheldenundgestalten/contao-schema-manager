@@ -12,3 +12,5 @@ foreach(array_keys($GLOBALS['TL_DCA']['tl_calendar_events']['palettes']) as $pal
 $fields['schemaPerformer']['options_callback']=[VHUG\SchemaManagerBundle\EventListener\CalendarSettingsListener::class,'performers'];
 
 $fields['schemaAttendanceMode']['reference']=&$GLOBALS['TL_LANG']['tl_calendar_events']['attendanceModes'];
+
+$fields['schemaAbout']['options_callback']=[VHUG\SchemaManagerBundle\EventListener\CalendarSettingsListener::class,'topics'];

@@ -12,6 +12,7 @@ final class CalendarSettingsListener
     public function saved(DataContainer $dc):void{$this->ensureIdentity((int)$dc->id);$this->invalidate();}
     #[AsCallback(table:'tl_calendar',target:'config.onsubmit')]
     public function calendarSaved(DataContainer $dc):void{foreach($this->db->fetchFirstColumn('SELECT id FROM tl_calendar_events WHERE pid=?',[$dc->id]) as $id)$this->ensureIdentity((int)$id);$this->invalidate();}
+    public function topics():array{return $this->db->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType<>'Person' ORDER BY name");}
     public function performers():array{return $this->db->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType IN ('Person','Organization','LocalBusiness') ORDER BY name");}
     public function ensureIdentity(int $id):void
     {
