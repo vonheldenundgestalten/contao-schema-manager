@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.4 — 2026-10-29
+
+- Accept extension-defined types declaring the `place` capability in the shared event venue picker and save validation.
+- Preserve current source addresses and coordinates when rendering compact event venue references; avoid replacing source facts with stale entity fields.
+- Use persisted event identities even when no other event schema settings are configured.
+- Allow calendars without a redirect target and use the listing page URL for their event schema instead of generating detail URLs.
+
+Upgrade: rebuild the application cache. No database schema updates; existing event identities are preserved. Event topic filtering remains the responsibility of each project integration.
+
 ## 1.4.3 — 2026-10-22
 
 - Remove internal planning, client research, feedback and handover documents and their public references.
