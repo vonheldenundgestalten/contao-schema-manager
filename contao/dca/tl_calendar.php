@@ -9,3 +9,6 @@ $names=array_merge(['schemaMode'],array_keys((VHUG\SchemaManagerBundle\Schema\Ca
 foreach(array_keys($GLOBALS['TL_DCA']['tl_calendar']['palettes']) as $palette){if($palette==='__selector__')continue;PaletteManipulator::create()->addLegend('schema_legend','details_legend',PaletteManipulator::POSITION_AFTER)->addField($names,'schema_legend',PaletteManipulator::POSITION_APPEND)->applyToPalette($palette,'tl_calendar');}
 
 $fields['schemaAttendanceMode']['reference']=&$GLOBALS['TL_LANG']['tl_calendar']['attendanceModes'];
+
+// An empty redirect target means list-only events, without detail URLs.
+$fields['jumpTo']['eval']['mandatory']=false;

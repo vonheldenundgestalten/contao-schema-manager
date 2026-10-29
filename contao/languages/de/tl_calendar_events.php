@@ -12,7 +12,7 @@ $GLOBALS['TL_LANG']['tl_calendar_events']['schemaAddressCountry'] = ['Ländercod
 $GLOBALS['TL_LANG']['tl_calendar_events']['schemaEventUrl'] = ['Online-Veranstaltungs-URL', 'Kalenderwerte dienen als Vorgabe. Leere Termin-Felder übernehmen diese, eigene Angaben haben Vorrang.'];
 $GLOBALS['TL_LANG']['tl_calendar_events']['schemaAbout'] = ['Themen / zugehörige Leistungen', 'Kalenderwerte dienen als Vorgabe. Leere Termin-Felder übernehmen diese, eigene Angaben haben Vorrang.'];
 $GLOBALS['TL_LANG']['tl_calendar_events']['schemaPerformer'] = ['Vortragende / Mitwirkende', 'Kalenderwerte dienen als Vorgabe. Leere Termin-Felder übernehmen diese, eigene Angaben haben Vorrang.'];
-$GLOBALS['TL_LANG']['tl_calendar_events']['schemaIdentity'] = ['Stabile Event-Identität', 'Kalenderwerte dienen als Vorgabe. Leere Termin-Felder übernehmen diese, eigene Angaben haben Vorrang.'];
+$GLOBALS['TL_LANG']['tl_calendar_events']['schemaIdentity'] = ['Stabile Event-Identität', 'Einmalig aus dem Namensraum des Veranstalters oder Website-Herausgebers erzeugt. Bleibt bei URL- oder Veranstalteränderungen erhalten; kopierte Termine erhalten eine neue ID.'];
 
 $GLOBALS['TL_LANG']['tl_calendar_events']['schemaLatitude'] = ['Breitengrad', 'Dezimalkoordinaten manuell eingeben. Beide Werte angeben. Beide leer: Koordinatenpaar des Kalenders übernehmen. Ein einzelner Terminwert erbt nicht.'];
 

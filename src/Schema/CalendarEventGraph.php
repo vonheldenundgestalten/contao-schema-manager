@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Spatie\SchemaOrg\Event;
 final class CalendarEventGraph
 {
-    public function __construct(private readonly Connection $db,private readonly EntityGraph $entities,private readonly ContentUrlGenerator $urls,private readonly CacheTagManager $tags){}
+    public function __construct(private readonly Connection $db,private readonly EntityGraph $entities,private readonly ContentUrlGenerator $urls,private readonly CacheTagManager $tags,private readonly ?\Symfony\Component\HttpFoundation\RequestStack $requests=null){}
     public function apply(array $items,string $language,JsonLdManager $manager,array &$emitted): array
     {
         if(!class_exists(\Contao\CalendarEventsModel::class))return [];
@@ -24,10 +24,16 @@ final class CalendarEventGraph
             if(empty($record['published'])||!empty($calendar['protected'])||(!empty($record['start'])&&$record['start']>time())||(!empty($record['stop'])&&$record['stop']<=time())){$graph->hide(Event::class,$key);continue;}
             $values=[];foreach(array_keys(CalendarEventFields::defaults()) as $field)$values[$field]=($record[$field]??'')?:($calendar[$field]??'');
             $location=LocationData::calendar($record,$calendar);
-            if(!$location['id']&&empty($record['schemaLocationMode'])&&empty($calendar['schemaLocationMode'])&&!array_filter($location['facts'],static fn($value)=>trim((string)$value)!=='')&&($calendar['schemaMode']??'')!=='enrich'&&!array_filter($values)&&empty($record['schemaAbout'])&&empty($record['schemaPerformer']))continue;
+            if(empty($record['schemaIdentity'])&&!$location['id']&&empty($record['schemaLocationMode'])&&empty($calendar['schemaLocationMode'])&&!array_filter($location['facts'],static fn($value)=>trim((string)$value)!=='')&&($calendar['schemaMode']??'')!=='enrich'&&!array_filter($values)&&empty($record['schemaAbout'])&&empty($record['schemaPerformer']))continue;
             $node=$graph->get(Event::class,$key)->toArray();unset($node['@context']);
             $model=\Contao\CalendarEventsModel::findById($record['id']);if(!$model)continue;
-            $url=$this->urls->generate($model,[],UrlGeneratorInterface::ABSOLUTE_URL);
+            if(empty($calendar['jumpTo']) && ($record['source']??'default')==='default'){
+                $page=$this->requests?->getMainRequest()?->attributes->get('pageModel');
+                if(!$page instanceof \Contao\PageModel)continue;
+                $url=$this->urls->generate($page,[],UrlGeneratorInterface::ABSOLUTE_URL);
+            }else{
+                $url=$this->urls->generate($model,[],UrlGeneratorInterface::ABSOLUTE_URL);
+            }
             // Recurring records retain the core identity/dates; no invented occurrence expansion.
             $identity=!empty($record['recurring'])?($node['@id']??$key):(($record['schemaIdentity']??'')?:$url.'#event');
             unset($node['identifier']);$node['@id']=$identity;$node['url']=$url;$node['inLanguage']=$language;$node['mainEntityOfPage']=['@id'=>$url.'#webpage'];
