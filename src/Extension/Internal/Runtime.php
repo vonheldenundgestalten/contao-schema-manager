@@ -8,12 +8,12 @@ final class Runtime
     public function __construct(private readonly Registry $registry,private readonly Store $store,private readonly FieldValidator $fields,private readonly Api\BindingManagerInterface $bindings,private readonly EntityMapper $nativeMapper,private readonly bool $allowPending=false,private readonly SiteScope $scopes=new SiteScope(), private readonly array $approvedPendingRelationships=[]) {}
     public function scope(int $id,string $fallback): string { return $this->store->binding($id)?->installationScope??$fallback; }
     public function handles(array $record): bool { return str_contains($record['entityType'],'.') || $this->store->binding((int)$record['id'])!==null; }
-    public function render(int $id,Api\ReadContext $context,?string $manualUrl=null,bool $full=true,bool $pending=false,?string $currentUrl=null): array
+    public function render(int $id,Api\ReadContext $context,?string $manualUrl=null,bool $full=true,bool $pending=false,?string $currentUrl=null,bool $venue=false): array
     {
         $context=$this->scopes->read($context);
         $pending=$pending || $this->allowPending;
         $cacheTags=[SourceInvalidator::TAG];$nodes=[];$diagnostics=[];$snapshots=[];$visiting=[];$expiry=null;
-        $load=function(int $entityId,int $depth=0) use (&$load,&$nodes,&$diagnostics,&$snapshots,&$visiting,&$expiry,&$cacheTags,$context,$manualUrl,$full,$pending,$id,$currentUrl): ?array {
+        $load=function(int $entityId,int $depth=0) use (&$load,&$nodes,&$diagnostics,&$snapshots,&$visiting,&$expiry,&$cacheTags,$context,$manualUrl,$full,$pending,$id,$currentUrl,$venue): ?array {
             if (isset($visiting[$entityId])) return $visiting[$entityId];
             if (count($visiting)>=100 || $depth>1) return null;
             $row=$this->store->record($entityId);
@@ -71,7 +71,7 @@ final class Runtime
                 $node=['@id'=>$row['entityId'],'@type'=>count($type->schemaTypes)===1?$type->schemaTypes[0]:$type->schemaTypes]+$contribution->properties;
                 if ($url!==null) $node['url']=$url;
             } else { $node=$this->nativeMapper->map($global,$localized,$url);$node['@id']=\VHUG\SchemaManagerBundle\Schema\ImportedSchema::identity($localized['schemaImportedData']??null)??$row['entityId'];$node['@type']=$row['entityType']; }
-            $compact=array_intersect_key($node,array_flip(['@id','@type','name','url']));
+            $compact=array_intersect_key($node,array_flip($venue && $depth===0?['@id','@type','name','url','address','geo','hasMap']:['@id','@type','name','url']));
             $visiting[$entityId]=$node;
             if ($depth===0 && $complete) foreach ($relations as $key=>$targets) {
                 $definition=$this->registry->relationship($key);

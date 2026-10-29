@@ -82,6 +82,12 @@ final class Registry
     public static function key(string $key): void { if (strlen($key)>128 || !preg_match('/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/D',$key)) throw new \LogicException('Expected namespaced extension key: '.$key); }
     public static function property(string $key): void { if (!preg_match('/^[a-z][A-Za-z0-9]*$/D',$key)) throw new \LogicException('Invalid public property '.$key); }
     public function known(string $key): bool { return isset($this->types[$key]) || in_array($key,['Organization','LocalBusiness','Place','Person','Service','Product','SoftwareApplication','Event'],true); }
+    public function placeTypes(): array
+    {
+        $keys=['Place','LocalBusiness'];
+        foreach($this->types as $type)if(in_array('place',$type->capabilities,true))$keys[]=$type->key;
+        return array_values(array_unique($keys));
+    }
     public function types(): array { return $this->types; }
     public function relationships(): array { return $this->relationships; }
     public function adapters(): array { return $this->adapters; }

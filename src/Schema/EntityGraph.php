@@ -24,6 +24,7 @@ final class EntityGraph
         private readonly EntityMapper $mapper,
         private readonly RequestStack $requests,
         private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\Runtime $extensions = null,
+        private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\Registry $registry = null,
     ) {}
 
     public function record(int $id): ?array
@@ -37,12 +38,12 @@ final class EntityGraph
     {
         $this->tags->tagWithModelClass(\VHUG\SchemaManagerBundle\Model\EntityModel::class);
         $record=$this->record($id);
-        if(!$record || !in_array($record['entityType'],['Place','LocalBusiness'],true))return null;
-        $node=$this->emit($id,$language,$manager,$emitted);
+        if(!$record || !in_array($record['entityType'],$this->registry?->placeTypes()??['Place','LocalBusiness'],true))return null;
+        $node=$this->emit($id,$language,$manager,$emitted,true);
         if(!$node)return null;
-        $facts=LocationData::physical($record);
+        $facts=($this->extensions?->handles($record)??false)?[]:LocationData::physical($record);
         foreach(['address','geo','hasMap'] as $property)if(isset($facts[$property]))$node[$property]=$facts[$property];
-        $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->set($manager->createSchemaOrgTypeFromArray($node),$node['@id']);
+        $manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG)->set(($this->extensions?->handles($record)??false)?new \VHUG\SchemaManagerBundle\Extension\Internal\JsonLdType($node):$manager->createSchemaOrgTypeFromArray($node),$node['@id']);
         $emitted[$record['entityId']]=$node;
         return array_intersect_key($node,array_flip(['@type','@id','name','url','address','geo','hasMap']));
     }
@@ -59,14 +60,14 @@ final class EntityGraph
      * Output rule: an entity is complete only on its localized home page. Everywhere else it is a lean
      * reference (see leanNode()) that pulls nothing further into the graph.
      */
-    public function emit(int $id, string $language, JsonLdManager $manager, array &$emitted): ?array
+    public function emit(int $id, string $language, JsonLdManager $manager, array &$emitted,bool $venue=false): ?array
     {
         $entity=$this->record($id);
         if(!$entity && $this->previewId===$id && $this->extensions){$draft=$this->connection->fetchAssociative('SELECT * FROM tl_schema_entity WHERE id=?',[$id]);if($draft && $this->extensions->handles($draft))$entity=$draft;}
         if(!$entity || (str_contains($entity['entityType'],'.') && !$this->extensions))return null;
         $extensionHandled=$this->extensions?->handles($entity)??false;
         $activeGraph=$manager->getGraphForSchema(JsonLdManager::SCHEMA_ORG);
-        if (isset($emitted[$entity['entityId']]) && (!$extensionHandled || !empty(($this->extensionDirect[$activeGraph]??[])[$id]))) { return $emitted[$entity['entityId']]; }
+        if (!$venue && isset($emitted[$entity['entityId']]) && (!$extensionHandled || !empty(($this->extensionDirect[$activeGraph]??[])[$id]))) { return $emitted[$entity['entityId']]; }
 
         $translation = $this->connection->fetchAssociative(
             'SELECT * FROM tl_schema_translation WHERE pid = ? AND language = ? AND published = ? ORDER BY id',
@@ -95,7 +96,7 @@ final class EntityGraph
             if ($preview && (!$actor?->id || (!$actor->isAdmin && !$actor->hasAccess('schema_manager','modules')))) return null;
             $read=new \VHUG\SchemaManagerBundle\Extension\V1\ReadContext($preview?'preview':'frontend',$site,$language,$preview?(int)$actor->id:null,$preview,time());
             $this->tags->tagWith(\VHUG\SchemaManagerBundle\Extension\Internal\SourceInvalidator::TAG);
-            $result=$this->extensions->render($id,$read,$url,$this->isHome($entity,$translation,$page),false,$this->requests->getMainRequest()?->getUri());
+            $result=$this->extensions->render($id,$read,$url,$this->isHome($entity,$translation,$page),false,$this->requests->getMainRequest()?->getUri(),$venue);
             $this->tags->tagWith($result['cacheTags']);
             if ($result['expiry']!==null) $this->requests->getMainRequest()?->attributes->set('_schema_extension_expires',min($result['expiry'],$this->requests->getMainRequest()?->attributes->get('_schema_extension_expires',PHP_INT_MAX)??PHP_INT_MAX));
             foreach ($result['nodes'] as $node) {

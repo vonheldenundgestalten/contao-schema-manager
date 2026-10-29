@@ -9,11 +9,13 @@ use VHUG\SchemaManagerBundle\Schema\LocationData;
 
 final class EventLocationListener
 {
-    public function __construct(private readonly Connection $db) {}
+    public function __construct(private readonly Connection $db, private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\Registry $registry=null) {}
     public function places(): array
     {
         $result=[];
-        foreach($this->db->fetchAllAssociative("SELECT id,name,entityType,addressLocality,published FROM tl_schema_entity WHERE entityType IN ('Place','LocalBusiness') ORDER BY name") as $row){
+        $types=$this->registry?->placeTypes()??['Place','LocalBusiness'];
+        $placeholders=implode(',',array_fill(0,count($types),'?'));
+        foreach($this->db->fetchAllAssociative("SELECT id,name,entityType,addressLocality,published FROM tl_schema_entity WHERE entityType IN ($placeholders) ORDER BY name",$types) as $row){
             $result[$row['id']]=$row['name'].' ['.$row['entityType'].']'.($row['addressLocality']?' — '.$row['addressLocality']:'').($row['published']?'':' ('.($GLOBALS['TL_LANG']['MSC']['schemaLocationDraft']??'unpublished').')');
         }
         return $result;
@@ -21,7 +23,7 @@ final class EventLocationListener
     public function validatePlace(mixed $value): int
     {
         $id=(int)$value;
-        if($id && !in_array($this->db->fetchOne('SELECT entityType FROM tl_schema_entity WHERE id=?',[$id]),['Place','LocalBusiness'],true))throw new \InvalidArgumentException('Select an existing Place or LocalBusiness.');
+        if($id && !in_array($this->db->fetchOne('SELECT entityType FROM tl_schema_entity WHERE id=?',[$id]),($this->registry?->placeTypes()??['Place','LocalBusiness']),true))throw new \InvalidArgumentException('Select an existing location.');
         return $id;
     }
     #[AsCallback(table:'tl_schema_entity',target:'config.onload',priority:-100)]
