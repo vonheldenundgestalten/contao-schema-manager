@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.5 — 2026-10-29
+
+- Exclude unpublished entities from author, publisher, organization, service, software, topic, performer, venue and extension relationship pickers.
+- Check the original source's current availability for source-bound entities, even when their reference index remains published.
+- Apply the same availability rule to configuration-review publisher choices and reject unavailable publishers when applying saved reviews.
+- Keep existing stored references intact when generating choices; disabled records remain accessible for management and re-enabling.
+
+Upgrade: rebuild the application cache. No database schema updates. Project-specific picker overrides should use the shared `EntitySelection` service to apply the same enabled-source policy.
+
 ## 1.4.4 — 2026-10-29
 
 - Accept extension-defined types declaring the `place` capability in the shared event venue picker and save validation.

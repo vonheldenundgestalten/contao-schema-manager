@@ -10,7 +10,7 @@ For example, a hosting business can describe its company once, connect its hosti
 
 *Screenshots show the English Contao backend; German labels are also included.*
 
-> **Version 1.4.4:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension supports manually managed and automatic source entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
+> **Version 1.4.5:** PHP 8.3+ and Contao 5.7+ within the 5.x series. The News and Calendar bundles are optional. The extension supports manually managed and automatic source entities, localized homes, news and calendar-event enrichment. It does not select sharing images, generate social tags or read prices from content elements.
 
 > **Versioning:** package versions follow semantic versioning independently of Contao. See [versioning and migration](docs/versioning.md) for upgrade guidance.
 
