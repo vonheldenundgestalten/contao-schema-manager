@@ -8,7 +8,8 @@ use Doctrine\DBAL\Connection;
 use Symfony\Component\Intl\Countries;
 final class EntityDetailsListener
 {
-    public function __construct(private readonly Connection $connection) {}
+    private function choices(): \VHUG\SchemaManagerBundle\Schema\EntitySelection { return $this->selection??new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->connection); }
+    public function __construct(private readonly Connection $connection, private readonly ?\VHUG\SchemaManagerBundle\Schema\EntitySelection $selection=null) {}
     #[AsCallback(table: 'tl_schema_entity', target: 'list.operations.contacts.button')]
     public function contactsButton(\Contao\CoreBundle\DataContainer\DataContainerOperation $operation): void
     {
@@ -24,7 +25,7 @@ final class EntityDetailsListener
         return $value;
     }
     public function countries(): array { return Countries::getNames(); }
-    public function services(): array { return $this->connection->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType='Service' ORDER BY name"); }
+    public function services(): array { return $this->choices()->options(['Service']); }
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.foundingDate.save')]
     public function foundingDate(mixed $value): string
     {

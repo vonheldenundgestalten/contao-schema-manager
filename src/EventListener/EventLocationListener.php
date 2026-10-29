@@ -9,21 +9,21 @@ use VHUG\SchemaManagerBundle\Schema\LocationData;
 
 final class EventLocationListener
 {
-    public function __construct(private readonly Connection $db, private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\Registry $registry=null) {}
+    private function choices(): \VHUG\SchemaManagerBundle\Schema\EntitySelection { return $this->selection??new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->db, $this->registry); }
+    public function __construct(private readonly Connection $db, private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\Registry $registry=null, private readonly ?\VHUG\SchemaManagerBundle\Schema\EntitySelection $selection=null) {}
     public function places(): array
     {
         $result=[];
         $types=$this->registry?->placeTypes()??['Place','LocalBusiness'];
-        $placeholders=implode(',',array_fill(0,count($types),'?'));
-        foreach($this->db->fetchAllAssociative("SELECT id,name,entityType,addressLocality,published FROM tl_schema_entity WHERE entityType IN ($placeholders) ORDER BY name",$types) as $row){
-            $result[$row['id']]=$row['name'].' ['.$row['entityType'].']'.($row['addressLocality']?' — '.$row['addressLocality']:'').($row['published']?'':' ('.($GLOBALS['TL_LANG']['MSC']['schemaLocationDraft']??'unpublished').')');
+        foreach($this->choices()->rows($types) as $row){
+            $result[$row['id']]=$row['name'].' ['.$row['entityType'].']'.($row['addressLocality']?' — '.$row['addressLocality']:'');
         }
         return $result;
     }
     public function validatePlace(mixed $value): int
     {
         $id=(int)$value;
-        if($id && !in_array($this->db->fetchOne('SELECT entityType FROM tl_schema_entity WHERE id=?',[$id]),($this->registry?->placeTypes()??['Place','LocalBusiness']),true))throw new \InvalidArgumentException('Select an existing location.');
+        if($id && (!$this->choices()->contains($id) || !in_array($this->db->fetchOne('SELECT entityType FROM tl_schema_entity WHERE id=?',[$id]),($this->registry?->placeTypes()??['Place','LocalBusiness']),true)))throw new \InvalidArgumentException('Select an existing location.');
         return $id;
     }
     #[AsCallback(table:'tl_schema_entity',target:'config.onload',priority:-100)]

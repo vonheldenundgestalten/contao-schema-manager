@@ -7,7 +7,8 @@ use Contao\StringUtil;
 use Doctrine\DBAL\Connection;
 final class BusinessDetailsListener
 {
-    public function __construct(private readonly Connection $connection) {}
+    private function choices(): \VHUG\SchemaManagerBundle\Schema\EntitySelection { return $this->selection??new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->connection); }
+    public function __construct(private readonly Connection $connection, private readonly ?\VHUG\SchemaManagerBundle\Schema\EntitySelection $selection=null) {}
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.registrationIdentifiers.save')]
     public function registrations(mixed $value): mixed
     {
@@ -46,8 +47,8 @@ final class BusinessDetailsListener
         }
         return $value;
     }
-    public function organizations(): array { return $this->connection->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType IN ('Organization','LocalBusiness') ORDER BY name"); }
-    public function offices(): array { return $this->connection->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType='LocalBusiness' ORDER BY name"); }
+    public function organizations(): array { return $this->choices()->options(['Organization','LocalBusiness']); }
+    public function offices(): array { return $this->choices()->options(['LocalBusiness']); }
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.hasMap.save')]
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.externalUrl.save')]
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.eventUrl.save')]
@@ -97,7 +98,7 @@ final class BusinessDetailsListener
     public function knowledgeTopicOptions(DataContainer $dc): array
     {
         $options = [];
-        foreach ($this->connection->fetchAllAssociative('SELECT id,name,entityType FROM tl_schema_entity WHERE id<>? ORDER BY name', [(int) $dc->id]) as $row) {
+        foreach ($this->choices()->rows(excludeId:(int)$dc->id) as $row) {
             $options[$row['id']] = $row['name'].' ['.$row['entityType'].']';
         }
         return $options;
@@ -110,8 +111,8 @@ final class BusinessDetailsListener
     public function softwareOptions(DataContainer $dc): array
     {
         $options = [];
-        foreach ($this->connection->fetchAllAssociative("SELECT id,name,published FROM tl_schema_entity WHERE entityType='SoftwareApplication' AND id<>? ORDER BY name", [(int) $dc->id]) as $row) {
-            $options[$row['id']] = $row['name'].($row['published'] === '1' ? '' : ' [draft]');
+        foreach ($this->choices()->rows(['SoftwareApplication'],(int)$dc->id) as $row) {
+            $options[$row['id']] = $row['name'];
         }
         return $options;
     }

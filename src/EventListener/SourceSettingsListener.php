@@ -8,14 +8,15 @@ use Doctrine\DBAL\Connection;
 
 final class SourceSettingsListener
 {
-    public function __construct(private readonly Connection $connection) {}
+    private function choices(): \VHUG\SchemaManagerBundle\Schema\EntitySelection { return $this->selection??new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->connection); }
+    public function __construct(private readonly Connection $connection, private readonly ?\VHUG\SchemaManagerBundle\Schema\EntitySelection $selection=null) {}
     public function people(): array
     {
-        return $this->connection->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType='Person' ORDER BY name");
+        return $this->choices()->options(['Person']);
     }
     public function entities(): array
     {
-        return $this->connection->fetchAllKeyValue('SELECT id,name FROM tl_schema_entity ORDER BY name');
+        return $this->choices()->options();
     }
     #[AsCallback(table:'tl_news',target:'config.onload')]
     public function newsPalette(DataContainer $dc): void

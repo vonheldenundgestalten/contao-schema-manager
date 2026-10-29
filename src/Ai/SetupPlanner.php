@@ -6,12 +6,12 @@ use Doctrine\DBAL\Connection;
 /** Editorial configuration review. No provider call and no inferred archive classification. */
 final class SetupPlanner
 {
-    public function __construct(private readonly Connection $db,private readonly SiteInventory $inventory,private readonly RunStore $store) {}
+    public function __construct(private readonly Connection $db,private readonly SiteInventory $inventory,private readonly RunStore $store,private readonly ?\VHUG\SchemaManagerBundle\Schema\EntitySelection $selection=null) {}
     public function prepare(BackendUser $user,int $root,bool $multilingual): int
     {
         $inventory=$this->inventory->collect($root,$user,$multilingual);
         $records=[];$proposals=[];$parents=[];
-        $organizations=$this->db->fetchAllAssociative("SELECT id,name,published,identityBase FROM tl_schema_entity WHERE entityType IN ('Organization','LocalBusiness') ORDER BY name");
+        $organizations=($this->selection??new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->db))->rows(['Organization','LocalBusiness']);
         $choices=[];foreach($organizations as $org)$choices[(int)$org['id']]=$org;
         $candidate=count($choices)===1?(int)array_key_first($choices):0;
         $add=function(string $key,array $row,array $values,string $reason)use(&$records,&$proposals):void{

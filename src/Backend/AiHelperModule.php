@@ -13,7 +13,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use VHUG\SchemaManagerBundle\Ai\{ApiKeyStore,RunStore,AnalysisRunner,SiteInventory,ProposalEngine,OpenAiProvider,SetupPlanner};
 final class AiHelperModule
 {
-    public function __construct(private readonly Connection $db,private readonly RequestStack $requests,private readonly ApiKeyStore $keys,private readonly RunStore $runs,private readonly AnalysisRunner $runner,private readonly SiteInventory $inventory,private readonly ProposalEngine $proposals,private readonly SetupPlanner $setup,private readonly \VHUG\SchemaManagerBundle\Ai\SchemaAudit $audit,private readonly \VHUG\SchemaManagerBundle\Ai\SchemaImport $importer) {}
+    public function __construct(private readonly Connection $db,private readonly RequestStack $requests,private readonly ApiKeyStore $keys,private readonly RunStore $runs,private readonly AnalysisRunner $runner,private readonly SiteInventory $inventory,private readonly ProposalEngine $proposals,private readonly SetupPlanner $setup,private readonly \VHUG\SchemaManagerBundle\Ai\SchemaAudit $audit,private readonly \VHUG\SchemaManagerBundle\Ai\SchemaImport $importer,private readonly ?\VHUG\SchemaManagerBundle\Schema\EntitySelection $selection=null) {}
     public function generate(): string
     {
         $user=BackendUser::getInstance();
@@ -88,6 +88,7 @@ final class AiHelperModule
         try { $hasKey=$this->keys->get()!==''; } catch (\Throwable) { $hasKey=false;$error=$l['keyError']; }
         try { $run=$id && $installed?$this->runs->get($id,(int)$user->id):null; } catch (\RuntimeException) { throw new AccessDeniedException('Analysis is not available for this user.'); }
         if(is_array($run))$this->importer->refreshPending($run);
+        if(is_array($run) && isset($run['organizations']))$run['organizations']=array_column(($this->selection??new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->db))->rows(['Organization','LocalBusiness']),null,'id');
         $template=new BackendTemplate('be_schema_ai');
         $template->l=$l;$template->error=$error;$template->message=$message;$template->hasKey=$hasKey;$template->installed=$installed;
         $template->token=$container->get('contao.csrf.token_manager')->getDefaultTokenValue();$template->run=$run;$template->runId=$id;

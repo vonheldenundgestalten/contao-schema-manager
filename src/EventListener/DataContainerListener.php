@@ -8,7 +8,8 @@ use Doctrine\DBAL\Connection;
 
 final class DataContainerListener
 {
-    public function __construct(private readonly Connection $connection) {}
+    private function choices(): \VHUG\SchemaManagerBundle\Schema\EntitySelection { return $this->selection??new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->connection); }
+    public function __construct(private readonly Connection $connection, private readonly ?\VHUG\SchemaManagerBundle\Schema\EntitySelection $selection=null) {}
 
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.identityBase.save')]
     public function identityBase(mixed $value, DataContainer $dc): string
@@ -81,9 +82,7 @@ final class DataContainerListener
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.organization.options')]
     public function organizations(): array
     {
-        return $this->connection->fetchAllKeyValue(
-            "SELECT id, name FROM tl_schema_entity WHERE entityType IN ('Organization', 'LocalBusiness') ORDER BY name"
-        );
+        return $this->choices()->options(['Organization','LocalBusiness']);
     }
 
     #[AsCallback(table: 'tl_schema_entity', target: 'fields.organization.save')]

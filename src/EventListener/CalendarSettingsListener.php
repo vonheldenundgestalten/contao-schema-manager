@@ -7,12 +7,13 @@ use Doctrine\DBAL\Connection;
 use Contao\CoreBundle\Cache\CacheTagManager;
 final class CalendarSettingsListener
 {
-    public function __construct(private readonly Connection $db,private readonly CacheTagManager $tags){}
+    private function choices(): \VHUG\SchemaManagerBundle\Schema\EntitySelection { return $this->selection??new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->db); }
+    public function __construct(private readonly Connection $db,private readonly CacheTagManager $tags, private readonly ?\VHUG\SchemaManagerBundle\Schema\EntitySelection $selection=null){}
     #[AsCallback(table:'tl_calendar_events',target:'config.onsubmit')]
     public function saved(DataContainer $dc):void{$this->ensureIdentity((int)$dc->id);$this->invalidate();}
     #[AsCallback(table:'tl_calendar',target:'config.onsubmit')]
     public function calendarSaved(DataContainer $dc):void{foreach($this->db->fetchFirstColumn('SELECT id FROM tl_calendar_events WHERE pid=?',[$dc->id]) as $id)$this->ensureIdentity((int)$id);$this->invalidate();}
-    public function performers():array{return $this->db->fetchAllKeyValue("SELECT id,name FROM tl_schema_entity WHERE entityType IN ('Person','Organization','LocalBusiness') ORDER BY name");}
+    public function performers():array{return $this->choices()->options(['Person','Organization','LocalBusiness']);}
     public function ensureIdentity(int $id):void
     {
         $row=$this->db->fetchAssociative('SELECT n.schemaIdentity,e.identityBase FROM tl_calendar_events n JOIN tl_calendar c ON c.id=n.pid JOIN tl_schema_entity e ON e.id=COALESCE(NULLIF(n.schemaOrganizer,0),c.schemaOrganizer) WHERE n.id=?',[$id]);

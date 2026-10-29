@@ -39,3 +39,6 @@ services:
     VHUG\SchemaManagerBundle\Extension\Internal\SiteScope:
         arguments:
             $approvedRoots: "%schema_manager.extension.approved_roots%"
+
+    VHUG\SchemaManagerBundle\Schema\EntitySelection:
+        public: true

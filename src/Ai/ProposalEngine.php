@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Contao\CoreBundle\Cache\CacheTagManager;
 final class ProposalEngine
 {
-    public function __construct(private readonly Connection $db,private readonly FieldPolicy $policy,private readonly CacheTagManager $tags,private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\AiBridge $extensions=null,private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\Store $extensionStore=null) {}
+    public function __construct(private readonly Connection $db,private readonly FieldPolicy $policy,private readonly CacheTagManager $tags,private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\AiBridge $extensions=null,private readonly ?\VHUG\SchemaManagerBundle\Extension\Internal\Store $extensionStore=null,private readonly ?\VHUG\SchemaManagerBundle\Schema\EntitySelection $selection=null) {}
     public function context(array $run,array $sources): array
     {
         $records=[];
@@ -249,7 +249,7 @@ final class ProposalEngine
                     if (!isset($versions[$versionKey])) { $v=new Versions($table,$id);$v->setUserId((int)$user->id);$v->setUsername($user->username);$v->setEditUrl('do='.(in_array($table,['tl_news','tl_news_archive'],true)?'news':(in_array($table,['tl_calendar','tl_calendar_events'],true)?'calendar':($table==='tl_user'?'user':($table==='tl_page'?'page':'schema_manager')))).'&table='.$table.'&act=edit&id='.$id);$v->initialize();$versions[$versionKey]=$v; }
                     if ($p['action']==='set') {
                         $value=$this->policy->validate($table,$type,$field,$value);
-                        if(in_array($field,['schemaPublisher','schemaOrganizer'],true) && (int)$value && !$this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE id=? AND entityType IN ('Organization','LocalBusiness')",[(int)$value]))throw new \RuntimeException('The publisher no longer exists. Review parent setup again.');
+                        if(in_array($field,['schemaPublisher','schemaOrganizer'],true) && (int)$value && (!($this->selection??new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->db))->contains((int)$value) || !$this->db->fetchOne("SELECT id FROM tl_schema_entity WHERE id=? AND entityType IN ('Organization','LocalBusiness')",[(int)$value])))throw new \RuntimeException('The publisher is disabled or unavailable. Review parent setup again.');
                     }
                     else {
                         [$targetTable,$related,$relatedType]=$this->resolve($value,$run);

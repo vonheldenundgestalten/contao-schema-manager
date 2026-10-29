@@ -86,7 +86,7 @@ final class ExtensionModule
                 if(in_array($key,$description?->ownedRelationships??[],true) || ($source && !$snapshot)) { $html.='<p>From source</p></fieldset>';continue; }
                 $selected=[];foreach($this->store->relations($entity,$language)[$key]??[] as $value)if($value->target instanceof Api\EntityReference)$selected[]=$value->target->id;
                 $html.=$this->form('relationship',$entity,$site,$language).'<input type="hidden" name="relation" value="'.$this->e($key).'"><input type="hidden" name="revision" value="'.(int)$row['schemaExtensionRevision'].'"><select name="targets[]"'.($definition->multiple?' multiple':'').'><option value="0">—</option>';
-                foreach($this->connection->fetchAllAssociative('SELECT id,name,entityType FROM tl_schema_entity ORDER BY name,id') as $target)if(in_array($target['entityType'],$definition->targetTypes,true))$html.='<option value="'.(int)$target['id'].'"'.(in_array((int)$target['id'],$selected,true)?' selected':'').'>'.$this->e($target['name']).'</option>';
+                foreach((new \VHUG\SchemaManagerBundle\Schema\EntitySelection($this->connection,$this->registry,$this->scopes))->rows() as $target)if(in_array($target['entityType'],$definition->targetTypes,true))$html.='<option value="'.(int)$target['id'].'"'.(in_array((int)$target['id'],$selected,true)?' selected':'').'>'.$this->e($target['name']).'</option>';
                 $html.='</select><button>Save</button></form></fieldset>';
             }
             $inspection=$this->editor->inspect(new Api\EntityReference($entity),$read);
